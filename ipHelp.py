@@ -4,9 +4,9 @@
 import sys
 import new
 
-import inspect 
+import inspect
 
-__version__ = "0.4"
+__version__ = "0.4.1"
 
 
 # Licence: GPLv3
@@ -35,7 +35,7 @@ from ipHelp import ip_syshook, IPS, ST, dirsearch
 IPS() # starts the ipython embedded shell
 (with the ability to prevent further invocations with `_ips_exit = True`)
 
-ST() # starts the debugger prompt ("Start Trace"); type 'help' to get started 
+ST() # starts the debugger prompt ("Start Trace"); type 'help' to get started
 
 ip_syshook(1) # starts debugger on exceptions and adds some infos
 to tracebacks (like the values of calling args)
@@ -45,7 +45,7 @@ the namespace. Example: import os; dirsearch('path', os)
 
 
 known bugs:
-- - - - - - 
+- - - - - -
 
 if used from within a PyQt app: annoying meassages
 
@@ -65,6 +65,11 @@ shells in eclipse, pyscripter or spyder; result: ugly control characters
 The embedded IPython-Shell seems to conflict with output suppressing in
 py.test. To avoid this disable the output suppressing via:
 py.test -s <testfiles>
+
+-----------
+
+problems with pyparallel
+
 """
 
 # if IPython is not installed it is not that bad.
@@ -74,138 +79,215 @@ py.test -s <testfiles>
 
 # with ipython12 support
 
+
+
 try:
     #from IPython.Shell import IPShellEmbed
-    from IPython.frontend.terminal.embed import InteractiveShellEmbed
-    #args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
-                #'-po','Out<\\#>: ','-nosep']
-    
-    #the_user_ns = {'_exit': False}
 
-    # workarround to the following problem:
-    # if one calls IPS() from within a loop
-    # it will be started again with every cycle
-    # this may be very unwanted
+    # the simplest way (but without extra features)
+    #from IPython import embed as IPS # this should work within nested scopes
 
-    # the solution is to introtuce a boolean variable
-    #  _ips_exit 
-    # into the user namespace and after IPS is finished check its value
+    # TODO: the Banner should print the caller function
+    # first attepmt
 
-    # To achive this, the Embedded Shell Object modifies itself during runtime
-    
-    
-    class AdaptedIPSE(InteractiveShellEmbed):
-        
-        def nest(self, **kwargs):
-            """Problem: the normal invocation in inner frames gives no
-            access to global namespace
-            
-            -> workarround:
-            
-            IPS.nest(glob=globals(), loc = locals())"""
-            
-            
-            
-            glob = kwargs.get('glob', {})
-            loc = kwargs.get('loc', {})
-            
-            assert isinstance(glob, dict)
-            
-            old_interact = self.interact # save the real method
-            
-            def new_interact(self, *args, **kwargs):
-                """ wrapper method which introduces some stuff to the
-                user_ns
-            
+
+    if 1:
+        from IPython.frontend.terminal.embed import InteractiveShellEmbed
+        class AdaptedIPSE(InteractiveShellEmbed):
+
+            def __init__(self, *args, **kwargs):
+
+                #!! hardcoded colors
+                self.colors = 'Linux'
+
+
+                InteractiveShellEmbed.__init__(self, *args, **kwargs)
+
+                # now self.IP exisits
+
+
+                #dd = dir(self)
+                #dd.sort()
+                #print dd
+
+                old_interact = self.interact # save the real method
+
+                def new_interact(self, *args, **kwargs):
+                    """ wrapper method which checks the user namespace
+                    """
+
+                    frame_info_list = []
+                    frame = inspect.currentframe()
+                    while not frame == None:
+                        info = inspect.getframeinfo(frame)
+                        frame_info_list.append(info)
+                        frame = frame.f_back
+
+                    frame_info_list.reverse()
+
+                    print "----- frame list -----\n"
+                    for fi in frame_info_list[:-3]:
+                        print fi
+                    print "\n----- end of frame list -----\n"
+
+                    self.user_ns.update({'_ips_exit':False})
+
+                    old_interact(*args, **kwargs) # call the real interact method
+
+                    # now look if the user wants to stop
+                    if self.user_ns['_ips_exit']:
+                        def do_nothing(*args, **kwargs):
+                            pass
+
+                        # harakiri
+                        # the calling method replaces itself with a the dummy
+                        self.interact = do_nothing
+
+
+                # replace the original interact method with the wrapper
+                self.interact = new.instancemethod(new_interact, self,
+                                                                      type(self))
+
+
+        IPS = AdaptedIPSE(banner1='ipython with frame list')
+
+    elif 0:
+        from IPython.frontend.terminal.embed import InteractiveShellEmbed
+        #args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
+                    #'-po','Out<\\#>: ','-nosep']
+
+        #the_user_ns = {'_exit': False}
+
+        # workarround to the following problem:
+        # if one calls IPS() from within a loop
+        # it will be started again with every cycle
+        # this may be very unwanted
+
+        # the solution is to introtuce a boolean variable
+        #  _ips_exit
+        # into the user namespace and after IPS is finished check its value
+
+        # To achive this, the Embedded Shell Object modifies itself during runtime
+
+
+        class AdaptedIPSE(InteractiveShellEmbed):
+
+            def nest(self, **kwargs):
+                """Problem: the normal invocation in inner frames gives no
+                access to global namespace
+
+                -> workarround:
+
+                IPS.nest(glob=globals(), loc = locals())"""
+
+                print """
+                There might be a namespace-problem with multiple
+                invocations of this function from one script
                 """
-            
 
-                self.user_ns.update(glob)
-                self.user_ns.update(loc)
-                self.user_ns.update({'_ips_exit':False})
 
-                old_interact(*args, **kwargs) # call the real interact method
-                
-                # now look if the user wants to stop
-                
-                if self.user_ns['_ips_exit']:
-                    def do_nothing(*args, **kwargs):
-                        pass
-                    
-                    # harakiri
-                    # the calling method replaces itself with a the dummy
-                    self.interact = do_nothing 
-                
-                
-            # replace the original interact method with the wrapper 
-            self.interact = new.instancemethod(new_interact, self,
-                                                                  type(self))
-    
-            
-            InteractiveShellEmbed.__call__(self)
-            
-        
-        def __init__(self, *args, **kwargs):
-            
-            #!! hardcoded colors
-            self.colors = 'Linux'
-            
-            
-            InteractiveShellEmbed.__init__(self, *args, **kwargs)
-            
-            # now self.IP exisits
 
-            
-            #dd = dir(self)
-            #dd.sort()
-            #print dd
-            
-            
-            
-            
-            old_interact = self.interact # save the real method
-            
-            
-            
-            
-            def new_interact(self, *args, **kwargs):
-                """ wrapper method which checks the user namespace
-                """
-                
-                self.user_ns.update({'_ips_exit':False})
 
-                old_interact(*args, **kwargs) # call the real interact method
-                
-                # now look if the user wants to stop
-                if self.user_ns['_ips_exit']:
-                    def do_nothing(*args, **kwargs):
-                        pass
-                    
-                    # harakiri
-                    # the calling method replaces itself with a the dummy
-                    self.interact = do_nothing 
-                
-                
-            # replace the original interact method with the wrapper 
-            self.interact = new.instancemethod(new_interact, self,
-                                                                  type(self))
-    
-# The old call    
-#    IPS= IPShellEmbed(args,
-#                           banner = 'Dropping into IPython',
-#                           exit_msg = 'Leaving Interpreter, back to program.',
-#                           user_ns = the_user_ns)
-    
-    IPS= AdaptedIPSE(banner1 = 'Dropping into IPython',
-                     exit_msg = 'Leaving Interpreter, back to program.')
-                           #user_ns = the_user_ns)
-    
+                glob = kwargs.get('glob', {})
+                loc = kwargs.get('loc', {})
+
+                assert isinstance(glob, dict)
+
+                old_interact = self.interact # save the real method
+
+                def new_interact(self, *args, **kwargs):
+                    """ wrapper method which introduces some stuff to the
+                    user_ns
+
+                    """
+
+
+                    self.user_ns.update(glob)
+                    self.user_ns.update(loc)
+                    self.user_ns.update({'_ips_exit':False})
+
+                    old_interact(*args, **kwargs) # call the real interact method
+
+                    # now look if the user wants to stop
+
+                    if self.user_ns['_ips_exit']:
+                        def do_nothing(*args, **kwargs):
+                            pass
+
+                        # harakiri
+                        # the calling method replaces itself with a the dummy
+                        self.interact = do_nothing
+
+
+                # replace the original interact method with the wrapper
+                self.interact = new.instancemethod(new_interact, self,
+                                                                      type(self))
+
+
+                InteractiveShellEmbed.__call__(self)
+
+
+            def __init__(self, *args, **kwargs):
+
+                #!! hardcoded colors
+                self.colors = 'Linux'
+
+
+                InteractiveShellEmbed.__init__(self, *args, **kwargs)
+
+                # now self.IP exisits
+
+
+                #dd = dir(self)
+                #dd.sort()
+                #print dd
+
+
+
+
+                old_interact = self.interact # save the real method
+
+
+
+
+                def new_interact(self, *args, **kwargs):
+                    """ wrapper method which checks the user namespace
+                    """
+
+                    self.user_ns.update({'_ips_exit':False})
+
+                    old_interact(*args, **kwargs) # call the real interact method
+
+                    # now look if the user wants to stop
+                    if self.user_ns['_ips_exit']:
+                        def do_nothing(*args, **kwargs):
+                            pass
+
+                        # harakiri
+                        # the calling method replaces itself with a the dummy
+                        self.interact = do_nothing
+
+
+                # replace the original interact method with the wrapper
+                self.interact = new.instancemethod(new_interact, self,
+                                                                      type(self))
+
+    # The old call
+    #    IPS= IPShellEmbed(args,
+    #                           banner = 'Dropping into IPython',
+    #                           exit_msg = 'Leaving Interpreter, back to program.',
+    #                           user_ns = the_user_ns)
+
+        IPS_a= AdaptedIPSE(banner1 = 'Dropping into IPython',
+                         exit_msg = 'Leaving Interpreter, back to program.')
+                               #user_ns = the_user_ns)
+
     def ip_syshook(pdb=0, mode=2):
         """
         Make exceptions verbose, and/or call pdb (python cmd line debugger)
         """
-        
-        
+
+
         from IPython.core import ultratb
 
         modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
@@ -218,7 +300,7 @@ try:
         """
 	Extended system hook for exceptions.
 
-	supports logging of tracebacks to a file 
+	supports logging of tracebacks to a file
 
         lets fnc() be executed imediately before the IPython
         Verbose Traceback is started
@@ -227,7 +309,6 @@ try:
         """
 
         assert callable(fnc)
-        import IPython.ultraTB
         from IPython.core import ultratb
         import time
 
@@ -257,25 +338,44 @@ try:
         # assign it
         sys.excepthook = theexecpthook
 
-    
+
 #    from IPython.Debugger import Tracer
 #    ST=Tracer() # "ST" = "start trace"
 
     from IPython.core.debugger import Tracer
-    ST=Tracer(colors='Linux') # "ST" = "start trace"     
+
+    def TracerFactory():
+    #!! TODO: Write some docstring for TracerFactory
+        return Tracer(colors='Linux')
+
+    #ST=Tracer(colors='Linux') # "ST" = "start trace"
+    def ST():
+        a = " "*3
+        print "\n"*5, a, "ST is dreprecated due to namespace problems!!!"
+        print a, "use:"
+        print a, "from IPython.core.debugger import Tracer"
+        print a, "ST=Tracer(colors='Linux')"
+        print a, "\n"*2
+        print a , "<ENTER>"
+        print a, "\n"*5
+        try:
+            raw_input()
+        except:
+            pass
+
 
 except ImportError, E:
     # IPython seems not to be installed
     # create dummy functions
-    
+
     print "ipython Import Error: ", E
-    
+
     def IPS():
         print "(EE): IPython is not available"
         pass
     def ip_syshook(*args, **kwargs):
         pass
-    
+
     def ip_extra_syshook(*args, **kwargs):
         pass
 
@@ -290,23 +390,30 @@ except ImportError, E:
 
 ###############################
 
-def dirsearch(word, obj, only_keys = True):
+def dirsearch(word, obj, only_keys = True, deep = 0):
     """
         search a string in dir(<some object>)
         if object is a dict, then search in keys
 
         optional arg only_keys: if False, returns also a str-version of
         the attribute (or dict-value) instead only the key
-        
+
         this function is case insensitive
     """
     word = word.lower()
 
     if isinstance(obj, dict):
-        d = obj
+        # only consider keys which are strings
+        d = dict([(key, val) for key, val in obj.items() \
+                                            if isinstance(key, str)])
     else:
         #d = dir(obj)
-        d = dict([(a, getattr(obj, a)) for a in dir(obj)])
+        try:
+            d = dict([(a, getattr(obj, a)) for a in dir(obj)])
+        except AttributeError:
+            d={}
+        except NotImplementedError:
+            d={}
 
     def maxlen(s, n):
         s = s.replace("\n", " ")
@@ -314,11 +421,33 @@ def dirsearch(word, obj, only_keys = True):
             s = s[:n-2]+'..'
         return s
 
-    res = [(k, maxlen(str(v), 20)) for k,v in d.items() if word in k.lower()]
+
+    items = d.items()
+    res = [(k, maxlen(str(v), 20)) for k,v in items if word in k.lower()]
     # res is a list of (key,value)-pairs
-    
+
+    if deep >0:
+
+        def interesting(obj):
+            module = type(sys)
+            deep_types  = (module, type, dict)
+            res = isinstance(type(obj), deep_types)
+            #res = res and not (obj is type)
+            return res
+
+        deeper_items = [(name, obj) for name, obj in items \
+                                    if interesting(obj)]
+
+        for name, obj in deeper_items:
+            deep_res = dirsearch(word, obj, only_keys=False, deep = deep-1)
+            deep_res = [("%s.%s" %(name, d_name), d_obj)
+                                        for d_name, d_obj in deep_res]
+            res.extend(deep_res)
+
+
     if only_keys and len(res) >0:
         res = zip(*res)[0]
+        # now res only contains the keys
     return res
 
-    
+
