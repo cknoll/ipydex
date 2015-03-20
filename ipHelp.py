@@ -9,6 +9,7 @@ import inspect
 __version__ = "0.4.1"
 
 
+
 # Licence: GPLv3
 #  (full text: http://www.gnu.org/licenses/gpl-3.0-standalone.html)
 # Origin: a coobook example extended by Carsten Knoll for personal needs
@@ -92,14 +93,14 @@ try:
 
 
     if 1:
-        from IPython.frontend.terminal.embed import InteractiveShellEmbed
+        
+        from IPython.terminal.embed import InteractiveShellEmbed
         class AdaptedIPSE(InteractiveShellEmbed):
 
             def __init__(self, *args, **kwargs):
 
                 #!! hardcoded colors
                 self.colors = 'Linux'
-
 
                 InteractiveShellEmbed.__init__(self, *args, **kwargs)
 
@@ -124,7 +125,6 @@ try:
                         frame = frame.f_back
 
                     frame_info_list.reverse()
-
                     print "----- frame list -----\n"
                     for fi in frame_info_list[:-3]:
                         print fi
@@ -132,17 +132,23 @@ try:
 
                     self.user_ns.update({'_ips_exit':False})
 
-                    old_interact(*args, **kwargs) # call the real interact method
+                    # prevent IPython shell to be launched in IP-Notebook
+                    test_str = str(frame_info_list[0]) + \
+                               str(frame_info_list[1])
+                    print test_str
+                    if 'IPython' in test_str and 'zmq' in test_str:
+                        print "\n- Not entering IPython embedded shell  -\n"
+                    else:
+                        # call the real interact method
+                        old_interact(*args, **kwargs) 
 
                     # now look if the user wants to stop
                     if self.user_ns['_ips_exit']:
                         def do_nothing(*args, **kwargs):
                             pass
 
-                        # harakiri
                         # the calling method replaces itself with a the dummy
                         self.interact = do_nothing
-
 
                 # replace the original interact method with the wrapper
                 self.interact = new.instancemethod(new_interact, self,
@@ -151,7 +157,7 @@ try:
 
         IPS = AdaptedIPSE(banner1='ipython with frame list')
 
-    elif 0:
+    elif 0: 
         from IPython.frontend.terminal.embed import InteractiveShellEmbed
         #args = ['-pi1','In <\\#>: ','-pi2','   .\\D.: ',
                     #'-po','Out<\\#>: ','-nosep']
@@ -398,22 +404,25 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
         optional arg only_keys: if False, returns also a str-version of
         the attribute (or dict-value) instead only the key
 
-        this function is case insensitive
+        this function is not case sensitive
     """
     word = word.lower()
 
     if isinstance(obj, dict):
         # only consider keys which are strings
-        d = dict([(key, val) for key, val in obj.items() \
-                                            if isinstance(key, str)])
+        items = [(key, val) for key, val in obj.items() \
+                                                if isinstance(key, str)]
     else:
         #d = dir(obj)
-        try:
-            d = dict([(a, getattr(obj, a)) for a in dir(obj)])
-        except AttributeError:
-            d={}
-        except NotImplementedError:
-            d={}
+
+        items = []
+        for key in dir(obj):
+            try:
+                items.append( (key, getattr(obj, key)) )
+            except AttributeError:
+                continue
+            except NotImplementedError:
+                continue
 
     def maxlen(s, n):
         s = s.replace("\n", " ")
@@ -422,8 +431,17 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
         return s
 
 
-    items = d.items()
-    res = [(k, maxlen(str(v), 20)) for k,v in items if word in k.lower()]
+    def match(word, key, value):
+        if only_keys:
+            return word in key.lower()
+        else:
+            # search also in value (if it is of type basestring)
+            if not isinstance(value, basestring):
+                value = "" # only local change
+
+            return (word in key.lower()) or (word in value.lower())
+
+    res = [(k, maxlen(str(v), 20)) for k,v in items if match(word, k, v)]
     # res is a list of (key,value)-pairs
 
     if deep >0:
