@@ -35,6 +35,7 @@ from ipHelp import ip_syshook, IPS, TracerFactory, dirsearch
 
 IPS() # starts the ipython embedded shell
 (with the ability to prevent further invocations with `_ips_exit = True`)
+#!! this currently does not work. (but not very important anyway)
 
 ST = TracerFactory()
 ...
@@ -137,18 +138,10 @@ try:
         
         custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
         
-        
         # prevent IPython shell to be launched in IP-Notebook
         test_str = str(frame_info_list[0]) + str(frame_info_list[1])
         #print test_str
         if 'IPython' in test_str and 'zmq' in test_str:
-            print "\n- Not entering IPython embedded shell  -\n"
-            return
-            
-        # prevent IPython shell to be launched if the apropriate flag is set
-        # (by the user during the last call)
-        # This is usefull if the IPS()-call is placed within a loop
-        if frame_list[0].f_locals.get('_ips_exit', False):
             print "\n- Not entering IPython embedded shell  -\n"
             return
 
@@ -156,17 +149,9 @@ try:
         config = load_default_config()
         config.InteractiveShellEmbed = config.TerminalInteractiveShell
         
-        custom_ns = {'_ips_exit':False}
-        shell = InteractiveShellEmbed.instance(user_ns=custom_ns)
-        #shell(header=header, stack_depth=2, compile_flags=compile_flags)
+        shell = InteractiveShellEmbed.instance()
         
-        # finally call the shell
         shell(header=custom_header, stack_depth=2)
-        
-        ips_exit_flag = shell.user_ns.get('_ips_exit', False)
-        
-        # insert this flag to the actual namespace in the caller-scope 
-        frame_list[0].f_locals['_ips_exit'] = ips_exit_flag
 
     def color_exepthook(pdb=0, mode=2):
         """
@@ -189,9 +174,9 @@ try:
 
     def ip_extra_syshook(fnc, pdb=0, filename=None):
         """
-	Extended system hook for exceptions.
+        Extended system hook for exceptions.
 
-	supports logging of tracebacks to a file
+        supports logging of tracebacks to a file
 
         lets fnc() be executed imediately before the IPython
         Verbose Traceback is started
@@ -236,11 +221,11 @@ try:
     from IPython.core.debugger import Tracer
 
     def TracerFactory():
-    """
-    Returns a callable `Tracer` object.
-    When this object is called it starts the ipython commandline debugger
-    in that place.
-    """
+        """
+        Returns a callable `Tracer` object.
+        When this object is called it starts the ipython commandline debugger
+        in that place.
+        """
         return Tracer(colors='Linux')
 
     # this has legacy reasons:
