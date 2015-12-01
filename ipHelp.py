@@ -6,7 +6,7 @@ import new
 
 import inspect
 
-__version__ = "0.4.1"
+__version__ = "0.4.1.1"
 
 
 
@@ -149,6 +149,12 @@ try:
         config = load_default_config()
         config.InteractiveShellEmbed = config.TerminalInteractiveShell
         
+        
+        # these two lines prevent problems in related to the initialization
+        # of ultratb.FormattedTB below
+        InteractiveShellEmbed.clear_instance()
+        InteractiveShellEmbed._instance = None
+
         shell = InteractiveShellEmbed.instance()
         
         shell(header=custom_header, stack_depth=2)

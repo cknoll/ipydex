@@ -27,6 +27,11 @@ def func2(q1, q2):
     """
 
     a = q1/q2
+    
+    if q2 == 5:
+        z = 7
+        IPS()
+    
     return a
 
 
@@ -46,10 +51,9 @@ z = func1(x) - 5
 u = y**2 + z**2# should be an array full of 1.0
 
 
-
-
 b1 = func2(1.0, 2.0)
-b2 = func2(1.0, 0)  # ZeroDivisionError -> start interactive debugger
+#b2 = func2(1.0, 0)  # ZeroDivisionError -> start interactive debugger
+b2 = func2(1.0, 5)  # start IPS inside func2
 
 
-IPS()
+#IPS() # start IPS on top level
