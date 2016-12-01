@@ -289,9 +289,9 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
     word = word.lower()
 
     if isinstance(obj, dict):
-        # only consider keys which are strings
+        # only consider keys which are basestrings
         items = [(key, val) for key, val in obj.items() \
-                                                if isinstance(key, str)]
+                                                if isinstance(key, basestring)]
     else:
         #d = dir(obj)
 
