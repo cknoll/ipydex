@@ -2,9 +2,9 @@
 
 
 import sys
-import new
 
 import inspect
+import collections
 
 __version__ = "0.4.1.1"
 
@@ -142,7 +142,7 @@ try:
         test_str = str(frame_info_list[0]) + str(frame_info_list[1])
         #print test_str
         if 'IPython' in test_str and 'zmq' in test_str:
-            print "\n- Not entering IPython embedded shell  -\n"
+            print("\n- Not entering IPython embedded shell  -\n")
             return
 
         # copied (and modified) from IPython/terminal/embed.py
@@ -190,7 +190,7 @@ try:
         this can be used to pop up a QTMessageBox: "An exception occured"
         """
 
-        assert callable(fnc)
+        assert isinstance(fnc, collections.Callable)
         from IPython.core import ultratb
         import time
 
@@ -237,27 +237,27 @@ try:
     # this has legacy reasons:
     def ST():
         a = " "*3
-        print "\n"*5, a, "ST is dreprecated due to namespace problems."
-        print a, "use: ST = TracerFactory() or"
-        print a, "from IPython.core.debugger import Tracer"
-        print a, "ST=Tracer(colors='Linux')"
-        print a, "\n"*2
-        print a , "<ENTER>"
-        print a, "\n"*5
+        print("\n"*5, a, "ST is dreprecated due to namespace problems.")
+        print(a, "use: ST = TracerFactory() or")
+        print(a, "from IPython.core.debugger import Tracer")
+        print(a, "ST=Tracer(colors='Linux')")
+        print(a, "\n"*2)
+        print(a , "<ENTER>")
+        print(a, "\n"*5)
         try:
-            raw_input()
+            input()
         except:
             pass
 
 
-except ImportError, E:
+except ImportError as E:
     # IPython seems not to be installed
     # create dummy functions
 
-    print "ipython Import Error: ", E
+    print("ipython Import Error: ", E)
 
     def IPS():
-        print "(EE): IPython is not available"
+        print("(EE): IPython is not available")
         pass
     def ip_syshook(*args, **kwargs):
         pass
@@ -290,8 +290,8 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
 
     if isinstance(obj, dict):
         # only consider keys which are basestrings
-        items = [(key, val) for key, val in obj.items() \
-                                                if isinstance(key, basestring)]
+        items = [(key, val) for key, val in list(obj.items()) \
+                                                if isinstance(key, str)]
     else:
         #d = dir(obj)
 
@@ -316,7 +316,7 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
             return word in key.lower()
         else:
             # search also in value (if it is of type basestring)
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 value = "" # only local change
 
             return (word in key.lower()) or (word in value.lower())
