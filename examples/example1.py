@@ -1,15 +1,14 @@
 # -*- coding: utf8 -*-
 
 
-
 import numpy as np
 from numpy import sin, cos
 
 
-from ipHelp import IPS, ip_syshook, ST
+from ipydex import IPS, ip_syshook, ST
 
 """
-This example shows how the tools from module ipHelp may be used.
+This example shows how the tools from module ipydex may be used.
 """
 
 
@@ -30,7 +29,9 @@ def func2(q1, q2):
     
     if q2 == 5:
         z = 7
-        IPS()
+        IPS() # start embedded ipython shell in the local scope
+        # -> explore global namespace
+
     
     return a
 
@@ -52,8 +53,13 @@ u = y**2 + z**2# should be an array full of 1.0
 
 
 b1 = func2(1.0, 2.0)
-#b2 = func2(1.0, 0)  # ZeroDivisionError -> start interactive debugger
 b2 = func2(1.0, 5)  # start IPS inside func2
 
 
-#IPS() # start IPS on top level
+#b2 = func2(1.0, 0)  # ZeroDivisionError -> start interactive debugger
+
+
+#IPS() # start embedded ipython shell on top level scope
+# -> explore global namespace
+
+
