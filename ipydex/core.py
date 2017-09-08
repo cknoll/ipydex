@@ -94,6 +94,12 @@ development, but already are deployd on different machines/ platforms)
 """
 
 
+class DummyMod(object):
+    """A dummy module used for IPython's interactive module when
+    a namespace must be assigned to the module's __dict__."""
+    pass
+
+
 def format_frameinfo(fi):
     """
     Takes a frameinfo object (from the inspect module)
@@ -102,7 +108,10 @@ def format_frameinfo(fi):
     """
     s1 = "{0}:{1}".format(fi.filename, fi.lineno)
     s2 = "function:{0},    code_context:".format(fi.function)
-    s3 = fi.code_context[0]
+    if fi.code_context:
+        s3 = fi.code_context[0]
+    else:
+        s3 = "<no code context available>"
     
     return "\n".join([s1, s2, s3])
     
@@ -113,6 +122,9 @@ try:
     from IPython.terminal.ipapp import load_default_config
     from IPython.terminal.embed import InteractiveShellEmbed    
     from IPython.core import ultratb
+
+    class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
+        display_banner = False
     
     def IPS():
         
@@ -159,12 +171,100 @@ try:
         
         shell(header=custom_header, stack_depth=2)
 
+        custom_excepthook = getattr(sys, 'custom_excepthook', None)
+        if custom_excepthook is not None:
+            assert callable(custom_excepthook)
+            sys.excepthook = custom_excepthook
+
+    # TODO: remove code duplication
+    def ip_shell_after_exception(frame):
+        """
+        Launches an IPython embedded shell in the namespace where an exception occured
+
+        :param frame:
+        :return:
+        """
+
+        # let the user know, where this shell is 'waking up'
+        # construct frame list
+        # this will be printed in the header
+        frame_info_list = []
+        frame_list = []
+        frame = frame or inspect.currentframe()
+
+        local_ns = frame.f_locals
+        # global_ns = frame.f_globals  # this is deprecated by IPython
+        dummy_module = DummyMod()
+        dummy_module.__dict__ = frame.f_globals
+
+        while not frame == None:
+            frame_list.append(frame)
+            info = inspect.getframeinfo(frame)
+            frame_info_list.append(info)
+            frame = frame.f_back
+
+        frame_info_list.reverse()
+        frame_list.reverse()
+        frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
+
+        custom_header1 = "----- frame list -----\n\n"
+        frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
+        custom_header2 = "\n----- end of frame list -----\n"
+        custom_header2 = "\n----- ERROR -----\n"
+
+        custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
+
+        # prevent IPython shell to be launched in IP-Notebook
+        if len(frame_info_list) >= 2:
+            test_str = str(frame_info_list[0]) + str(frame_info_list[1])
+            #print test_str
+            if 'IPython' in test_str and 'zmq' in test_str:
+                print("\n- Not entering IPython embedded shell  -\n")
+                return
+
+        # copied (and modified) from IPython/terminal/embed.py
+        config = load_default_config()
+        config.InteractiveShellEmbed = config.TerminalInteractiveShell
+
+        # these two lines prevent problems in related to the initialization
+        # of ultratb.FormattedTB below
+        InteractiveShellEmbedWithoutBanner.clear_instance()
+        InteractiveShellEmbedWithoutBanner._instance = None
+
+        shell = InteractiveShellEmbedWithoutBanner.instance()
+
+        shell(header=custom_header, stack_depth=2, local_ns=local_ns, module=dummy_module)
+
+
+    def ips_excepthook(excType, excValue, traceback):
+
+        # first: print the traceback:
+        tb_print_func  = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
+        tb_print_func(excType, excValue, traceback)
+
+        # go down the stack
+        tb = traceback
+        while tb.tb_next is not None:
+            tb = tb.tb_next
+
+        critical_frame = tb.tb_frame
+        # IPS()
+        ip_shell_after_exception(frame=critical_frame)
+
+    def activate_ips_on_exception():
+        # set the hook
+        sys.excepthook = ips_excepthook
+
+        # save the hook (because it might be overridden from extern)
+        sys.custom_excepthook = ips_excepthook
+
+
     def color_exepthook(pdb=0, mode=2):
         """
         Make tracebacks after exceptions colored, verbose, and/or call pdb
         (python cmd line debugger) at the place where the exception occurs
         """
-
+        
         modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
 
         sys.excepthook = ultratb.FormattedTB(mode=modus,
@@ -344,7 +444,7 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
 
 
     if only_keys and len(res) >0:
-        res = zip(*res)[0]
+        res = list(zip(*res))[0]
         # now res only contains the keys
     return res
 
