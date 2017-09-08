@@ -1,6 +1,11 @@
 ipydex
 ======
 
+.. image:: https://img.shields.io/pypi/v/ipydex.svg
+    :target: https://pypi.python.org/pypi/ipydex
+    :alt: Link to PyPi
+
+
 "IPython based debugging and exploring"
 
 The module contains the following functions:
