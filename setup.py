@@ -4,7 +4,7 @@ with open("requirements.txt") as requirements_file:
     requirements = requirements_file.read()
 
 setup(name='ipydex',
-      version='0.1',
+      version='0.2',
       description='IPython based debugging and exploring tool',
       classifiers=[
         'Development Status :: 3 - Alpha',
