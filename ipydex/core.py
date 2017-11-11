@@ -6,8 +6,6 @@ import sys
 import inspect
 import collections
 
-__version__ = "0.4.1.1"
-
 
 
 # Licence: GPLv3
