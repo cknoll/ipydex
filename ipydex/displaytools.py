@@ -4,7 +4,7 @@
 """
 This module was written by Carsten Knoll, see
 
-https://github.com/cknoll/displaytools
+https://github.com/cknoll/ipydex
 
 This code is licensed under GPLv3
 
@@ -20,7 +20,7 @@ Background: insert some logic to display the 'result' of an assignment
 
 
 
-# load it with %reload_ext displaytools
+# load it with %reload_ext ipydex.displaytools
 
 usage:
 
@@ -194,7 +194,11 @@ def custom_display(lhs, rhs):
     new_format_dict = {}
     for key, value in list(format_dict.items()):
         if 'text/plain' in key:
-            new_value = lhs+' := '+value
+            prefix = "{} := ".format(lhs)
+            if value.startswith("array") or value.startswith("matrix"):
+                value = format_np_array(value, len(prefix))
+
+            new_value = prefix + value
             new_format_dict[key] = new_value
 
         elif 'text/latex' in key:
@@ -218,6 +222,33 @@ def custom_display(lhs, rhs):
         # indeed, I dont know with which version the api changed
         # but it does not really matter (for me)
         publish_display_data(data=new_format_dict, metadata=md_dict)
+
+
+def get_np_linewidth():
+    try:
+        import numpy as np
+    except ImportError:
+        # numpy not available
+        # unexpected situation but not critical
+        # return the default
+        return 75
+    return np.get_printoptions().get('linewidth', 75)
+
+
+def format_np_array(value, prefixlen):
+    lw = get_np_linewidth()
+    rows = value.split("\n")
+    if len(rows[0]) + prefixlen > lw:
+        # inserting prefix will cause linebreaks (or they will occur anyway)
+        # start the array at a new line
+        rows.insert(0, "")# + [r.strip() for r in rows]
+        separation = "\n"
+    else:
+        # there is enough space to insert the prefix and
+        # shift every row to the right appropriately
+        separation = "\n" + " "*prefixlen
+
+    return separation.join(rows)
 
 
 def load_ipython_extension(ip):
