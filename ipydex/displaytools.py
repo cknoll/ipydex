@@ -2,7 +2,7 @@
 
 
 """
-This module was written by Carsten Knoll, see 
+This module was written by Carsten Knoll, see
 
 https://github.com/cknoll/displaytools
 
@@ -23,7 +23,7 @@ Background: insert some logic to display the 'result' of an assignment
 # load it with %reload_ext displaytools
 
 usage:
- 
+
 `my_random_variable =  np.random.rand() ##`
 
 inserts the source line `display(my_random_variable)` to the source code,
@@ -63,6 +63,7 @@ sc_list = [sc, sc_lhs, sc_transpose, sc_lhs_transpose]
 # ensure that all special comments have the same start string
 for elt in sc_list:
     assert elt.startswith(sc)
+
 
 def eval_line_end(line):
     res = Container()
@@ -115,7 +116,7 @@ def process_line(line, line_flags, disp_str):
 def insert_disp_lines(raw_cell):
     lines = raw_cell.split('\n')
     N = len(lines)
-    
+
     # iterate from behind -> insert does not change the lower indices
     for i in range(N-1, -1, -1):
         line = lines[i]
@@ -131,7 +132,7 @@ def insert_disp_lines(raw_cell):
                 # the special comment might not be the first comment
                 # -> ignore this line?
                 # continue
-                
+
                 # new option: not an important special case
                 pass
 
@@ -159,11 +160,11 @@ def custom_display(lhs, rhs):
     """
     lhs: left hand side
     rhs: right hand side
-    
+
     This function serves to inject the string for the left hand side
     of an assignment
     """
-    
+
     # This code is mainly copied from IPython/display.py
     # (IPython version 2.3.0)
     kwargs = {}
@@ -177,24 +178,25 @@ def custom_display(lhs, rhs):
 
     format = InteractiveShell.instance().display_formatter.format
     format_dict, md_dict = format(rhs, include=include, exclude=exclude)
-    
+
     # example format_dict (for a sympy expression):
     # {u'image/png': '\x89PNG\r\n\x1a\n\x00 ...\x00\x00IEND\xaeB`\x82',
     #  u'text/latex': '$$- 2 \\pi \\sin{\\left (2 \\pi t \\right )}$$',
     # u'text/plain': u'-2\u22c5\u03c0\u22c5sin(2\u22c5\u03c0\u22c5t)'}
-    
+
     # it is up to IPython which item value is finally used
-    
+
     # now merge the lhs into the dict:
-    
+
     if not isinstance(lhs, str):
         raise TypeError('unexpexted Type for lhs object: %s' %type(lhs))
-    
+
     new_format_dict = {}
     for key, value in list(format_dict.items()):
         if 'text/plain' in key:
             new_value = lhs+' := '+value
             new_format_dict[key] = new_value
+
         elif 'text/latex' in key:
             if value.startswith("$$"):
                 # this is the expected case
@@ -202,13 +204,13 @@ def custom_display(lhs, rhs):
                 new_format_dict[key] = new_value
             else:
                 # this is unexpected but raising an exceptions seems
-                # not necessary; hanle like plain text (see above)
+                # not necessary; handle like plain text (see above)
                 new_value = lhs+' := '+value
                 new_format_dict[key] = new_value
         else:
             # this happens e.g. for mime-type (i.e. key) 'image/png'
             new_format_dict[key] = value
-            
+
     # legacy IPython 2.x support
     if IPython.__version__.startswith('2.'):
         publish_display_data('display', new_format_dict, md_dict)
@@ -239,7 +241,7 @@ def load_ipython_extension(ip):
     # prevent unwanted overwriting when the extension is reloaded
     if not 'new_run_cell' in str(ip.run_cell):
         ip.old_run_cell = ip.run_cell
-        
+
     ip.run_cell = types.MethodType(new_run_cell, ip)
     ip.user_ns['display'] = display
     ip.user_ns['custom_display'] = custom_display

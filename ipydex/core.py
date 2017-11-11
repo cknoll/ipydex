@@ -90,7 +90,7 @@ If IPython is not installed, dummy objects are created.
 This makes it possible to run code which import the ipHelp module on machines
 where IPython is not available (useful for modules which are still under
 development, but already are deployd on different machines/ platforms)
- 
+
 """
 
 
@@ -103,7 +103,7 @@ class DummyMod(object):
 def format_frameinfo(fi):
     """
     Takes a frameinfo object (from the inspect module)
-    
+
     returns a properly formated string
     """
     s1 = "{0}:{1}".format(fi.filename, fi.lineno)
@@ -112,22 +112,22 @@ def format_frameinfo(fi):
         s3 = fi.code_context[0]
     else:
         s3 = "<no code context available>"
-    
+
     return "\n".join([s1, s2, s3])
-    
+
 
 try:
 
     from IPython import embed
     from IPython.terminal.ipapp import load_default_config
-    from IPython.terminal.embed import InteractiveShellEmbed    
+    from IPython.terminal.embed import InteractiveShellEmbed
     from IPython.core import ultratb
 
     class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
         display_banner = False
-    
+
     def IPS():
-        
+
         # let the user know, where this shell is 'waking up'
         # construct frame list
         # this will be printed in the header
@@ -143,13 +143,13 @@ try:
         frame_info_list.reverse()
         frame_list.reverse()
         frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
-        
+
         custom_header1 = "----- frame list -----\n\n"
         frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
         custom_header2 = "\n----- end of frame list -----\n"
-        
+
         custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
-        
+
         # prevent IPython shell to be launched in IP-Notebook
         test_str = str(frame_info_list[0]) + str(frame_info_list[1])
         #print test_str
@@ -160,15 +160,15 @@ try:
         # copied (and modified) from IPython/terminal/embed.py
         config = load_default_config()
         config.InteractiveShellEmbed = config.TerminalInteractiveShell
-        
-        
+
+
         # these two lines prevent problems in related to the initialization
         # of ultratb.FormattedTB below
         InteractiveShellEmbed.clear_instance()
         InteractiveShellEmbed._instance = None
 
         shell = InteractiveShellEmbed.instance()
-        
+
         shell(header=custom_header, stack_depth=2)
 
         custom_excepthook = getattr(sys, 'custom_excepthook', None)
@@ -264,19 +264,19 @@ try:
         Make tracebacks after exceptions colored, verbose, and/or call pdb
         (python cmd line debugger) at the place where the exception occurs
         """
-        
+
         modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
 
         sys.excepthook = ultratb.FormattedTB(mode=modus,
                                         color_scheme='Linux', call_pdb=pdb)
 
-    # for backward compatibiliy                                                    
+    # for backward compatibiliy
     ip_syshook = color_exepthook
-    
+
     # now, we immediately  apply this new excepthook.
     # consequence: often its sufficient jsut to import this module
     color_exepthook()
-    
+
 
     def ip_extra_syshook(fnc, pdb=0, filename=None):
         """
