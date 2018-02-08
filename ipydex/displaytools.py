@@ -204,7 +204,7 @@ def custom_display(lhs, rhs):
         elif 'text/latex' in key:
             if value.startswith("$$"):
                 # this is the expected case
-                new_value = r"$$\texttt{%s} := %s" % (lhs, value[2:])
+                new_value = r"$$\verb|%s| := %s" % (lhs, value[2:])
                 new_format_dict[key] = new_value
             else:
                 # this is unexpected but raising an exceptions seems
