@@ -94,7 +94,7 @@ development, but already are deployd on different machines/ platforms)
 
 class DummyMod(object):
     """A dummy module used for IPython's interactive module when
-    a namespace must be assigned to the module's __dict__."""
+    a name space must be assigned to the module's __dict__."""
     pass
 
 
@@ -124,7 +124,14 @@ try:
     class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
         display_banner = False
 
-    def IPS():
+    def IPS(copy_namespaces=True):
+        """Starts IPython embedded shell. This is similar to IPython.embed() but with some
+        additional features:
+
+        1. Print a list of the calling frames before entering the prompt
+        2. (optionally) copy local name space to global one to prevent certain IPython bug.
+
+        """
 
         # let the user know, where this shell is 'waking up'
         # construct frame list
@@ -160,14 +167,46 @@ try:
         config.InteractiveShellEmbed = config.TerminalInteractiveShell
 
 
-        # these two lines prevent problems in related to the initialization
+        # these two lines prevent problems related to the initialization
         # of ultratb.FormattedTB below
         InteractiveShellEmbed.clear_instance()
         InteractiveShellEmbed._instance = None
 
         shell = InteractiveShellEmbed.instance()
 
-        shell(header=custom_header, stack_depth=2)
+        # adapt the namespaces to prevent missing names inside the shell
+        # see: https://github.com/ipython/ipython/issues/62
+        # https://github.com/ipython/ipython/issues/10695
+        if copy_namespaces and len(frame_list) >= 2:
+            # callers_frame to IPS()
+            f1 = frame_list[1]
+            lns = f1.f_locals
+            gns = f1.f_globals
+
+            l_keys = set(lns)
+            g_keys = set(gns)
+
+            safe_keys = l_keys - g_keys
+            unsafe_keys = l_keys.intersection(g_keys)
+
+            assert safe_keys.union(unsafe_keys) == l_keys
+
+            gns.update({k:lns[k] for k in safe_keys})
+
+            dummy_module = DummyMod()
+            dummy_module.__dict__ = gns
+
+            if unsafe_keys:
+                custom_header += "following local keys have " \
+                                 "not been copied:\n{}\n".format(unsafe_keys)
+
+        else:
+            # unexpected few frames or no copying desired:
+            lns = None
+            dummy_module = None
+
+
+        shell(header=custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
 
         custom_excepthook = getattr(sys, 'custom_excepthook', None)
         if custom_excepthook is not None:
