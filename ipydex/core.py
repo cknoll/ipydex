@@ -179,7 +179,8 @@ try:
         # https://github.com/ipython/ipython/issues/10695
         if copy_namespaces and len(frame_list) >= 2:
             # callers_frame to IPS()
-            f1 = frame_list[1]
+            # note that frame_list and frame_info_list were reversed above
+            f1 = frame_list[-2]
             lns = f1.f_locals
             gns = f1.f_globals
 
