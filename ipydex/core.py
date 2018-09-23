@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-import sys
-
-import inspect
 import collections
-
-
+import inspect
+import sys
 
 # Licence: GPLv3
 #  (full text: http://www.gnu.org/licenses/gpl-3.0-standalone.html)
@@ -124,12 +121,13 @@ try:
     class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
         display_banner = False
 
-    def IPS(copy_namespaces=True):
+    def IPS(copy_namespaces=True, overwrite_globals=False):
         """Starts IPython embedded shell. This is similar to IPython.embed() but with some
         additional features:
 
         1. Print a list of the calling frames before entering the prompt
         2. (optionally) copy local name space to global one to prevent certain IPython bug.
+        3. while doing so optinally overwrite names in the global namespace
 
         """
 
@@ -164,6 +162,7 @@ try:
 
         # copied (and modified) from IPython/terminal/embed.py
         config = load_default_config()
+
         config.InteractiveShellEmbed = config.TerminalInteractiveShell
 
 
@@ -173,6 +172,15 @@ try:
         InteractiveShellEmbed._instance = None
 
         shell = InteractiveShellEmbed.instance()
+
+        # achieve that custom macros are loade in interactive shell
+        shell.magic('load_ext storemagic')
+        if config.StoreMagics.autorestore == True:
+            shell.magic('store -r')
+            ar_keys = [k.split("/")[-1] for k in shell.db.keys() if k.startswith("autorestore/")]
+        else:
+            ar_keys = []
+
 
         # adapt the namespaces to prevent missing names inside the shell
         # see: https://github.com/ipython/ipython/issues/62
@@ -186,7 +194,9 @@ try:
 
             l_keys = set(lns)
             g_keys = set(gns)
+            u_keys = shell.user_ns.keys()
 
+            # those keys which are in local ns but not in global
             safe_keys = l_keys - g_keys
             unsafe_keys = l_keys.intersection(g_keys)
 
@@ -194,12 +204,25 @@ try:
 
             gns.update({k:lns[k] for k in safe_keys})
 
-            dummy_module = DummyMod()
-            dummy_module.__dict__ = gns
-
-            if unsafe_keys:
+            if unsafe_keys and not overwrite_globals:
                 custom_header += "following local keys have " \
                                  "not been copied:\n{}\n".format(unsafe_keys)
+
+            if unsafe_keys and overwrite_globals:
+                gns.update({k:lns[k] for k in unsafe_keys})
+                custom_header += "following global keys have " \
+                                 "been overwritten:\n{}\n".format(unsafe_keys)
+
+            # now update the gns with stuff from the user_ns (if it will not overwrite anything)
+            # this could be implemented cleaner
+            for k in ar_keys:
+                if k not in gns:
+                    gns[k] = shell.user_ns[k]
+                else:
+                    print("omitting key from user_namespace:", k)
+
+            dummy_module = DummyMod()
+            dummy_module.__dict__ = gns
 
         else:
             # unexpected few frames or no copying desired:
@@ -207,12 +230,14 @@ try:
             dummy_module = None
 
 
+        # now execute the shell
         shell(header=custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
 
         custom_excepthook = getattr(sys, 'custom_excepthook', None)
         if custom_excepthook is not None:
             assert callable(custom_excepthook)
             sys.excepthook = custom_excepthook
+
 
     # TODO: remove code duplication
     def ip_shell_after_exception(frame):
