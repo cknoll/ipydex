@@ -4,6 +4,7 @@
 import collections
 import inspect
 import sys
+import os
 
 # Licence: GPLv3
 #  (full text: http://www.gnu.org/licenses/gpl-3.0-standalone.html)
@@ -110,6 +111,28 @@ def format_frameinfo(fi):
 
     return "\n".join([s1, s2, s3])
 
+
+def get_frame_list():
+    """
+    Create the list of frames
+    """
+
+    # TODO: use this function in IPS below (less code duplication)
+
+    frame_info_list = []
+    frame_list = []
+    frame = inspect.currentframe()
+    while not frame == None:
+        frame_list.append(frame)
+        info = inspect.getframeinfo(frame)
+        frame_info_list.append(info)
+        frame = frame.f_back
+
+    frame_info_list.reverse()
+    frame_list.reverse()
+    frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
+
+    return frame_list, frame_info_list, frame_info_str_list
 
 try:
 
@@ -433,9 +456,70 @@ except ImportError as E:
 
 
 #################################
+# Code below is jupyter notebook specific
+
+
+
+def get_notebook_name():
+    """
+    Return the full path of the jupyter notebook.
+    """
+    # taken from https://github.com/jupyter/notebook/issues/1000#issuecomment-359875246
+
+    from requests.compat import urljoin
+    import ipykernel
+    import requests
+    import json
+    import re
+    from notebook.notebookapp import list_running_servers
+
+    kernel_id = re.search('kernel-(.*).json',
+                          ipykernel.connect.get_connection_file()).group(1)
+    servers = list_running_servers()
+    for ss in servers:
+        response = requests.get(urljoin(ss['url'], 'api/sessions'),
+                                params={'token': ss.get('token', '')})
+        for nn in json.loads(response.text):
+            if nn['kernel']['id'] == kernel_id:
+                relative_path = nn['notebook']['path']
+                return os.path.join(ss['notebook_dir'], relative_path)
+
+
+def in_ipynb():
+    """
+    Test whether this functions is called from within an ipython notebook on jupyter
+    """
+
+    test_str = "\n".join(get_frame_list()[2])
+    # this should be made more reliable
+    if "ipykernel_launcher" in test_str and \
+       "ipykernel/kernelapp.py" in test_str and \
+       "zmq/eventloop" in test_str:
+        return True
+    else:
+        return False
+
+def save_current_nb_as_html():
+    """
+    Save the current notebook as html file in the same directory
+    """
+    assert in_ipynb()
+
+    full_path = get_notebook_name()
+    path, filename = os.path.split(full_path)
+
+    wd_save = os.getcwd()
+    os.chdir(path)
+    cmd = "jupyter nbconvert --to html {}".format(filename)
+    os.sys(cmd)
+    os.chdir(wd_save)
+
+
+
+#################################
 
 # The function below is just for convenience part of this module
-# formally it would belong to its own module
+# formally it would belong to an own module
 
 ###############################
 
