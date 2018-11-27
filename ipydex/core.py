@@ -511,7 +511,7 @@ def save_current_nb_as_html():
     wd_save = os.getcwd()
     os.chdir(path)
     cmd = "jupyter nbconvert --to html {}".format(filename)
-    os.sys(cmd)
+    os.system(cmd)
     os.chdir(wd_save)
 
 
