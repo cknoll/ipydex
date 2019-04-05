@@ -6,6 +6,12 @@ import inspect
 import sys
 import os
 
+
+from IPython.terminal.ipapp import load_default_config
+from IPython.terminal.embed import InteractiveShellEmbed
+from IPython.core import ultratb
+from IPython.core.debugger import Tracer
+
 # Licence: GPLv3
 #  (full text: http://www.gnu.org/licenses/gpl-3.0-standalone.html)
 # Origin: a coobook example extended by Carsten Knoll for personal needs
@@ -14,38 +20,36 @@ import os
 
 
 """
-Module which quickly offers IPythons embedding functions.
+Module which offers an slightly enhanced IPython shell and other tools
+which might be helpful for debugging and exploring.
+ 
 
-In principle this module could be reduced to
+typical use cases:
 
-from IPython import embed as IPS
+from ipydex import ip_syshook, IPS,  activate_ips_on_exception
+activate_ips_on_exception()
 
-but there are some additional features in this module
+# some code ...
 
+IPS()  # call the IPython shell to interactively investigate the situaion 
 
-typical usage:
+--
 
-from ipHelp import ip_syshook, IPS, TracerFactory, dirsearch
+# access to the commandline debugger 
 
-
-
-IPS() # starts the ipython embedded shell
-(with the ability to prevent further invocations with `_ips_exit = True`)
-#!! this currently does not work. (but not very important anyway)
-
+from ipydex import TracerFactory
 ST = TracerFactory()
 ...
 ST() # starts the debugger prompt ("Start Trace"); type 'help' to get started
 in contrast to the IPython Shell the debugger allows to go stepwise through
 the following code.
 
-
-ip_syshook(1) # starts debugger on exceptions and adds some infos
-to tracebacks (like the values of calling args)
+--
 
 dirsearch # has nothing to do with ipython but may help to explore
 the namespace. Example: import os; dirsearch('path', os)
 
+--
 
 known bugs:
 - - - - - -
@@ -122,7 +126,7 @@ def get_frame_list():
     frame_info_list = []
     frame_list = []
     frame = inspect.currentframe()
-    while not frame == None:
+    while frame is not None:
         frame_list.append(frame)
         info = inspect.getframeinfo(frame)
         frame_info_list.append(info)
@@ -134,330 +138,299 @@ def get_frame_list():
 
     return frame_list, frame_info_list, frame_info_str_list
 
-try:
 
-    from IPython import embed
-    from IPython.terminal.ipapp import load_default_config
-    from IPython.terminal.embed import InteractiveShellEmbed
-    from IPython.core import ultratb
+class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
+    display_banner = False
 
-    class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
-        display_banner = False
 
-    def IPS(copy_namespaces=True, overwrite_globals=False):
-        """Starts IPython embedded shell. This is similar to IPython.embed() but with some
-        additional features:
+def IPS(copy_namespaces=True, overwrite_globals=False):
+    """Starts IPython embedded shell. This is similar to IPython.embed() but with some
+    additional features:
 
-        1. Print a list of the calling frames before entering the prompt
-        2. (optionally) copy local name space to global one to prevent certain IPython bug.
-        3. while doing so optinally overwrite names in the global namespace
+    1. Print a list of the calling frames before entering the prompt
+    2. (optionally) copy local name space to global one to prevent certain IPython bug.
+    3. while doing so optinally overwrite names in the global namespace
 
-        """
+    """
 
-        # let the user know, where this shell is 'waking up'
-        # construct frame list
-        # this will be printed in the header
-        frame_info_list = []
-        frame_list = []
-        frame = inspect.currentframe()
-        while not frame == None:
-            frame_list.append(frame)
-            info = inspect.getframeinfo(frame)
-            frame_info_list.append(info)
-            frame = frame.f_back
+    # let the user know, where this shell is 'waking up'
+    # construct frame list
+    # this will be printed in the header
+    frame_info_list = []
+    frame_list = []
+    frame = inspect.currentframe()
+    while frame is not None:
+        frame_list.append(frame)
+        info = inspect.getframeinfo(frame)
+        frame_info_list.append(info)
+        frame = frame.f_back
 
-        frame_info_list.reverse()
-        frame_list.reverse()
-        frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
+    frame_info_list.reverse()
+    frame_list.reverse()
+    frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
 
-        custom_header1 = "----- frame list -----\n\n"
-        frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
-        custom_header2 = "\n----- end of frame list -----\n"
+    custom_header1 = "----- frame list -----\n\n"
+    frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
+    custom_header2 = "\n----- end of frame list -----\n"
 
-        custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
+    custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
 
-        # prevent IPython shell to be launched in IP-Notebook
+    # prevent IPython shell to be launched in IP-Notebook
+    test_str = str(frame_info_list[0]) + str(frame_info_list[1])
+    if 'IPython' in test_str and 'zmq' in test_str:
+        print("\n- Not entering IPython embedded shell  -\n")
+        return
+
+    # copied (and modified) from IPython/terminal/embed.py
+    config = load_default_config()
+
+    config.InteractiveShellEmbed = config.TerminalInteractiveShell
+
+    # these two lines prevent problems related to the initialization
+    # of ultratb.FormattedTB below
+    InteractiveShellEmbed.clear_instance()
+    InteractiveShellEmbed._instance = None
+
+    shell = InteractiveShellEmbed.instance()
+
+    # achieve that custom macros are loade in interactive shell
+    shell.magic('load_ext storemagic')
+    if config.StoreMagics.autorestore:
+        shell.magic('store -r')
+        ar_keys = [k.split("/")[-1] for k in shell.db.keys() if k.startswith("autorestore/")]
+    else:
+        ar_keys = []
+
+    # adapt the namespaces to prevent missing names inside the shell
+    # see: https://github.com/ipython/ipython/issues/62
+    # https://github.com/ipython/ipython/issues/10695
+    if copy_namespaces and len(frame_list) >= 2:
+        # callers_frame to IPS()
+        # note that frame_list and frame_info_list were reversed above
+        f1 = frame_list[-2]
+        lns = f1.f_locals
+        gns = f1.f_globals
+
+        l_keys = set(lns)
+        g_keys = set(gns)
+        u_keys = shell.user_ns.keys()
+
+        # those keys which are in local ns but not in global
+        safe_keys = l_keys - g_keys
+        unsafe_keys = l_keys.intersection(g_keys)
+
+        assert safe_keys.union(unsafe_keys) == l_keys
+
+        gns.update({k:lns[k] for k in safe_keys})
+
+        if unsafe_keys and not overwrite_globals:
+            custom_header += "following local keys have " \
+                             "not been copied:\n{}\n".format(unsafe_keys)
+
+        if unsafe_keys and overwrite_globals:
+            gns.update({k:lns[k] for k in unsafe_keys})
+            custom_header += "following global keys have " \
+                             "been overwritten:\n{}\n".format(unsafe_keys)
+
+        # now update the gns with stuff from the user_ns (if it will not overwrite anything)
+        # this could be implemented cleaner
+        for k in ar_keys:
+            if k not in gns:
+                gns[k] = shell.user_ns[k]
+            else:
+                print("omitting key from user_namespace:", k)
+
+        dummy_module = DummyMod()
+        dummy_module.__dict__ = gns
+
+    else:
+        # unexpected few frames or no copying desired:
+        lns = None
+        dummy_module = None
+
+    # now execute the shell
+    shell(header=custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
+
+    custom_excepthook = getattr(sys, 'custom_excepthook', None)
+    if custom_excepthook is not None:
+        assert callable(custom_excepthook)
+        sys.excepthook = custom_excepthook
+
+
+# TODO: remove code duplication
+def ip_shell_after_exception(frame):
+    """
+    Launches an IPython embedded shell in the namespace where an exception occured
+
+    :param frame:
+    :return:
+    """
+
+    # let the user know, where this shell is 'waking up'
+    # construct frame list
+    # this will be printed in the header
+    frame_info_list = []
+    frame_list = []
+    frame = frame or inspect.currentframe()
+
+    local_ns = frame.f_locals
+    # global_ns = frame.f_globals  # this is deprecated by IPython
+    dummy_module = DummyMod()
+    dummy_module.__dict__ = frame.f_globals
+
+    while not frame == None:
+        frame_list.append(frame)
+        info = inspect.getframeinfo(frame)
+        frame_info_list.append(info)
+        frame = frame.f_back
+
+    frame_info_list.reverse()
+    frame_list.reverse()
+    frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
+
+    custom_header1 = "----- frame list -----\n\n"
+    frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
+    custom_header2 = "\n----- ERROR -----\n"
+
+    custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
+
+    # prevent IPython shell to be launched in IP-Notebook
+    if len(frame_info_list) >= 2:
         test_str = str(frame_info_list[0]) + str(frame_info_list[1])
         #print test_str
         if 'IPython' in test_str and 'zmq' in test_str:
             print("\n- Not entering IPython embedded shell  -\n")
             return
 
-        # copied (and modified) from IPython/terminal/embed.py
-        config = load_default_config()
+    # copied (and modified) from IPython/terminal/embed.py
+    config = load_default_config()
+    config.InteractiveShellEmbed = config.TerminalInteractiveShell
 
-        config.InteractiveShellEmbed = config.TerminalInteractiveShell
+    # these two lines prevent problems in related to the initialization
+    # of ultratb.FormattedTB below
+    InteractiveShellEmbedWithoutBanner.clear_instance()
+    InteractiveShellEmbedWithoutBanner._instance = None
 
+    shell = InteractiveShellEmbedWithoutBanner.instance()
 
-        # these two lines prevent problems related to the initialization
-        # of ultratb.FormattedTB below
-        InteractiveShellEmbed.clear_instance()
-        InteractiveShellEmbed._instance = None
-
-        shell = InteractiveShellEmbed.instance()
-
-        # achieve that custom macros are loade in interactive shell
-        shell.magic('load_ext storemagic')
-        if config.StoreMagics.autorestore == True:
-            shell.magic('store -r')
-            ar_keys = [k.split("/")[-1] for k in shell.db.keys() if k.startswith("autorestore/")]
-        else:
-            ar_keys = []
+    shell(header=custom_header, stack_depth=2, local_ns=local_ns, module=dummy_module)
 
 
-        # adapt the namespaces to prevent missing names inside the shell
-        # see: https://github.com/ipython/ipython/issues/62
-        # https://github.com/ipython/ipython/issues/10695
-        if copy_namespaces and len(frame_list) >= 2:
-            # callers_frame to IPS()
-            # note that frame_list and frame_info_list were reversed above
-            f1 = frame_list[-2]
-            lns = f1.f_locals
-            gns = f1.f_globals
+def ips_excepthook(excType, excValue, traceback):
 
-            l_keys = set(lns)
-            g_keys = set(gns)
-            u_keys = shell.user_ns.keys()
+    # first: print the traceback:
+    tb_print_func  = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
+    tb_print_func(excType, excValue, traceback)
 
-            # those keys which are in local ns but not in global
-            safe_keys = l_keys - g_keys
-            unsafe_keys = l_keys.intersection(g_keys)
+    # go down the stack
+    tb = traceback
+    while tb.tb_next is not None:
+        tb = tb.tb_next
 
-            assert safe_keys.union(unsafe_keys) == l_keys
-
-            gns.update({k:lns[k] for k in safe_keys})
-
-            if unsafe_keys and not overwrite_globals:
-                custom_header += "following local keys have " \
-                                 "not been copied:\n{}\n".format(unsafe_keys)
-
-            if unsafe_keys and overwrite_globals:
-                gns.update({k:lns[k] for k in unsafe_keys})
-                custom_header += "following global keys have " \
-                                 "been overwritten:\n{}\n".format(unsafe_keys)
-
-            # now update the gns with stuff from the user_ns (if it will not overwrite anything)
-            # this could be implemented cleaner
-            for k in ar_keys:
-                if k not in gns:
-                    gns[k] = shell.user_ns[k]
-                else:
-                    print("omitting key from user_namespace:", k)
-
-            dummy_module = DummyMod()
-            dummy_module.__dict__ = gns
-
-        else:
-            # unexpected few frames or no copying desired:
-            lns = None
-            dummy_module = None
+    critical_frame = tb.tb_frame
+    # IPS()
+    ip_shell_after_exception(frame=critical_frame)
 
 
-        # now execute the shell
-        shell(header=custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
+def activate_ips_on_exception():
+    # set the hook
+    sys.excepthook = ips_excepthook
 
-        custom_excepthook = getattr(sys, 'custom_excepthook', None)
-        if custom_excepthook is not None:
-            assert callable(custom_excepthook)
-            sys.excepthook = custom_excepthook
-
-
-    # TODO: remove code duplication
-    def ip_shell_after_exception(frame):
-        """
-        Launches an IPython embedded shell in the namespace where an exception occured
-
-        :param frame:
-        :return:
-        """
-
-        # let the user know, where this shell is 'waking up'
-        # construct frame list
-        # this will be printed in the header
-        frame_info_list = []
-        frame_list = []
-        frame = frame or inspect.currentframe()
-
-        local_ns = frame.f_locals
-        # global_ns = frame.f_globals  # this is deprecated by IPython
-        dummy_module = DummyMod()
-        dummy_module.__dict__ = frame.f_globals
-
-        while not frame == None:
-            frame_list.append(frame)
-            info = inspect.getframeinfo(frame)
-            frame_info_list.append(info)
-            frame = frame.f_back
-
-        frame_info_list.reverse()
-        frame_list.reverse()
-        frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
-
-        custom_header1 = "----- frame list -----\n\n"
-        frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
-        custom_header2 = "\n----- end of frame list -----\n"
-        custom_header2 = "\n----- ERROR -----\n"
-
-        custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
-
-        # prevent IPython shell to be launched in IP-Notebook
-        if len(frame_info_list) >= 2:
-            test_str = str(frame_info_list[0]) + str(frame_info_list[1])
-            #print test_str
-            if 'IPython' in test_str and 'zmq' in test_str:
-                print("\n- Not entering IPython embedded shell  -\n")
-                return
-
-        # copied (and modified) from IPython/terminal/embed.py
-        config = load_default_config()
-        config.InteractiveShellEmbed = config.TerminalInteractiveShell
-
-        # these two lines prevent problems in related to the initialization
-        # of ultratb.FormattedTB below
-        InteractiveShellEmbedWithoutBanner.clear_instance()
-        InteractiveShellEmbedWithoutBanner._instance = None
-
-        shell = InteractiveShellEmbedWithoutBanner.instance()
-
-        shell(header=custom_header, stack_depth=2, local_ns=local_ns, module=dummy_module)
+    # save the hook (because it might be overridden from extern)
+    sys.custom_excepthook = ips_excepthook
 
 
-    def ips_excepthook(excType, excValue, traceback):
+def color_exepthook(pdb=0, mode=2):
+    """
+    Make tracebacks after exceptions colored, verbose, and/or call pdb
+    (python cmd line debugger) at the place where the exception occurs
+    """
 
-        # first: print the traceback:
-        tb_print_func  = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
-        tb_print_func(excType, excValue, traceback)
+    modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
 
-        # go down the stack
-        tb = traceback
-        while tb.tb_next is not None:
-            tb = tb.tb_next
-
-        critical_frame = tb.tb_frame
-        # IPS()
-        ip_shell_after_exception(frame=critical_frame)
-
-    def activate_ips_on_exception():
-        # set the hook
-        sys.excepthook = ips_excepthook
-
-        # save the hook (because it might be overridden from extern)
-        sys.custom_excepthook = ips_excepthook
+    sys.excepthook = ultratb.FormattedTB(mode=modus,
+                                    color_scheme='Linux', call_pdb=pdb)
 
 
-    def color_exepthook(pdb=0, mode=2):
-        """
-        Make tracebacks after exceptions colored, verbose, and/or call pdb
-        (python cmd line debugger) at the place where the exception occurs
-        """
+# for backward compatibiliy
+ip_syshook = color_exepthook
 
-        modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
-
-        sys.excepthook = ultratb.FormattedTB(mode=modus,
-                                        color_scheme='Linux', call_pdb=pdb)
-
-    # for backward compatibiliy
-    ip_syshook = color_exepthook
-
-    # now, we immediately  apply this new excepthook.
-    # consequence: often its sufficient jsut to import this module
-    color_exepthook()
+# now, we immediately  apply this new excepthook.
+# consequence: often its sufficient jsut to import this module
+color_exepthook()
 
 
-    def ip_extra_syshook(fnc, pdb=0, filename=None):
-        """
-        Extended system hook for exceptions.
+def ip_extra_syshook(fnc, pdb=0, filename=None):
+    """
+    Extended system hook for exceptions.
 
-        supports logging of tracebacks to a file
+    supports logging of tracebacks to a file
 
-        lets fnc() be executed imediately before the IPython
-        Verbose Traceback is started
+    lets fnc() be executed imediately before the IPython
+    Verbose Traceback is started
 
-        this can be used to pop up a QTMessageBox: "An exception occured"
-        """
+    this can be used to pop up a QTMessageBox: "An exception occured"
+    """
 
-        assert isinstance(fnc, collections.Callable)
-        from IPython.core import ultratb
-        import time
+    assert isinstance(fnc, collections.Callable)
+    from IPython.core import ultratb
+    import time
 
+    if not filename == None:
+        assert isinstance(filename, str)
+        pdb = 0
+
+    ip_excepthook = ultratb.FormattedTB(mode='Verbose',
+                                    color_scheme='Linux', call_pdb=pdb)
+
+    fileTraceback = ultratb.FormattedTB(mode='Verbose',
+                                    color_scheme='NoColor', call_pdb=0)
+
+    # define the new excepthook
+    def theexecpthook (type, value, traceback):
+        fnc()
+        ip_excepthook(type, value, traceback)
+        # write this to a File without Colors
         if not filename == None:
-            assert isinstance(filename, str)
-            pdb = 0
+            outFile = open(filename, "a")
+            outFile.write("--" + time.ctime()+" --\n")
+            outFile.write(fileTraceback.text(type, value, traceback))
+            outFile.write("\n-- --\n")
+            outFile.close()
 
-        ip_excepthook = ultratb.FormattedTB(mode='Verbose',
-                                        color_scheme='Linux', call_pdb=pdb)
-
-        fileTraceback = ultratb.FormattedTB(mode='Verbose',
-                                        color_scheme='NoColor', call_pdb=0)
-
-
-        # define the new excepthook
-        def theexecpthook (type, value, traceback):
-            fnc()
-            ip_excepthook(type, value, traceback)
-            # write this to a File without Colors
-            if not filename == None:
-                outFile = open(filename, "a")
-                outFile.write("--" + time.ctime()+" --\n")
-                outFile.write(fileTraceback.text(type, value, traceback))
-                outFile.write("\n-- --\n")
-                outFile.close()
-
-        # assign it
-        sys.excepthook = theexecpthook
+    # assign it
+    sys.excepthook = theexecpthook
 
 
-#    from IPython.Debugger import Tracer
-#    ST=Tracer() # "ST" = "start trace"
-
-    from IPython.core.debugger import Tracer
-
-    def TracerFactory():
-        """
-        Returns a callable `Tracer` object.
-        When this object is called it starts the ipython commandline debugger
-        in that place.
-        """
-        return Tracer(colors='Linux')
-
-    # this has legacy reasons:
-    def ST():
-        a = " "*3
-        print("\n"*5, a, "ST is dreprecated due to namespace problems.")
-        print(a, "use: ST = TracerFactory() or")
-        print(a, "from IPython.core.debugger import Tracer")
-        print(a, "ST=Tracer(colors='Linux')")
-        print(a, "\n"*2)
-        print(a , "<ENTER>")
-        print(a, "\n"*5)
-        try:
-            input()
-        except:
-            pass
+# noinspection PyPep8Naming
+def TracerFactory():
+    """
+    Returns a callable `Tracer` object.
+    When this object is called it starts the ipython commandline debugger
+    in that place.
+    """
+    return Tracer(colors='Linux')
 
 
-except ImportError as E:
-    # IPython seems not to be installed
-    # create dummy functions
-
-    print("ipython Import Error: ", E)
-
-    def IPS():
-        print("(EE): IPython is not available")
+# this has legacy reasons:
+# noinspection PyPep8Naming
+def ST():
+    a = " "*3
+    print("\n"*5, a, "ST is dreprecated due to namespace problems.")
+    print(a, "use: ST = TracerFactory() or")
+    print(a, "from IPython.core.debugger import Tracer")
+    print(a, "ST=Tracer(colors='Linux')")
+    print(a, "\n"*2)
+    print(a , "<ENTER>")
+    print(a, "\n"*5)
+    # noinspection PyBroadException
+    try:
+        input()
+    except:
         pass
-    def ip_syshook(*args, **kwargs):
-        pass
-
-    def ip_extra_syshook(*args, **kwargs):
-        pass
-
-    def ST():
-        pass
-
 
 #################################
 # Code below is jupyter notebook specific
-
 
 
 def get_notebook_name():
@@ -562,7 +535,6 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
             s = s[:n-2]+'..'
         return s
 
-
     def match(word, key, value):
         if only_keys:
             return word in key.lower()
@@ -594,10 +566,83 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
                                         for d_name, d_obj in deep_res]
             res.extend(deep_res)
 
-
     if only_keys and len(res) >0:
         res = list(zip(*res))[0]
         # now res only contains the keys
     return res
+
+
+class Container(object):
+    """General purpose container class to conveniently store data attributes
+
+    The main debugging usecase for this container is to collect all data from
+    the local namespace of a function an make it available outside.
+    """
+
+    def __init__(self, fetch_locals=False, **kwargs):
+
+        if fetch_locals:
+            self.fetch_locals(upcount=2)
+
+        assert len( set(dir(self)).intersection(list(kwargs.keys())) ) == 0
+        self.__dict__.update(kwargs)
+
+    def _get_attrs(self, names):
+        """
+        Convenience function to extract multiple attributes at once
+
+        :param names:   string of names separated by comma or space
+        :return:
+        """
+        assert isinstance(names, str)
+        names = names.replace(",", " ").split(" ")
+        res = []
+        for n in names:
+            if n == "":
+                continue
+            if n not in self.__dict__:
+                raise KeyError("Unknown name for Container attribute: '{}'".format(n))
+            res.append(getattr(self, n))
+        return res
+
+    def fetch_locals(self, upcount=1):
+        """
+        Magic function which fetches all variables from the callers namespace
+        :param upcount     int, how many stack levels we go up
+        :return:
+        """
+
+        frame = inspect.currentframe()
+        i = upcount
+        while True:
+            if frame.f_back == None:
+                break
+            frame = frame.f_back
+            i -= 1
+            if i == 0:
+                break
+
+        for k, v in frame.f_locals.items():
+            self.__dict__[k] = v
+
+    def publish_attrs(self, upcount=1):
+        """
+        Magic function which inject all attrs into the callers namespace
+        :param upcount     int, how many stack levels we go up
+        :return:
+        """
+
+        frame = inspect.currentframe()
+        i = upcount
+        while True:
+            if frame.f_back == None:
+                break
+            frame = frame.f_back
+            i -= 1
+            if i == 0:
+                break
+
+        for k, v in self.__dict__.items():
+            frame.f_globals[k] = v
 
 
