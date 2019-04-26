@@ -5,6 +5,8 @@ import collections
 import inspect
 import sys
 import os
+import tokenize as tk
+import io
 
 
 from IPython.terminal.ipapp import load_default_config
@@ -579,12 +581,32 @@ class Container(object):
     the local namespace of a function an make it available outside.
     """
 
-    def __init__(self, fetch_locals=False, **kwargs):
+    def __init__(self, cargs=None, **kwargs):
+
+        fetch_locals = kwargs.pop("fetch_locals", False)
+        allow_overwrite = kwargs.pop("_allow_overwrite", False)
+
+        if cargs is not None:
+            assert not fetch_locals
+            # we were called with something like: c = Container(cargs=(x, y, z))
+
+            caller_frame = inspect.currentframe().f_back
+
+            tmp_dict = get_carg_vars_from_frame(caller_frame, type(cargs))
+
+            for k in tmp_dict.keys():
+                if k in kwargs:
+                    msg = "Name conflict between cargs and kwargs w.r.t. name: '{}'".format(k)
+                    raise NameError(msg)
+            kwargs.update(tmp_dict)
 
         if fetch_locals:
             self.fetch_locals(upcount=2)
 
-        assert len( set(dir(self)).intersection(list(kwargs.keys())) ) == 0
+        isec = set(dir(self)).intersection(list(kwargs.keys()))
+        if len(isec) > 0 and not allow_overwrite:
+            msg = "Name conflict with the following names: {}".format(isec)
+            raise NameError(msg)
         self.__dict__.update(kwargs)
 
     def _get_attrs(self, names):
@@ -644,5 +666,129 @@ class Container(object):
 
         for k, v in self.__dict__.items():
             frame.f_globals[k] = v
+
+    def value_list(self):
+        return list(self.__dict__.values())
+
+    def items(self):
+        return self.__dict__.items()
+
+
+def get_whole_assignment_expression(line, varname, seq_type):
+    """
+    Example:
+
+    line = "x = Container(cargs=(a, b, c))"
+    varname = cargs
+    delimiter pair = "()"
+
+    return "a, b, c"
+
+    :return:
+    """
+
+    tokens = list(tk.generate_tokens(io.StringIO(line).readline))
+
+    if issubclass(seq_type, tuple):
+        L, R = "()"
+    elif issubclass(seq_type, list):
+        L, R = "[]"
+    else:
+        raise TypeError("Invalid sequence type given: {}".format(seq_type))
+
+    errmsg = "Unexpected format to process assignment `{}=...` in line '{}'".format(varname, line)
+
+    # Delimiter_open_level
+    DOL = 0
+
+    # 0 -> not searching, 1 -> searching for first occurence of `L`, 2 -> searching for last occurence of `R`
+    search_mode = 0
+
+    i_start, i_end = None, None
+
+    for i, t in enumerate(tokens):
+        if t.type == tk.NAME and t.string == varname:
+            search_mode = 1
+            i_start = i
+            assert tokens[i + 1].string == "="
+            assert tokens[i + 2].string == L
+            continue
+
+        if search_mode < 1 or not t.type == tk.OP:
+            continue
+
+        if t.string == L:
+            DOL += 1
+            search_mode = 2
+
+        if t.string == R:
+            DOL -= 1
+
+        if search_mode == 2 and DOL == 0:
+            i_end = i
+            break
+    else:  # no break
+        raise ValueError(errmsg)
+
+    substr = line[tokens[i_start].start[1]: tokens[i_end].end[1]]
+
+    try:
+        assert substr.count(L) == 1
+        assert substr.count(R) == 1
+        assert substr.count('"') == 0
+        assert substr.count("'") == 0
+    except AssertionError:
+        raise ValueError(errmsg)
+
+    return substr
+
+
+def get_carg_vars(expr):
+    expr = expr.replace(" ", "")
+    assert expr.startswith("cargs=(") or expr.startswith("cargs=[")
+
+    vars = expr[7:-1].split(",")
+
+    return vars
+
+
+def get_carg_vars_from_frame(frame, seq_type):
+
+    info = inspect.getframeinfo(frame)
+    context = info.code_context
+
+    code_line = " ".join(context)
+
+    expr = get_whole_assignment_expression(code_line, "cargs", seq_type)
+    varnames = get_carg_vars(expr)
+
+    not_found_list = []
+    results = {}
+    for vn in varnames:
+        if vn in frame.f_locals:
+            results[vn] = frame.f_locals[vn]
+        elif vn in frame.f_globals:
+            results[vn] = frame.f_globals[vn]
+        else:
+            not_found_list.append(vn)
+
+    if len(not_found_list) > 0:
+
+        msg = "The following variables could not be found in local or global namespace: {}".format(not_found_list)
+        raise NameError(msg)
+
+    return results
+
+
+
+
+
+
+
+
+
+
+
+
 
 
