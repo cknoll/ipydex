@@ -40,54 +40,137 @@ duplication of manually adding `display(my_random_variable)`.
 
 # todo maybe use sp.Eq(sp.Symbol('Z1'), theta, evaluate=False) to get better formatting
 
-
-#import new
 import types
 
+import tokenize as tk
+import io
 
 import IPython
 from IPython.display import display
+from .core import Container, IPS
 
 
-class Container(object):
-    pass
+class FC(Container):
+    """
+    FlagContainer
+    """
 
-# special comments
-sc = '##'
-sc_lhs = '##:'
-sc_transpose = '##T'
-sc_lhs_transpose = '##:T'
+    def __init__(self, **kwargs):
+        self.empty_comment = False
+        self.sc = True  # just indicate that we have a special comment (default true servers as abbreviation)
+        self.lhs = False
+        self.transpose = False
+        self.shape = False
+        self.comment_only = None  # this refers to the whole line
+        self.multi_match = []
 
-sc_list = [sc, sc_lhs, sc_transpose, sc_lhs_transpose]
+        kwargs["_allow_overwrite"] = True
 
-# ensure that all special comments have the same start string
-for elt in sc_list:
-    assert elt.startswith(sc)
+        # TODO: when python2 support is dropped: change this to super().__init__(...)
+        super(FC, self).__init__(**kwargs)
 
 
-def eval_line_end(line):
-    res = Container()
-    res.sc = False
-    res.lhs = False
-    res.transpose = False
-    res.assignment = False
+# generate Special Comment Container
 
-    if line.endswith(sc):
-        res.sc = True
+def def_special_comments():
+    # _base = "##"
+    plain = Container(c="##;", flags=FC())
+    lhs = Container(c="##:", flags=FC(lhs=True))
+    transpose = Container(c="##T", flags=FC(transpose=True))
+    lhs_transpose = Container(c="##:T", flags=FC(lhs=True, transpose=True))
+    lhs_shape = Container(c="##:S", flags=FC(lhs=True, shape=True))
 
-    elif line.endswith(sc_lhs):
-        res.sc = True
-        res.lhs = True
+    SCC = Container(cargs=(plain, transpose, lhs_transpose, lhs_shape, lhs))
+    return SCC
 
-    # Transposition assumes that sympy or numpy is imported
-    elif line.endswith(sc_transpose):
-        res.sc = True
-        res.transpose = True
 
-    elif line.endswith(sc_lhs_transpose):
-        res.sc = True
-        res.lhs = True
-        res.transpose = True
+SCC = def_special_comments()
+
+sc_list = SCC.value_list()
+
+
+def classify_line_by_comment(line):
+
+    tokens = tk.generate_tokens(io.StringIO(line).readline)
+
+    for i, t in enumerate(tokens):
+        if t.type == tk.COMMENT:
+            if i == 0:
+                res = FC(comment_only=True, sc=False)
+            else:
+                res = classify_comment(t.string)
+
+            break
+    else:  # no break
+        res = FC(sc=False)
+
+    return res
+
+
+def get_line_segments(line):
+    """
+    Split up a line into lhs, rhs, comment, flags
+
+    lhs ist defined as the leftmost assignment
+
+    (line does not need to be an assignment)
+    
+    :param line: 
+    :return: lhs, rhs, comment 
+    """
+    line = line.strip()
+
+    tokens = tk.generate_tokens(io.StringIO(line).readline)
+
+    equality_signs = [-1]
+    comment_tuple = None, ""
+    for i, t in enumerate(tokens):
+        if t.type == tk.COMMENT:
+            # store string_index and comment string
+            comment_tuple = t.start[1], t.string
+        if t.type == tk.OP and t.string == "=":
+            equality_signs.append(t.start[1])
+
+    if len(equality_signs) > 1:
+        # we have at least one assignment
+        lhs = line[equality_signs[-2]+1:equality_signs[-1]].strip()
+        equality_signs.pop(0)
+    else:
+        lhs = None
+
+    rhs_start_idx = equality_signs[-1] + 1
+
+    # from the last `=` until the beginning of the comment
+    rhs = line[rhs_start_idx:comment_tuple[0]].strip()
+    if rhs == "":
+        rhs = None
+    comment = comment_tuple[1].strip()
+
+    return lhs, rhs, comment
+
+
+def classify_comment(cmt):
+
+    if cmt == "":
+        return FC(empty_comment=True)
+
+    assert cmt.startswith("#")
+
+    res = None
+    matchflag = False
+    for sc in sc_list:
+        if sc.c in cmt:
+            if matchflag:
+                # we have a multi match situation
+                # ignore this for now
+                res.multi_match.append(sc)
+                continue
+            matchflag = True
+
+            res = sc.flags
+
+    if res is None:
+        res = FC(sc=False)
 
     return res
 
@@ -120,7 +203,13 @@ def insert_disp_lines(raw_cell):
     # iterate from behind -> insert does not change the lower indices
     for i in range(N-1, -1, -1):
         line = lines[i]
-        line_flags = eval_line_end(line)
+        # line_flags = eval_line_end(line)
+        line_flags = classify_line_by_comment(line)
+
+        lhs, rhs, cmt = get_line_segments(line)
+
+        if line_flags.comment_only:
+            continue
 
         if line_flags.sc:
             if line[0] in [' ', '#']:
@@ -128,14 +217,7 @@ def insert_disp_lines(raw_cell):
                 # -> ignore
                 continue
 
-            if not line.index('#') == line.index(sc):
-                # the special comment might not be the first comment
-                # -> ignore this line?
-                # continue
-
-                # new option: not an important special case
-                pass
-
+            # TODO: delegate this to tokenize
             if ' = ' in line:
                 idx = line.index(' = ')
                 var_str = line[:idx].strip()
@@ -145,7 +227,8 @@ def insert_disp_lines(raw_cell):
             else:
                 # this line is not an assignment
                 # -> it is replaced by `display(line)`
-                idx = line.index(sc)
+                # in practise this case is not so important
+                idx = line.index("##")
                 disp_str = line[:idx]
                 line_flags.assignment = False
                 new_line = process_line(line, line_flags, disp_str)
