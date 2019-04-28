@@ -260,12 +260,11 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
 
 
 # TODO: remove code duplication
-def ip_shell_after_exception(frame, *args):
+def ip_shell_after_exception(frame):
     """
     Launches an IPython embedded shell in the namespace where an exception occurred.
 
     :param frame:
-    :param args:    optional args are ignored (cheap compatibility with nose plugin)
     :return:
     """
 
@@ -325,11 +324,7 @@ def ip_shell_after_exception(frame, *args):
     return diff_index
 
 
-def add_frame_magic_to_ns(frame_list, current_frame):
-    assert current_frame in frame_list
-
-
-def ips_excepthook(excType, excValue, traceback):
+def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     """
     This function is launched after an exception. It launches IPS in suitable frame.
     Also note that if `__mu` is an integer in the local_ns of the closed IPS-Session then another Session
@@ -338,8 +333,11 @@ def ips_excepthook(excType, excValue, traceback):
     :param excType:     Exception type
     :param excValue:    Exception value
     :param traceback:   Traceback
+    :param frame_upcount:   int; initial value for diff index; useful if this hook is called from outside
     :return:
     """
+
+    assert isinstance(frame_upcount, int)
 
     # first: print the traceback:
     tb_printer = TBPrinter(excType, excValue, traceback)
@@ -357,7 +355,7 @@ def ips_excepthook(excType, excValue, traceback):
     tb_frame_list.reverse()
     # now the first frame in the list is the critical frame where the exception occured
     index = 0
-    diff_index = 0
+    diff_index = frame_upcount
 
     while diff_index is not None:
         index += diff_index
