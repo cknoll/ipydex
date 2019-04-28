@@ -260,11 +260,12 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
 
 
 # TODO: remove code duplication
-def ip_shell_after_exception(frame):
+def ip_shell_after_exception(frame, *args):
     """
     Launches an IPython embedded shell in the namespace where an exception occurred.
 
     :param frame:
+    :param args:    optional args are ignored (cheap compatibility with nose plugin)
     :return:
     """
 
@@ -280,7 +281,7 @@ def ip_shell_after_exception(frame):
     dummy_module = DummyMod()
     dummy_module.__dict__ = frame.f_globals
 
-    while not frame == None:
+    while frame is not None:
         frame_list.append(frame)
         info = inspect.getframeinfo(frame)
         frame_info_list.append(info)
@@ -602,7 +603,7 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
     res = [(k, maxlen(str(v), 20)) for k,v in items if match(word, k, v)]
     # res is a list of (key,value)-pairs
 
-    if deep >0:
+    if deep > 0:
 
         def interesting(obj):
             module = type(sys)
@@ -689,7 +690,7 @@ class Container(object):
         frame = inspect.currentframe()
         i = upcount
         while True:
-            if frame.f_back == None:
+            if frame.f_back is None:
                 break
             frame = frame.f_back
             i -= 1
@@ -709,7 +710,7 @@ class Container(object):
         frame = inspect.currentframe()
         i = upcount
         while True:
-            if frame.f_back == None:
+            if frame.f_back is None:
                 break
             frame = frame.f_back
             i -= 1
