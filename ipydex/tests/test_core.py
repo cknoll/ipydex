@@ -88,5 +88,31 @@ class InteractiveConvenienceTest(unittest.TestCase):
         self.assertEqual(cvars,  ["a", "b0", "z_test"])
 
 
+def f1(*args1, **kwargs1):
+    """
+    This function serves to test manually how ips_after_exception behaves
+    :param args1:
+    :param kwargs1:
+    :return:
+    """
+    ipd.activate_ips_on_exception()
+    x = kwargs1.get("x", 0)
+    print("x=", x)
+    if x > 3:
+        1/0
+    else:
+        f2(x)
+
+
+def f2(x):
+    import time
+    t = time.time()
+    time.sleep(0.05)
+    f1(x=x+1)
+
+
 if __name__ == "__main__":
     unittest.main()
+
+    # interactively test activate ips_on exception
+    # f1()

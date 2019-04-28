@@ -262,7 +262,7 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
 # TODO: remove code duplication
 def ip_shell_after_exception(frame):
     """
-    Launches an IPython embedded shell in the namespace where an exception occured
+    Launches an IPython embedded shell in the namespace where an exception occurred.
 
     :param frame:
     :return:
@@ -273,7 +273,7 @@ def ip_shell_after_exception(frame):
     # this will be printed in the header
     frame_info_list = []
     frame_list = []
-    frame = frame or inspect.currentframe()
+    original_frame = frame = frame or inspect.currentframe()
 
     local_ns = frame.f_locals
     # global_ns = frame.f_globals  # this is deprecated by IPython
@@ -287,7 +287,6 @@ def ip_shell_after_exception(frame):
         frame = frame.f_back
 
     frame_info_list.reverse()
-    frame_list.reverse()
     frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
 
     custom_header1 = "----- frame list -----\n\n"
@@ -299,7 +298,6 @@ def ip_shell_after_exception(frame):
     # prevent IPython shell to be launched in IP-Notebook
     if len(frame_info_list) >= 2:
         test_str = str(frame_info_list[0]) + str(frame_info_list[1])
-        #print test_str
         if 'IPython' in test_str and 'zmq' in test_str:
             print("\n- Not entering IPython embedded shell  -\n")
             return
@@ -317,21 +315,75 @@ def ip_shell_after_exception(frame):
 
     shell(header=custom_header, stack_depth=2, local_ns=local_ns, module=dummy_module)
 
+    # if `diff_index` is not None it will be interpreted as index increment for the frame_list in the except hook
+    # "__mu" means "move up"
+    diff_index = local_ns.get("__mu")
+    if not isinstance(diff_index, int):
+        diff_index = None
+
+    return diff_index
+
+
+def add_frame_magic_to_ns(frame_list, current_frame):
+    assert current_frame in frame_list
+
 
 def ips_excepthook(excType, excValue, traceback):
+    """
+    This function is launched after an exception. It launches IPS in suitable frame.
+    Also note that if `__mu` is an integer in the local_ns of the closed IPS-Session then another Session
+    is launched in the corresponding frame: "__mu" means = "move up" and referes to frame levels.
+
+    :param excType:     Exception type
+    :param excValue:    Exception value
+    :param traceback:   Traceback
+    :return:
+    """
 
     # first: print the traceback:
-    tb_print_func  = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
-    tb_print_func(excType, excValue, traceback)
+    tb_printer = TBPrinter(excType, excValue, traceback)
 
     # go down the stack
     tb = traceback
+    tb_frame_list = []
     while tb.tb_next is not None:
+        tb_frame_list.append(tb.tb_frame)
         tb = tb.tb_next
 
     critical_frame = tb.tb_frame
-    # IPS()
-    ip_shell_after_exception(frame=critical_frame)
+    tb_frame_list.append(critical_frame)
+
+    tb_frame_list.reverse()
+    # now the first frame in the list is the critical frame where the exception occured
+    index = 0
+    diff_index = 0
+
+    while diff_index is not None:
+        index += diff_index
+        tb_printer.print(end_offset=index)
+        current_frame = tb_frame_list[index]
+        diff_index = ip_shell_after_exception(frame=current_frame)
+
+
+class TBPrinter(object):
+
+    def __init__(self, excType, excValue, traceback):
+        self.excType = excType
+        self.excValue = excValue
+        self.traceback = traceback
+
+        self.TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
+
+    def print(self, end_offset=0):
+        """
+
+        :param end_offset:  0 means print all, 1 means print parts[:-1] etc
+        :return:
+        """
+        # note that the kwarg `tb_offset` of the FormattedTB constructor is refers to the start of the list
+        tb_parts = self.TB.structured_traceback(self.excType, self.excValue, self.traceback)
+        text = "\n".join(tb_parts[:len(tb_parts)-1-end_offset]+[tb_parts[-1]])
+        print(text)
 
 
 def activate_ips_on_exception():
