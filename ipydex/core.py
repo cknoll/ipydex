@@ -359,7 +359,7 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
 
     while diff_index is not None:
         index += diff_index
-        tb_printer.print(end_offset=index)
+        tb_printer.printout(end_offset=index)
         current_frame = tb_frame_list[index]
         diff_index = ip_shell_after_exception(frame=current_frame)
 
@@ -373,7 +373,7 @@ class TBPrinter(object):
 
         self.TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
 
-    def print(self, end_offset=0):
+    def printout(self, end_offset=0):
         """
 
         :param end_offset:  0 means print all, 1 means print parts[:-1] etc
@@ -645,6 +645,8 @@ class Container(object):
 
             tmp_dict = get_carg_vars_from_frame(caller_frame, type(cargs))
 
+
+
             for k in tmp_dict.keys():
                 if k in kwargs:
                     msg = "Name conflict between cargs and kwargs w.r.t. name: '{}'".format(k)
@@ -738,7 +740,14 @@ def get_whole_assignment_expression(line, varname, seq_type):
     :return:
     """
 
-    tokens = list(tk.generate_tokens(io.StringIO(line).readline))
+    if sys.version_info[0] >= 3:
+        # in python3 line is already unicode
+        uline = line
+    else:
+        # uses sys.getdefaultencoding(
+        uline = line.decode()
+
+    tokens = list(tk.generate_tokens(io.StringIO(uline).readline))
 
     if issubclass(seq_type, tuple):
         L, R = "()"
@@ -756,6 +765,10 @@ def get_whole_assignment_expression(line, varname, seq_type):
     search_mode = 0
 
     i_start, i_end = None, None
+
+    # for python2-compatibility explicitly convert to named tuple
+    TokenInfo = collections.namedtuple("TokenInfo", ["type", "string", "start", "end", "line"])
+    tokens = [TokenInfo(*t) for t in tokens]
 
     for i, t in enumerate(tokens):
         if t.type == tk.NAME and t.string == varname:

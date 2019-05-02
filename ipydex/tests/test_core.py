@@ -11,6 +11,15 @@ class InteractiveConvenienceTest(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_container_aux_functions(self):
+        s = "x = Container(cargs=(a, b0, z_test))"
+        r = ipd.get_whole_assignment_expression(s, "cargs", tuple)
+
+        self.assertEqual(r, "cargs=(a, b0, z_test)")
+
+        cvars = ipd.get_carg_vars(r)
+        self.assertEqual(cvars,  ["a", "b0", "z_test"])
+
     def test_container1(self):
 
         C1 = ipd.Container(a=1.25, xaz=[42])
@@ -43,11 +52,11 @@ class InteractiveConvenienceTest(unittest.TestCase):
         self.assertEqual(Y, "test")
 
     def test_container2(self):
-        C1 = ipd.Container(a=1.25, xaz=[42], s="test")
+        C1 = ipd.Container(a=1.25, xaz=(42,), s="test")
 
         l = C1.value_list()
 
-        self.assertEqual(l, [1.25, [42], "test"])
+        self.assertEqual(set(l), set([1.25, (42,), "test"]))
 
         x = 123.4
         y2 = (5, 6, 7)
@@ -78,14 +87,8 @@ class InteractiveConvenienceTest(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             ipd.Container(cargs=x)
 
-    def test_container_aux_functions(self):
-        s = "x = Container(cargs=(a, b0, z_test))"
-        r = ipd.get_whole_assignment_expression(s, "cargs", tuple)
 
-        self.assertEqual(r, "cargs=(a, b0, z_test)")
 
-        cvars = ipd.get_carg_vars(r)
-        self.assertEqual(cvars,  ["a", "b0", "z_test"])
 
 
 def f1(*args1, **kwargs1):
