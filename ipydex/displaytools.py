@@ -41,13 +41,13 @@ duplication of manually adding `display(my_random_variable)`.
 # todo maybe use sp.Eq(sp.Symbol('Z1'), theta, evaluate=False) to get better formatting
 
 import types
+import collections
 
 import tokenize as tk
-import io
 
 import IPython
 from IPython.display import display
-from .core import Container, IPS
+from .core import Container, IPS, line_to_token_list
 
 
 class FC(Container):
@@ -58,7 +58,8 @@ class FC(Container):
     def __init__(self, **kwargs):
         self.empty_comment = False
         self.sc = True  # just indicate that we have a special comment (default true servers as abbreviation)
-        self.lhs = False
+        self.lhs = False  # relates to the comment
+        self.assignment = None  # relates to the actual line (will be set later)
         self.transpose = False
         self.shape = False
         self.comment_only = None  # this refers to the whole line
@@ -91,7 +92,9 @@ sc_list = SCC.value_list()
 
 def classify_line_by_comment(line):
 
-    tokens = tk.generate_tokens(io.StringIO(line).readline)
+    raise NotImplementedError("obsolete")
+
+    tokens = line_to_token_list(line)
 
     for i, t in enumerate(tokens):
         if t.type == tk.COMMENT:
@@ -109,7 +112,7 @@ def classify_line_by_comment(line):
 
 def get_line_segments(line):
     """
-    Split up a line into lhs, rhs, comment, flags
+    Split up a line into (indent, lhs, rhs, comment)
 
     lhs ist defined as the leftmost assignment
 
@@ -118,13 +121,16 @@ def get_line_segments(line):
     :param line: 
     :return: lhs, rhs, comment 
     """
-    line = line.strip()
 
-    tokens = tk.generate_tokens(io.StringIO(line).readline)
+    tokens = line_to_token_list(line)
 
     equality_signs = [-1]
     comment_tuple = None, ""
+    indent = ""
+
     for i, t in enumerate(tokens):
+        if t.type == tk.INDENT:
+            indent = t.string
         if t.type == tk.COMMENT:
             # store string_index and comment string
             comment_tuple = t.start[1], t.string
@@ -146,13 +152,13 @@ def get_line_segments(line):
         rhs = None
     comment = comment_tuple[1].strip()
 
-    return lhs, rhs, comment
+    return indent, lhs, rhs, comment
 
 
 def classify_comment(cmt):
 
     if cmt == "":
-        return FC(empty_comment=True)
+        return FC(empty_comment=True, sc=False)
 
     assert cmt.startswith("#")
 
@@ -175,23 +181,55 @@ def classify_comment(cmt):
     return res
 
 
-def process_line(line, line_flags, disp_str):
+def is_single_name(expr):
+    """
+    Return whether an expression consists of a single name
 
-    if line_flags.assignment:
-        delim = "---"
-        brace_str = "%s"
+    :param expr:
+    :return:
+    """
+
+    tokens = line_to_token_list(expr)
+
+    type_counter = collections.defaultdict(int)
+
+    for t in tokens:
+        type_counter[t.type] += 1
+
+    # this is absent in Python2
+    type_counter.pop(tk.NEWLINE, 0)
+
+    res = type_counter[tk.NAME] == 1 and type_counter[tk.ENDMARKER] == 1 and len(type_counter) == 2
+
+    return res
+
+
+def process_line(line, line_flags, expr_to_disp, indent):
+    """
+
+    :param line:
+    :param line_flags:
+    :param expr_to_disp:     this is the expression which will be displayed ("x" or "x1, x2" or "a + b")
+    :param indent:
+    :return:
+    """
+
+    delim = "---"
+    if line_flags.assignment and is_single_name(expr_to_disp):
+        brace_str = "{}"
     else:
-        delim = "___"
-        brace_str = "(%s)"
+        brace_str = "({})"
+
+    expr_to_disp = brace_str.format(expr_to_disp)
 
      #!! try ... eval(...) except SyntaxError ?
     if line_flags.transpose:
-        disp_str = brace_str % disp_str
-        disp_str += '.T'
+        expr_to_disp = "{}.T".format(expr_to_disp)
+
     if line_flags.lhs:
-        new_line = 'custom_display("%s", %s); print("%s")' % (disp_str, disp_str, delim)
+        new_line = '{}custom_display("{}", {}); print("{}")'.format(indent, expr_to_disp, expr_to_disp, delim)
     else:
-        new_line = 'display(%s); print("%s")' % (disp_str, delim)
+        new_line = '{}display({}); print("{}")'.format(indent, expr_to_disp, delim)
 
     return new_line
 
@@ -203,36 +241,35 @@ def insert_disp_lines(raw_cell):
     # iterate from behind -> insert does not change the lower indices
     for i in range(N-1, -1, -1):
         line = lines[i]
-        # line_flags = eval_line_end(line)
-        line_flags = classify_line_by_comment(line)
 
-        lhs, rhs, cmt = get_line_segments(line)
+        indent, lhs, rhs, cmt = sgm = get_line_segments(line)
+        cmt_flags = classify_comment(cmt)
 
-        if line_flags.comment_only:
+        if rhs is None or not cmt_flags.sc:
+            # no actual statement on that line or
+            # no special comment
             continue
 
-        if line_flags.sc:
-            if line[0] in [' ', '#']:
-                # this line is part of a comment or indented block
-                # -> ignore
-                continue
+        # we have a special comment
 
-            # TODO: delegate this to tokenize
-            if ' = ' in line:
-                idx = line.index(' = ')
-                var_str = line[:idx].strip()
-                line_flags.assignment = True
-                new_line = process_line(line, line_flags, var_str)
-                lines.insert(i+1, new_line)
-            else:
-                # this line is not an assignment
-                # -> it is replaced by `display(line)`
-                # in practise this case is not so important
-                idx = line.index("##")
-                disp_str = line[:idx]
-                line_flags.assignment = False
-                new_line = process_line(line, line_flags, disp_str)
-                lines[i] = new_line
+        if lhs is not None:
+
+            # situation
+            # lhs = rhs ##: sc
+
+            cmt_flags.assignment = True
+            new_line = process_line(line, cmt_flags, lhs, indent)
+            lines.insert(i+1, new_line)
+        else:
+            # situation
+            # rhs ##: sc
+
+            # this line is not an assignment
+            # -> it is replaced by `display(line)`
+            # in practise this case is not so important
+            cmt_flags.assignment = False
+            new_line = process_line(line, cmt_flags, rhs)
+            lines[i] = new_line
 
     new_raw_cell = "\n".join(lines)
 

@@ -51,7 +51,7 @@ class InteractiveConvenienceTest(unittest.TestCase):
         self.assertTrue(r1.shape)
         self.assertFalse(r1.transpose)
 
-    def test_classify_line_by_comment(self):
+    def _test_classify_line_by_comment(self):
 
         l1 = "x = 0 # nothing special here"
         r1 = dt.classify_line_by_comment(l1)
@@ -91,51 +91,45 @@ class InteractiveConvenienceTest(unittest.TestCase):
 
         l1 = "x = 0"
 
-        lhs, rhs, cmt = dt.get_line_segments(l1)
-
-        self.assertEqual(lhs, "x")
-        self.assertEqual(rhs, "0")
-        self.assertEqual(cmt, "")
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", "x", "0", ""))
 
         l1 = "# abx"
-
-        lhs, rhs, cmt = dt.get_line_segments(l1)
-
-        self.assertEqual(lhs, None)
-        self.assertEqual(rhs, None)
-        self.assertEqual(cmt, "# abx")
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, "# abx"))
 
         l1 = "     "
-        lhs, rhs, cmt = dt.get_line_segments(l1)
-        self.assertEqual((lhs, rhs, cmt), (None, None, ""))
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, ""))
 
         l1 = ""
-        lhs, rhs, cmt = dt.get_line_segments(l1)
-        self.assertEqual((lhs, rhs, cmt), (None, None, ""))
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, ""))
 
         l1 = "x + y  ##"
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", None, "x + y", "##"))
 
-        lhs, rhs, cmt = dt.get_line_segments(l1)
-
-        self.assertEqual(lhs, None)
-        self.assertEqual(rhs, "x + y")
-        self.assertEqual(cmt, "##")
-
-        l1 = "x + y 'z=#'  ##:"
-
-        lhs, rhs, cmt = dt.get_line_segments(l1)
-
-        self.assertEqual(lhs, None)
-        self.assertEqual(rhs, "x + y 'z=#'")
-        self.assertEqual(cmt, "##:")
+        l1 = "x + y + 'z=#'  ##:"
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", None, "x + y + 'z=#'", "##:"))
 
         l1 = "A =     '#xyz=7'  # abcd ##: efg    "
-        lhs, rhs, cmt = dt.get_line_segments(l1)
-        self.assertEqual(lhs, "A")
-        self.assertEqual(rhs, "'#xyz=7'")
-        self.assertEqual(cmt, "# abcd ##: efg")
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", "A", "'#xyz=7'", "# abcd ##: efg"))
 
-    def _test_insert_disp_lines1(self):
+        l1 = "    A = X  # Z"
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("    ", "A", "X", "# Z"))
+
+        l1 = "    y, x, z = A = X  # Z"
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("    ", "A", "X", "# Z"))
+        l1 = "    A = y, x, z = X  # Z"
+        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("    ", "y, x, z", "X", "# Z"))
+
+    def test_insert_disp_lines1(self):
         raw_cell1 = """\
 x = 0
 y = 1 ##:
@@ -153,7 +147,6 @@ z = 0
         self.assertEqual(eres1, res1)
 
         # --------------------
-        IPS()
 
         raw_cell1 = """\
 x = 0
@@ -188,7 +181,7 @@ z = 0
 
         raw_cell1 = """\
 x = 0
-if 1: 
+if 1:
     y = 1 ##:
 z = 0
 """
@@ -199,12 +192,57 @@ if 1:
     y = 1 ##:
     custom_display("y", y); print("---")
 z = 0
-        """
+"""
+
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
+        # --------------------
+
+        raw_cell1 = """\
+x = 0
+if 1:
+    y1, y2 = 1, 2 ##:
+
+    y1, y2 = yy = 1, 2 ##:
+
+    yy = y1, y2 = 1, 2 ##:
+
+    y1, y2 = yy = 1, 2 ##:T
+z = 0
+"""
+
+        eres1 = """\
+x = 0
+if 1:
+    y1, y2 = 1, 2 ##:
+    custom_display("(y1, y2)", (y1, y2)); print("---")
+
+    y1, y2 = yy = 1, 2 ##:
+    custom_display("yy", yy); print("---")
+
+    yy = y1, y2 = 1, 2 ##:
+    custom_display("(y1, y2)", (y1, y2)); print("---")
+
+    y1, y2 = yy = 1, 2 ##:T
+    custom_display("yy.T", yy.T); print("---")
+z = 0
+"""
 
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
 
-        IPS()
+    def test_is_single_name(self):
+        self.assertTrue(dt.is_single_name("a"))
+        self.assertTrue(dt.is_single_name("abc_xyz "))
+
+        self.assertFalse(dt.is_single_name("abc,xyz "))
+        self.assertFalse(dt.is_single_name("abc, xyz, qwe"))
+        self.assertFalse(dt.is_single_name("abc + xyz"))
+        self.assertFalse(dt.is_single_name("abc - xyz"))
+        self.assertFalse(dt.is_single_name("abc*xyz-1"))
+        self.assertFalse(dt.is_single_name("abc/xyz-1"))
+        self.assertFalse(dt.is_single_name("abc%xyz-1"))
+        self.assertFalse(dt.is_single_name("abc^xyz-1"))
 
 
 if __name__ == "__main__":
