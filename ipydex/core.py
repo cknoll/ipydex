@@ -373,15 +373,16 @@ class TBPrinter(object):
 
         self.TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
 
-    def printout(self, end_offset=0):
+    def printout(self, end_offset=0, prefix="\n"):
         """
 
+        :param prefix:      string which is printed befor the actual TB (default: "\n")
         :param end_offset:  0 means print all, 1 means print parts[:-1] etc
         :return:
         """
         # note that the kwarg `tb_offset` of the FormattedTB constructor is refers to the start of the list
         tb_parts = self.TB.structured_traceback(self.excType, self.excValue, self.traceback)
-        text = "\n".join(tb_parts[:len(tb_parts)-1-end_offset]+[tb_parts[-1]])
+        text = "\n".join([prefix]+tb_parts[:len(tb_parts)-1-end_offset]+[tb_parts[-1]])
         print(text)
 
 
@@ -740,14 +741,7 @@ def get_whole_assignment_expression(line, varname, seq_type):
     :return:
     """
 
-    if sys.version_info[0] >= 3:
-        # in python3 line is already unicode
-        uline = line
-    else:
-        # uses sys.getdefaultencoding(
-        uline = line.decode()
-
-    tokens = list(tk.generate_tokens(io.StringIO(uline).readline))
+    tokens = line_to_token_list(line)
 
     if issubclass(seq_type, tuple):
         L, R = "()"
@@ -765,10 +759,6 @@ def get_whole_assignment_expression(line, varname, seq_type):
     search_mode = 0
 
     i_start, i_end = None, None
-
-    # for python2-compatibility explicitly convert to named tuple
-    TokenInfo = collections.namedtuple("TokenInfo", ["type", "string", "start", "end", "line"])
-    tokens = [TokenInfo(*t) for t in tokens]
 
     for i, t in enumerate(tokens):
         if t.type == tk.NAME and t.string == varname:
@@ -842,6 +832,24 @@ def get_carg_vars_from_frame(frame, seq_type):
         raise NameError(msg)
 
     return results
+
+
+def line_to_token_list(line):
+
+    if sys.version_info[0] >= 3:
+        # in python3 line is already unicode
+        uline = line
+    else:
+        # uses sys.getdefaultencoding(
+        uline = line.decode()
+
+    tokens = list(tk.generate_tokens(io.StringIO(uline).readline))
+
+    # for python2-compatibility explicitly convert to named tuple
+    TokenInfo = collections.namedtuple("TokenInfo", ["type", "string", "start", "end", "line"])
+    tokens = [TokenInfo(*t) for t in tokens]
+
+    return tokens
 
 
 
