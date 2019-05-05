@@ -268,7 +268,7 @@ def insert_disp_lines(raw_cell):
             # -> it is replaced by `display(line)`
             # in practise this case is not so important
             cmt_flags.assignment = False
-            new_line = process_line(line, cmt_flags, rhs)
+            new_line = process_line(line, cmt_flags, rhs, indent)
             lines[i] = new_line
 
     new_raw_cell = "\n".join(lines)

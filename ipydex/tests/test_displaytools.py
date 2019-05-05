@@ -196,6 +196,25 @@ z = 0
 
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
+
+        # --------------------
+
+        raw_cell1 = """\
+x = 0
+if 1:
+    y ##:
+C.xyz ##:
+"""
+
+        eres1 = """\
+x = 0
+if 1:
+    custom_display("(y)", (y)); print("---")
+custom_display("(C.xyz)", (C.xyz)); print("---")
+"""
+
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
         # --------------------
 
         raw_cell1 = """\
