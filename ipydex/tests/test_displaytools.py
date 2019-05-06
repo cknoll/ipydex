@@ -250,6 +250,25 @@ z = 0
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
 
+        # --------------------
+
+        raw_cell1 = """\
+def func(a, b):
+    '''
+    some docstring
+    '''
+    pass
+"""
+
+        eres1 = raw_cell1
+
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
+
+        # --------------------
+        # --------------------
+        # --------------------
+
     def test_is_single_name(self):
         self.assertTrue(dt.is_single_name("a"))
         self.assertTrue(dt.is_single_name("abc_xyz "))

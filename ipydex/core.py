@@ -840,10 +840,15 @@ def line_to_token_list(line):
         # in python3 line is already unicode
         uline = line
     else:
-        # uses sys.getdefaultencoding(
+        # uses sys.getdefaultencoding()
         uline = line.decode()
 
-    tokens = list(tk.generate_tokens(io.StringIO(uline).readline))
+    try:
+        tokens = list(tk.generate_tokens(io.StringIO(uline).readline))
+    except tk.TokenError:
+        # this happens e.g. for a multi-line-string
+        # ignore this line
+        tokens = list(tk.generate_tokens(io.StringIO(u"").readline))
 
     # for python2-compatibility explicitly convert to named tuple
     TokenInfo = collections.namedtuple("TokenInfo", ["type", "string", "start", "end", "line"])
