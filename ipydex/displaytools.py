@@ -42,6 +42,7 @@ duplication of manually adding `display(my_random_variable)`.
 
 import types
 import collections
+import ast
 
 import tokenize as tk
 
@@ -117,14 +118,13 @@ def get_line_segments(line):
     lhs ist defined as the leftmost assignment
 
     (line does not need to be an assignment)
-    
-    :param line: 
-    :return: lhs, rhs, comment 
+
+    :param line:
+    :return: lhs, rhs, comment
     """
 
     tokens = line_to_token_list(line)
-
-    equality_signs = [-1]
+    equality_signs = []
     comment_tuple = None, ""
     indent = ""
 
@@ -136,15 +136,31 @@ def get_line_segments(line):
             comment_tuple = t.start[1], t.string
         if t.type == tk.OP and t.string == "=":
             equality_signs.append(t.start[1])
+    try:
+        myast = ast.parse(line.strip()).body[0]
+    except (IndexError, SyntaxError):
+        myast = None
 
-    if len(equality_signs) > 1:
-        # we have at least one assignment
-        lhs = line[equality_signs[-2]+1:equality_signs[-1]].strip()
-        equality_signs.pop(0)
+    if isinstance(myast, ast.Assign):
+        left_most_assignment = myast.targets[-1]
+        # note that indent was stripped away
+        lhs_start_idx = left_most_assignment.col_offset + len(indent)
+
+        for eqs_idx in equality_signs:
+            if eqs_idx > lhs_start_idx:
+                # take the first equality sign which comes after the beginning of the last assignment
+                # as delimiter
+                lhs_end_idx = eqs_idx-1
+                break
+        else:
+            # no break
+            msg = "unexpected locations of equality signs in the line `{}`".format(line)
+            raise ValueError(msg)
+        lhs = line[lhs_start_idx:lhs_end_idx].strip()
+        rhs_start_idx = lhs_end_idx + 2
     else:
         lhs = None
-
-    rhs_start_idx = equality_signs[-1] + 1
+        rhs_start_idx = 0
 
     # from the last `=` until the beginning of the comment
     rhs = line[rhs_start_idx:comment_tuple[0]].strip()

@@ -13,7 +13,7 @@ def bool_sum(x):
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
-class InteractiveConvenienceTest(unittest.TestCase):
+class Tests(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -125,9 +125,14 @@ class InteractiveConvenienceTest(unittest.TestCase):
         l1 = "    y, x, z = A = X  # Z"
         ind, lhs, rhs, cmt = dt.get_line_segments(l1)
         self.assertEqual((ind, lhs, rhs, cmt), ("    ", "A", "X", "# Z"))
+
         l1 = "    A = y, x, z = X  # Z"
         ind, lhs, rhs, cmt = dt.get_line_segments(l1)
         self.assertEqual((ind, lhs, rhs, cmt), ("    ", "y, x, z", "X", "# Z"))
+
+        l1 = "x = func1(a=a, b = b) ##:"
+        ind, lhs, rhs, cmt = sgm = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", "x", "func1(a=a, b = b)", "##:"))
 
     def test_insert_disp_lines1(self):
         raw_cell1 = """\
@@ -261,6 +266,25 @@ def func(a, b):
 """
 
         eres1 = raw_cell1
+
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
+
+        # --------------------
+
+        raw_cell1 = """\
+x = func1(a=a, b = b) ##:
+if 1:
+    y = func2(a=a, b = b) ##:T
+"""
+
+        eres1 = """\
+x = func1(a=a, b = b) ##:
+custom_display("x", x); print("---")
+if 1:
+    y = func2(a=a, b = b) ##:T
+    custom_display("y.T", y.T); print("---")
+"""
 
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
