@@ -91,26 +91,6 @@ SCC = def_special_comments()
 sc_list = SCC.value_list()
 
 
-def classify_line_by_comment(line):
-
-    raise NotImplementedError("obsolete")
-
-    tokens = line_to_token_list(line)
-
-    for i, t in enumerate(tokens):
-        if t.type == tk.COMMENT:
-            if i == 0:
-                res = FC(comment_only=True, sc=False)
-            else:
-                res = classify_comment(t.string)
-
-            break
-    else:  # no break
-        res = FC(sc=False)
-
-    return res
-
-
 def get_line_segments(line):
     """
     Split up a line into (indent, lhs, rhs, comment)
@@ -238,12 +218,16 @@ def process_line(line, line_flags, expr_to_disp, indent):
 
     expr_to_disp = brace_str.format(expr_to_disp)
 
-     #!! try ... eval(...) except SyntaxError ?
+     # !! try ... eval(...) except SyntaxError ?
     if line_flags.transpose:
         expr_to_disp = "{}.T".format(expr_to_disp)
 
     if line_flags.lhs:
-        new_line = '{}custom_display("{}", {}); print("{}")'.format(indent, expr_to_disp, expr_to_disp, delim)
+        if line_flags.shape:
+            new_line = '{}custom_display("{}.shape", {}.shape); print("{}")'
+            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, delim)
+        else:
+            new_line = '{}custom_display("{}", {}); print("{}")'.format(indent, expr_to_disp, expr_to_disp, delim)
     else:
         new_line = '{}display({}); print("{}")'.format(indent, expr_to_disp, delim)
 

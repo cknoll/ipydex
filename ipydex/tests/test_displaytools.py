@@ -293,6 +293,23 @@ if 1:
         # --------------------
         # --------------------
 
+    def test_insert_disp_lines2(self):
+        raw_cell1 = """\
+y = x ##:S
+z = 0
+"""
+
+        eres1 = """\
+y = x ##:S
+custom_display("y.shape", y.shape); print("---")
+z = 0
+"""
+
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
+
+        # --------------------
+
     def test_is_single_name(self):
         self.assertTrue(dt.is_single_name("a"))
         self.assertTrue(dt.is_single_name("abc_xyz "))
