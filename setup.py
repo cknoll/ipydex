@@ -21,5 +21,6 @@ setup(name='ipydex',
       author_email='carsten.knoll@tu-dresden.de',
       license='GPLv3+',
       install_requires=requirements,
+      setup_requires=requirements,
       packages=['ipydex'],
       zip_safe=False)
