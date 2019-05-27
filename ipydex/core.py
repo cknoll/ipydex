@@ -24,7 +24,7 @@ from IPython.core.debugger import Tracer
 """
 Module which offers an slightly enhanced IPython shell and other tools
 which might be helpful for debugging and exploring.
- 
+
 
 typical use cases:
 
@@ -33,11 +33,11 @@ activate_ips_on_exception()
 
 # some code ...
 
-IPS()  # call the IPython shell to interactively investigate the situaion 
+IPS()  # call the IPython shell to interactively investigate the situaion
 
 --
 
-# access to the commandline debugger 
+# access to the commandline debugger
 
 from ipydex import TracerFactory
 ST = TracerFactory()

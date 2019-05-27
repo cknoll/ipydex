@@ -11776,7 +11776,7 @@ div#notebook {
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>This is an example for the extension <code>displaytools</code> from the package <a href="https://github.com/cknoll/ipydex">ipydex</a> for the IPython Notebook.</p>
-<p>The extension introduces some "magic" comments (like <code>##:</code>, <code>##:T</code>and <code>##:S</code> ) which trigger additional output (normally only the return value of the last line of a cell is printed). See <a href="#why-usefull">Why is this useful?</a></p>
+<p>The extension introduces some "magic" comments (like <code>##:</code>, <code>##:T</code>, <code>##:S</code>, and <code>##:i</code> ) which trigger additional output (normally only the return value of the last line of a cell is printed). See <a href="#why-usefull">Why is this useful?</a></p>
 <p>Note that this extension is not yet in mature state and is likely to have some issues .</p>
 <p>This example was tested successfully under python3.6. However it should also work on python 2.7.</p>
 
@@ -11821,7 +11821,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -11839,7 +11839,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">t</span>
@@ -11955,7 +11955,7 @@ ydot1_obj := $\displaystyle \frac{\partial}{\partial t} \cos{\left(2 \pi t \righ
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">y1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">t</span><span class="p">)</span> <span class="c1">##:</span>
@@ -12033,7 +12033,7 @@ ydot1_obj := $\displaystyle \frac{\partial}{\partial t} \cos{\left(2 \pi t \righ
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">xx</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;x1:11&#39;</span><span class="p">))</span> <span class="c1">##:</span>
@@ -12137,7 +12137,7 @@ yy.T := $\displaystyle \left[\begin{matrix}y_{1} & y_{2} & y_{3} & y_{4} & y_{5}
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">zz</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;z1:101&#39;</span><span class="p">))</span> <span class="c1">##:S</span>
@@ -12206,7 +12206,7 @@ zz2.shape := $\displaystyle \left( 14, \  5\right)$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># special comments can be combined with other comments:</span>
@@ -12251,7 +12251,7 @@ a := $\displaystyle 3$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Multiline statements are not yet supported:</span>
@@ -12360,12 +12360,11 @@ b := $\displaystyle \left[ 14, \  20\right]$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># numpy arrays and matrices (indented to take left-hand-side into account)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># numpy arrays and matrices are indented to take left-hand-side into account</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
@@ -12420,11 +12419,11 @@ b := $\displaystyle \left[ 14, \  20\right]$
 
 
 <div class="output_text output_subarea ">
-<pre>np.matrix(A)  := matrix([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
-                         [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
-                         [0.96366276, 0.38344152, 0.79172504, 0.52889492],
-                         [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
-                         [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
+<pre>(np.matrix(A)) := matrix([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
+                          [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
+                          [0.96366276, 0.38344152, 0.79172504, 0.52889492],
+                          [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
+                          [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
 </div>
 
 </div>
@@ -12435,7 +12434,7 @@ b := $\displaystyle \left[ 14, \  20\right]$
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>___
+<pre>---
 </pre>
 </div>
 </div>
@@ -12475,7 +12474,7 @@ array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># that new-line feature is aware of the configured linewidth</span>
@@ -12559,6 +12558,135 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<p>With <code>##:i</code> some general type information is diplayed</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">B</span> <span class="c1">##:i</span>
+<span class="nb">list</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="c1">##:i</span>
+<span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">##:i</span>
+<span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="c1">##:i</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info(C) := &#34;&lt;class &#39;numpy.ndarray&#39;&gt; with shape: (5, 7)&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info((list(C))) := &#34;&lt;class &#39;list&#39;&gt; with length: 5&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info((C[0])) := &#34;&lt;class &#39;numpy.ndarray&#39;&gt; with shape: (7,)&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info((C[0, 0])) := &#34;&lt;class &#39;numpy.float64&#39;&gt; with value: 1.957236684465528&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Why-this-extension-might-be-useful?">Why this extension might be useful?<a class="anchor-link" href="#Why-this-extension-might-be-useful?">&#182;</a></h3><p><a id='why-usefull'></a></p>
 <ul>
 <li>It saves space in the final document, when intermediate results shall be displayed (e.g. for didactic purpose)<ul>
@@ -12573,7 +12701,7 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">ipydex</span> <span class="k">import</span> <span class="n">save_current_nb_as_html</span>

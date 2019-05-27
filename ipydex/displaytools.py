@@ -48,6 +48,7 @@ import tokenize as tk
 
 import IPython
 from IPython.display import display
+# noinspection PyUnresolvedReferences
 from .core import Container, IPS, line_to_token_list
 
 
@@ -64,6 +65,7 @@ class FC(Container):
         self.transpose = False
         self.shape = False
         self.comment_only = None  # this refers to the whole line
+        self.info = None  # this refers to the whole line
         self.multi_match = []
 
         kwargs["_allow_overwrite"] = True
@@ -77,12 +79,13 @@ class FC(Container):
 def def_special_comments():
     # _base = "##"
     plain = Container(c="##;", flags=FC())
-    lhs = Container(c="##:", flags=FC(lhs=True))
     transpose = Container(c="##T", flags=FC(transpose=True))
     lhs_transpose = Container(c="##:T", flags=FC(lhs=True, transpose=True))
     lhs_shape = Container(c="##:S", flags=FC(lhs=True, shape=True))
+    lhs_info = Container(c="##:i", flags=FC(lhs=True, info=True))
+    lhs = Container(c="##:", flags=FC(lhs=True))  # this must be the last one in the list
 
-    SCC = Container(cargs=(plain, transpose, lhs_transpose, lhs_shape, lhs))
+    SCC = Container(cargs=(plain, transpose, lhs_transpose, lhs_shape, lhs_info, lhs))
     return SCC
 
 
@@ -226,10 +229,14 @@ def process_line(line, line_flags, expr_to_disp, indent):
         if line_flags.shape:
             new_line = '{}custom_display("{}.shape", {}.shape); print("{}")'
             new_line = new_line.format(indent, expr_to_disp, expr_to_disp, delim)
+        elif line_flags.info:
+            new_line = '{}custom_display("info({})", _ipydex__info({})); print("{}")'
+            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, delim)
         else:
             new_line = '{}custom_display("{}", {}); print("{}")'.format(indent, expr_to_disp, expr_to_disp, delim)
     else:
         new_line = '{}display({}); print("{}")'.format(indent, expr_to_disp, delim)
+
 
     return new_line
 
@@ -337,6 +344,7 @@ def custom_display(lhs, rhs):
 
     # legacy IPython 2.x support
     if IPython.__version__.startswith('2.'):
+        # noinspection PyTypeChecker
         publish_display_data('display', new_format_dict, md_dict)
     else:
         # indeed, I dont know with which version the api changed
@@ -344,13 +352,52 @@ def custom_display(lhs, rhs):
         publish_display_data(data=new_format_dict, metadata=md_dict)
 
 
+def info(arg):
+    """
+    Print some short and usefull information about arg
+    :param arg:
+    :return:
+    """
+
+    C = Container()
+    C.type = type(arg)
+    C.shape = getattr(arg, "shape", None)
+    C.len = getattr(arg, "__len__", None)
+
+    try:
+        tmp = float(arg)
+        C.is_number = tmp == arg
+    except TypeError:
+
+        C.is_number = False
+
+    res = "{} with {}: {}"
+    if C.is_number:
+        final = res.format(C.type, "value", arg)
+    elif C.shape is not None:
+        final = res.format(C.type, "shape", C.shape)
+    elif C.len is not None:
+        final = res.format(C.type, "length", len(arg))
+    else:
+        final = res.format(C.type, "str repr", str(arg))
+
+    return final
+
+
+
+
+
 def get_np_linewidth():
     try:
+        # noinspection PyPackageRequirements
         import numpy as np
     except ImportError:
         # numpy not available
         # unexpected situation but not critical
         # return the default
+
+        # noinspection PyUnusedLocal
+        np = None  # make pycharm happy
         return 75
     return np.get_printoptions().get('linewidth', 75)
 
@@ -390,10 +437,11 @@ def load_ipython_extension(ip):
         return ip.old_run_cell(new_raw_cell, *args, **kwargs)
 
     # prevent unwanted overwriting when the extension is reloaded
-    if not 'new_run_cell' in str(ip.run_cell):
+    if 'new_run_cell' not in str(ip.run_cell):
         ip.old_run_cell = ip.run_cell
 
     ip.run_cell = types.MethodType(new_run_cell, ip)
     ip.user_ns['display'] = display
     ip.user_ns['custom_display'] = custom_display
+    ip.user_ns['_ipydex__info'] = info
 

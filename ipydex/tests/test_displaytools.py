@@ -310,6 +310,54 @@ z = 0
 
         # --------------------
 
+        raw_cell1 = """\
+y = x ##:i
+z = 0
+"""
+
+        eres1 = """\
+y = x ##:i
+custom_display("info(y)", _ipydex__info(y)); print("---")
+z = 0
+"""
+
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
+        # --------------------
+        # --------------------
+
+    def test_info1(self):
+        res1 = dt.info(1)
+        eres1 = "<class 'int'> with value: 1"
+        self.assertEqual(res1, eres1)
+        # --------------------
+
+        res1 = dt.info(1.0)
+        eres1 = "<class 'float'> with value: 1.0"
+        self.assertEqual(res1, eres1)
+        # --------------------
+
+        res1 = dt.info([])
+        eres1 = "<class 'list'> with length: 0"
+        self.assertEqual(res1, eres1)
+        # --------------------
+
+        res1 = dt.info({1: 2})
+        eres1 = "<class 'dict'> with length: 1"
+        self.assertEqual(res1, eres1)
+        # --------------------
+
+        try:
+            # noinspection PyPackageRequirements
+            import numpy as np
+        except ImportError:
+            return
+
+        res1 = dt.info(np.zeros((12, 15)))
+        eres1 = "<class 'numpy.ndarray'> with shape: (12, 15)"
+        self.assertEqual(res1, eres1)
+        # --------------------
+
     def test_is_single_name(self):
         self.assertTrue(dt.is_single_name("a"))
         self.assertTrue(dt.is_single_name("abc_xyz "))
