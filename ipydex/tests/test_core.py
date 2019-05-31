@@ -5,6 +5,7 @@ import ipydex as ipd
 
 zz_global = 5678
 
+
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
 class InteractiveConvenienceTest(unittest.TestCase):
 

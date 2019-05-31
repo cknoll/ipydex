@@ -260,11 +260,12 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
 
 
 # TODO: remove code duplication
-def ip_shell_after_exception(frame):
+def ip_shell_after_exception(frame, ns_extension=None):
     """
     Launches an IPython embedded shell in the namespace where an exception occurred.
 
     :param frame:
+    :param ns_extension:    None or dict which will be injected into the local namespace of IPS
     :return:
     """
 
@@ -276,7 +277,12 @@ def ip_shell_after_exception(frame):
     original_frame = frame = frame or inspect.currentframe()
 
     local_ns = frame.f_locals
-    # global_ns = frame.f_globals  # this is deprecated by IPython
+    if ns_extension is not None:
+        for key, value in ns_extension.items():
+            assert key.startswith("__")
+            assert key not in local_ns
+            local_ns[key] = value
+
     dummy_module = DummyMod()
     dummy_module.__dict__ = frame.f_globals
 
@@ -357,11 +363,14 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     index = 0
     diff_index = frame_upcount
 
+    def __ips_print_tb(**kwargs):
+        return tb_printer.printout(end_offset=index, **kwargs)
+
     while diff_index is not None:
         index += diff_index
         tb_printer.printout(end_offset=index)
         current_frame = tb_frame_list[index]
-        diff_index = ip_shell_after_exception(frame=current_frame)
+        diff_index = ip_shell_after_exception(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb})
 
 
 class TBPrinter(object):
@@ -373,16 +382,43 @@ class TBPrinter(object):
 
         self.TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
 
-    def printout(self, end_offset=0, prefix="\n"):
+    def printout(self, end_offset=0, prefix="\n", debug=False, cut_logging=True):
         """
 
         :param prefix:      string which is printed befor the actual TB (default: "\n")
         :param end_offset:  0 means print all, 1 means print parts[:-1] etc
+        :param debug:       debug flag (return debug_container)
+        :param cut_logging: flag (cut off logging information e.g. injected by nosetests)
         :return:
         """
         # note that the kwarg `tb_offset` of the FormattedTB constructor is refers to the start of the list
         tb_parts = self.TB.structured_traceback(self.excType, self.excValue, self.traceback)
-        text = "\n".join([prefix]+tb_parts[:len(tb_parts)-1-end_offset]+[tb_parts[-1]])
+
+        line_list = [prefix] + tb_parts[:len(tb_parts)-1-end_offset] + [tb_parts[-1]]
+
+        if cut_logging:
+            start_idcs = []
+            end_idcs = []
+            removed_lines = []
+            for i, line in enumerate(line_list):
+                if ">> begin captured logging <<" in line:
+                    start_idcs.append(i)
+                if ">> end captured logging <<" in line:
+                    end_idcs.append(i)
+
+            if len(start_idcs) == len(end_idcs) == 1:
+                for i in range(start_idcs[0], end_idcs[0] + 1):
+                    removed_lines.append(line_list.pop(i))
+
+                msg = "Note: {} lines ({} chars) of logging information have beed removed for better overview."
+                n_chars = len("\n".join(removed_lines))
+                msg = msg.format(len(removed_lines), n_chars)
+                line_list.insert(start_idcs[0], msg)
+
+        text = "\n".join(line_list)
+
+        if debug:
+            return Container(fetch_locals=True)
         print(text)
 
 
