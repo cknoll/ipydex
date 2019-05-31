@@ -415,6 +415,19 @@ class TBPrinter(object):
                 msg = msg.format(len(removed_lines), n_chars)
                 line_list.insert(start_idcs[0], msg)
 
+                # the first removed line might contain useful information
+
+                fl = removed_lines[0]
+                idx = fl.index(">> begin captured logging <<")
+
+                # find the last line break before the unwanted logging info
+                br_idx = fl.rfind("\n", 0, idx) + 1
+
+                line_list.insert(start_idcs[0], fl[:br_idx])
+
+
+
+
         text = "\n".join(line_list)
 
         if debug:
