@@ -89,9 +89,6 @@ class InteractiveConvenienceTest(unittest.TestCase):
             ipd.Container(cargs=x)
 
 
-
-
-
 def f1(*args1, **kwargs1):
     """
     This function serves to test manually how ips_after_exception behaves
@@ -103,6 +100,7 @@ def f1(*args1, **kwargs1):
     x = kwargs1.get("x", 0)
     print("x=", x)
     if x > 3:
+        ipd.IPS()
         1/0
     else:
         f2(x)

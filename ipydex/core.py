@@ -8,11 +8,12 @@ import os
 import tokenize as tk
 import io
 
-
 from IPython.terminal.ipapp import load_default_config
 from IPython.terminal.embed import InteractiveShellEmbed
 from IPython.core import ultratb
 from IPython.core.debugger import Tracer
+
+sys_orig_excepthook = sys.excepthook
 
 # Licence: GPLv3
 #  (full text: http://www.gnu.org/licenses/gpl-3.0-standalone.html)
@@ -102,90 +103,96 @@ class DummyMod(object):
     pass
 
 
-def format_frameinfo(fi):
+def get_frame_list(frame=None, code_context=1):
     """
-    Takes a frameinfo object (from the inspect module)
-
-    returns a properly formated string
-    """
-    s1 = "{0}:{1}".format(fi.filename, fi.lineno)
-    s2 = "function:{0},    code_context:".format(fi.function)
-    if fi.code_context:
-        s3 = fi.code_context[0]
-    else:
-        s3 = "<no code context available>"
-
-    return "\n".join([s1, s2, s3])
-
-
-def get_frame_list():
-    """
-    Create the list of frames
+    return the list of frames and frame_info_tuples in desceninding order (newest frame is last)
     """
 
     # TODO: use this function in IPS below (less code duplication)
 
     frame_info_list = []
     frame_list = []
-    frame = inspect.currentframe()
+    if not frame:
+        frame = inspect.currentframe()
     while frame is not None:
         frame_list.append(frame)
-        info = inspect.getframeinfo(frame)
+        info = inspect.getframeinfo(frame, code_context)
         frame_info_list.append(info)
         frame = frame.f_back
 
     frame_info_list.reverse()
     frame_list.reverse()
-    frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
 
-    return frame_list, frame_info_list, frame_info_str_list
+    return frame_list, frame_info_list
 
 
 class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
     display_banner = False
 
 
-def IPS(copy_namespaces=True, overwrite_globals=False):
+# noinspection PyPep8Naming
+def IPS(frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False, code_context=1, print_tb=True):
     """Starts IPython embedded shell. This is similar to IPython.embed() but with some
     additional features:
 
     1. Print a list of the calling frames before entering the prompt
     2. (optionally) copy local name space to global one to prevent certain IPython bug.
     3. while doing so optinally overwrite names in the global namespace
-
     """
 
+    C = Container()
+    C.copy_namespaces = copy_namespaces
+    C.overwrite_globals = overwrite_globals
+
+    if not frame:
+        frame = inspect.currentframe().f_back
+
+    # extension of local namespace for IPS-debugging purposes
+    if not ns_extension:
+        C.ns_extension = {}
+    else:
+        C.ns_extension = ns_extension
+
     # let the user know, where this shell is 'waking up'
-    # construct frame list
-    # this will be printed in the header
-    frame_info_list = []
-    frame_list = []
-    frame = inspect.currentframe()
-    while frame is not None:
-        frame_list.append(frame)
-        info = inspect.getframeinfo(frame)
-        frame_info_list.append(info)
-        frame = frame.f_back
+    fli = generate_frame_list_info(frame, code_context)
+    custom_header2 = "\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n"
 
-    frame_info_list.reverse()
-    frame_list.reverse()
-    frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
+    C.ns_extension["_ips_fli"] = fli
 
-    custom_header1 = "----- frame list -----\n\n"
-    frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
-    custom_header2 = "\n----- end of frame list -----\n"
+    # noinspection PyUnresolvedReferences
 
-    custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
+    if print_tb:
+        C.custom_header = "{0}{1}".format(fli.tb_txt, custom_header2)
+    else:
+        C.custom_header = ""
 
+    # noinspection PyUnresolvedReferences
+    frame_list, frame_info_list = fli.frame_list, fli.frame_info_list
     # prevent IPython shell to be launched in IP-Notebook
     test_str = str(frame_info_list[0]) + str(frame_info_list[1])
     if 'IPython' in test_str and 'zmq' in test_str:
         print("\n- Not entering IPython embedded shell  -\n")
         return
 
+    diff_index = _run_ips(frame_list, C)
+
+    # restore the custom excepthook if possible
+    custom_excepthook = getattr(sys, 'custom_excepthook', None)
+    if custom_excepthook is not None:
+        assert callable(custom_excepthook)
+        sys.excepthook = custom_excepthook
+
+    return diff_index
+
+
+def _run_ips(frame_list, c):
+    """
+    :param frame_list:  list of frames
+    :param c:       Container for arguments
+    """
+
     # copied (and modified) from IPython/terminal/embed.py
     config = load_default_config()
-
     config.InteractiveShellEmbed = config.TerminalInteractiveShell
 
     # these two lines prevent problems related to the initialization
@@ -195,7 +202,7 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
 
     shell = InteractiveShellEmbed.instance()
 
-    # achieve that custom macros are loade in interactive shell
+    # achieve that custom macros are loaded in interactive shell
     shell.magic('load_ext storemagic')
     if config.StoreMagics.autorestore:
         shell.magic('store -r')
@@ -206,12 +213,15 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
     # adapt the namespaces to prevent missing names inside the shell
     # see: https://github.com/ipython/ipython/issues/62
     # https://github.com/ipython/ipython/issues/10695
-    if copy_namespaces and len(frame_list) >= 2:
+    if c.copy_namespaces and len(frame_list) >= 2:
         # callers_frame to IPS()
         # note that frame_list and frame_info_list were reversed above
         f1 = frame_list[-2]
         lns = f1.f_locals
         gns = f1.f_globals
+
+        # insert some IPS-debugging variables
+        lns.update(c.ns_extension)
 
         l_keys = set(lns)
         g_keys = set(gns)
@@ -223,15 +233,15 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
 
         assert safe_keys.union(unsafe_keys) == l_keys
 
-        gns.update({k:lns[k] for k in safe_keys})
+        gns.update({k: lns[k] for k in safe_keys})
 
-        if unsafe_keys and not overwrite_globals:
-            custom_header += "following local keys have " \
+        if unsafe_keys and not c.overwrite_globals:
+            c.custom_header += "following local keys have " \
                              "not been copied:\n{}\n".format(unsafe_keys)
 
-        if unsafe_keys and overwrite_globals:
-            gns.update({k:lns[k] for k in unsafe_keys})
-            custom_header += "following global keys have " \
+        if unsafe_keys and c.overwrite_globals:
+            gns.update({k: lns[k] for k in unsafe_keys})
+            c.custom_header += "following global keys have " \
                              "been overwritten:\n{}\n".format(unsafe_keys)
 
         # now update the gns with stuff from the user_ns (if it will not overwrite anything)
@@ -247,89 +257,22 @@ def IPS(copy_namespaces=True, overwrite_globals=False):
 
     else:
         # unexpected few frames or no copying desired:
-        lns = None
+        lns = {}
         dummy_module = None
 
     # now execute the shell
-    shell(header=custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
-
-    custom_excepthook = getattr(sys, 'custom_excepthook', None)
-    if custom_excepthook is not None:
-        assert callable(custom_excepthook)
-        sys.excepthook = custom_excepthook
-
-
-# TODO: remove code duplication
-def ip_shell_after_exception(frame, ns_extension=None):
-    """
-    Launches an IPython embedded shell in the namespace where an exception occurred.
-
-    :param frame:
-    :param ns_extension:    None or dict which will be injected into the local namespace of IPS
-    :return:
-    """
-
-    # let the user know, where this shell is 'waking up'
-    # construct frame list
-    # this will be printed in the header
-    frame_info_list = []
-    frame_list = []
-    original_frame = frame = frame or inspect.currentframe()
-
-    local_ns = frame.f_locals
-    if ns_extension is not None:
-        for key, value in ns_extension.items():
-            assert key.startswith("__")
-            assert key not in local_ns
-            local_ns[key] = value
-
-    dummy_module = DummyMod()
-    dummy_module.__dict__ = frame.f_globals
-
-    while frame is not None:
-        frame_list.append(frame)
-        info = inspect.getframeinfo(frame)
-        frame_info_list.append(info)
-        frame = frame.f_back
-
-    frame_info_list.reverse()
-    frame_info_str_list = [format_frameinfo(fi) for fi in frame_info_list]
-
-    custom_header1 = "----- frame list -----\n\n"
-    frame_info_str = "\n--\n".join(frame_info_str_list[:-1])
-    custom_header2 = "\n----- ERROR -----\n"
-
-    custom_header = "{0}{1}{2}".format(custom_header1, frame_info_str, custom_header2)
-
-    # prevent IPython shell to be launched in IP-Notebook
-    if len(frame_info_list) >= 2:
-        test_str = str(frame_info_list[0]) + str(frame_info_list[1])
-        if 'IPython' in test_str and 'zmq' in test_str:
-            print("\n- Not entering IPython embedded shell  -\n")
-            return
-
-    # copied (and modified) from IPython/terminal/embed.py
-    config = load_default_config()
-    config.InteractiveShellEmbed = config.TerminalInteractiveShell
-
-    # these two lines prevent problems in related to the initialization
-    # of ultratb.FormattedTB below
-    InteractiveShellEmbedWithoutBanner.clear_instance()
-    InteractiveShellEmbedWithoutBanner._instance = None
-
-    shell = InteractiveShellEmbedWithoutBanner.instance()
-
-    shell(header=custom_header, stack_depth=2, local_ns=local_ns, module=dummy_module)
+    shell(header=c.custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
 
     # if `diff_index` is not None it will be interpreted as index increment for the frame_list in the except hook
     # "__mu" means "move up"
-    diff_index = local_ns.get("__mu")
+    diff_index = lns.get("__mu")
     if not isinstance(diff_index, int):
         diff_index = None
 
     return diff_index
 
 
+# noinspection PyPep8Naming
 def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     """
     This function is launched after an exception. It launches IPS in suitable frame.
@@ -363,6 +306,9 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     index = 0
     diff_index = frame_upcount
 
+    # this allows to repeat the traceback inside the interactive function
+
+
     def __ips_print_tb(**kwargs):
         return tb_printer.printout(end_offset=index, **kwargs)
 
@@ -370,7 +316,16 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
         index += diff_index
         tb_printer.printout(end_offset=index)
         current_frame = tb_frame_list[index]
-        diff_index = ip_shell_after_exception(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb})
+        diff_index = IPS(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb}, print_tb=False)
+
+
+def generate_frame_list_info(frame, code_context):
+    res = Container()
+    TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
+    res.frame_list, res.frame_info_list = get_frame_list(frame, code_context)
+    formated_records = [TB.format_record(frame, *fi) for fi in res.frame_info_list]
+    res.tb_txt = "\n".join(formated_records)
+    return res
 
 
 class TBPrinter(object):
@@ -382,7 +337,15 @@ class TBPrinter(object):
 
         self.TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
 
-    def printout(self, end_offset=0, prefix="\n", debug=False, cut_logging=True):
+    def printout(self, *args, **kwargs):
+            debug = kwargs.get("debug", False)
+            res = self.get_tb_txt(*args, **kwargs)
+            if debug:
+                return res
+            else:
+                print(res)
+
+    def get_tb_txt(self, end_offset=0, prefix="\n", debug=False, cut_logging=True):
         """
 
         :param prefix:      string which is printed befor the actual TB (default: "\n")
@@ -393,7 +356,6 @@ class TBPrinter(object):
         """
         # note that the kwarg `tb_offset` of the FormattedTB constructor is refers to the start of the list
         tb_parts = self.TB.structured_traceback(self.excType, self.excValue, self.traceback)
-
         line_list = [prefix] + tb_parts[:len(tb_parts)-1-end_offset] + [tb_parts[-1]]
 
         if cut_logging:
@@ -425,14 +387,12 @@ class TBPrinter(object):
 
                 line_list.insert(start_idcs[0], fl[:br_idx])
 
-
-
-
         text = "\n".join(line_list)
 
         if debug:
             return Container(fetch_locals=True)
-        print(text)
+
+        return text
 
 
 def activate_ips_on_exception():
@@ -443,7 +403,7 @@ def activate_ips_on_exception():
     sys.custom_excepthook = ips_excepthook
 
 
-def color_exepthook(pdb=0, mode=2):
+def color_excepthook(pdb=0, mode=2, force=True):
     """
     Make tracebacks after exceptions colored, verbose, and/or call pdb
     (python cmd line debugger) at the place where the exception occurs
@@ -451,16 +411,17 @@ def color_exepthook(pdb=0, mode=2):
 
     modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
 
-    sys.excepthook = ultratb.FormattedTB(mode=modus,
-                                    color_scheme='Linux', call_pdb=pdb)
+    if force or not sys.excepthook == sys_orig_excepthook:
+        sys.excepthook = ultratb.FormattedTB(mode=modus,
+                                             color_scheme='Linux', call_pdb=pdb)
 
 
 # for backward compatibiliy
-ip_syshook = color_exepthook
+ip_syshook = color_excepthook
 
 # now, we immediately  apply this new excepthook.
 # consequence: often its sufficient jsut to import this module
-color_exepthook()
+color_excepthook(force=False)
 
 
 def ip_extra_syshook(fnc, pdb=0, filename=None):
