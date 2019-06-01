@@ -213,10 +213,10 @@ def _run_ips(frame_list, c):
     # adapt the namespaces to prevent missing names inside the shell
     # see: https://github.com/ipython/ipython/issues/62
     # https://github.com/ipython/ipython/issues/10695
-    if c.copy_namespaces and len(frame_list) >= 2:
+    if c.copy_namespaces and len(frame_list) >= 1:
         # callers_frame to IPS()
         # note that frame_list and frame_info_list were reversed above
-        f1 = frame_list[-2]
+        f1 = frame_list[-1]
         lns = f1.f_locals
         gns = f1.f_globals
 
@@ -307,7 +307,6 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     diff_index = frame_upcount
 
     # this allows to repeat the traceback inside the interactive function
-
 
     def __ips_print_tb(**kwargs):
         return tb_printer.printout(end_offset=index, **kwargs)

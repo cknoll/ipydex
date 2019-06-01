@@ -96,6 +96,7 @@ def f1(*args1, **kwargs1):
     :param kwargs1:
     :return:
     """
+    name = "f1"
     ipd.activate_ips_on_exception()
     x = kwargs1.get("x", 0)
     print("x=", x)
@@ -107,14 +108,23 @@ def f1(*args1, **kwargs1):
 
 
 def f2(x):
+    name = "f2"
     import time
     t = time.time()
     time.sleep(0.05)
     f1(x=x+1)
 
 
+def f3():
+    name = "f3"
+    a = 1
+    b = [1, 3]
+
+    f2(5)
+
+
 if __name__ == "__main__":
     unittest.main()
 
     # interactively test activate ips_on exception
-    # f1()
+    # f3()
