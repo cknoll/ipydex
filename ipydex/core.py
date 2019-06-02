@@ -103,7 +103,7 @@ class DummyMod(object):
     pass
 
 
-def get_frame_list(frame=None, code_context=1):
+def get_frame_list(frame=None, code_context=1, add_context_for_latest=0):
     """
     return the list of frames and frame_info_tuples in desceninding order (newest frame is last)
     """
@@ -120,8 +120,12 @@ def get_frame_list(frame=None, code_context=1):
         frame_info_list.append(info)
         frame = frame.f_back
 
+    # special treatment for last frame:
+
     frame_info_list.reverse()
     frame_list.reverse()
+
+    frame_info_list[-1] = inspect.getframeinfo(frame_list[-1], code_context + add_context_for_latest)
 
     return frame_list, frame_info_list
 
@@ -131,13 +135,14 @@ class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
 
 
 # noinspection PyPep8Naming
-def IPS(frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False, code_context=1, print_tb=True):
+def IPS(frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False, code_context=1, print_tb=True,
+        add_context_for_latest=6):
     """Starts IPython embedded shell. This is similar to IPython.embed() but with some
     additional features:
 
     1. Print a list of the calling frames before entering the prompt
     2. (optionally) copy local name space to global one to prevent certain IPython bug.
-    3. while doing so optinally overwrite names in the global namespace
+    3. while doing so optionally overwrite names in the global namespace
     """
 
     C = Container()
@@ -154,7 +159,7 @@ def IPS(frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=F
         C.ns_extension = ns_extension
 
     # let the user know, where this shell is 'waking up'
-    fli = generate_frame_list_info(frame, code_context)
+    fli = generate_frame_list_info(frame, code_context, add_context_for_latest)
     custom_header2 = "\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n"
 
     C.ns_extension["_ips_fli"] = fli
@@ -318,10 +323,10 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
         diff_index = IPS(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb}, print_tb=False)
 
 
-def generate_frame_list_info(frame, code_context):
+def generate_frame_list_info(frame, code_context, add_context_for_latest=0):
     res = Container()
     TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
-    res.frame_list, res.frame_info_list = get_frame_list(frame, code_context)
+    res.frame_list, res.frame_info_list = get_frame_list(frame, code_context, add_context_for_latest)
     formated_records = [TB.format_record(frame, *fi) for fi in res.frame_info_list]
     res.tb_txt = "\n".join(formated_records)
     return res
