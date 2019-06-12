@@ -319,7 +319,7 @@ def custom_display(lhs, rhs):
         raise TypeError('unexpexted Type for lhs object: %s' %type(lhs))
 
     new_format_dict = {}
-    for key, value in list(format_dict.items()):
+    for key, value in list(format_dict.item_list()):
         if 'text/plain' in key:
             prefix = "{} := ".format(lhs)
             if value.startswith("array") or value.startswith("matrix"):

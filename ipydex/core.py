@@ -660,15 +660,16 @@ class Container(object):
         fetch_locals = kwargs.pop("fetch_locals", False)
         allow_overwrite = kwargs.pop("_allow_overwrite", False)
 
+        # this might later hold the variable names passed to cargs (used for sorting)
+        self.__carg_varnames = []
+
         if cargs is not None:
             assert not fetch_locals
             # we were called with something like: c = Container(cargs=(x, y, z))
 
             caller_frame = inspect.currentframe().f_back
 
-            tmp_dict = get_carg_vars_from_frame(caller_frame, type(cargs))
-
-
+            tmp_dict, self.__carg_varnames = get_carg_vars_from_frame(caller_frame, type(cargs), return_varnames=True)
 
             for k in tmp_dict.keys():
                 if k in kwargs:
@@ -744,10 +745,27 @@ class Container(object):
             frame.f_globals[k] = v
 
     def value_list(self):
-        return list(self.__dict__.values())
+        ilist = self.item_list()
 
-    def items(self):
-        return self.__dict__.items()
+        return list(zip(*ilist))[1]
+
+    def item_list(self):
+
+        tmp_dict = dict(self.__dict__)
+        tmp_dict.pop("_Container__carg_varnames")
+
+        ilist = list(tmp_dict.items())
+
+        def keyfnc(tup):
+            try:
+                idx = self.__carg_varnames.index(tup[0])
+            except ValueError:
+                idx = float("inf")
+
+            return idx
+
+        ilist.sort(key=keyfnc)
+        return ilist
 
 
 def get_whole_assignment_expression(line, varname, seq_type):
@@ -828,7 +846,7 @@ def get_carg_vars(expr):
     return vars
 
 
-def get_carg_vars_from_frame(frame, seq_type):
+def get_carg_vars_from_frame(frame, seq_type, return_varnames=False):
 
     info = inspect.getframeinfo(frame)
     context = info.code_context
@@ -853,7 +871,10 @@ def get_carg_vars_from_frame(frame, seq_type):
         msg = "The following variables could not be found in local or global namespace: {}".format(not_found_list)
         raise NameError(msg)
 
-    return results
+    if return_varnames:
+        return results, varnames
+    else:
+        return results
 
 
 def line_to_token_list(line):
