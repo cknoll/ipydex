@@ -174,7 +174,15 @@ def IPS(frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=F
     # noinspection PyUnresolvedReferences
     frame_list, frame_info_list = fli.frame_list, fli.frame_info_list
     # prevent IPython shell to be launched in IP-Notebook
-    test_str = str(frame_info_list[0]) + str(frame_info_list[1])
+
+    test_str = str(frame_info_list[0])
+    try:
+        test_str += str(frame_info_list[1])
+    except IndexError:
+        # IPS was called in the top-level frame
+        # -> no problem
+        pass
+
     if 'IPython' in test_str and 'zmq' in test_str:
         print("\n- Not entering IPython embedded shell  -\n")
         return
