@@ -11,4 +11,5 @@ install:
 
 # command to run tests
 script:
+ - cd ipydex/tests
  - python -m unittest
