@@ -13,7 +13,8 @@ import sys
 import unittest
 from IPython.utils.tempdir import NamedFileInTemporaryDirectory
 import pexpect
-from ipydex import IPS
+# from ipydex import IPS, activate_ips_on_exception
+# activate_ips_on_exception()
 
 _exit = b"exit\r"
 _mu1 = b"__mu = 1; exit\n"
@@ -88,8 +89,22 @@ def write_string_to_file_script(bytearr, fname="tmp.py"):
     print("\n{}\n\n written to {}.".format(bytearr.decode(), fname))
 
 
-def generalize_random_filename(out, fname):
-    return out.replace(fname.encode(), b"/tmp/tmpdir/filename.py")
+def perform_replacements(out, fname):
+    """
+
+    Replace random filename with generic one and fix some compatibility issue with py3.5
+
+    :param out:
+    :param fname:
+    :return:
+    """
+    out = out.replace(fname.encode(), b"/tmp/tmpdir/filename.py")
+
+    # fix some compatibility issue with py3.5
+    out = out.replace(b'<module>\x1b[1;34m(x)\x1b[0m', b'<module>\x1b[1;34m\x1b[0m')
+    out = out.replace(b'<module>\x1b[1;34m()\x1b[0m', b'<module>\x1b[1;34m\x1b[0m')
+
+    return out
 
 
 def get_adapted_out(spawn_instance, fname):
@@ -110,7 +125,7 @@ def get_adapted_out(spawn_instance, fname):
     assert isinstance(spawn_instance, pexpect.pty_spawn.spawn)
 
     out = spawn_instance.before + spawn_instance.after
-    return generalize_random_filename(out, fname)
+    return perform_replacements(out, fname)
 
 
 def ipy_io(spawn_instance, fname, command):
@@ -182,7 +197,7 @@ class Tests(unittest.TestCase):
 
             out, err = p.communicate(_exit)
 
-            out_adapted = generalize_random_filename(out, fname)
+            out_adapted = perform_replacements(out, fname)
 
             self.assertIn(eout1, out_adapted)
 
@@ -262,7 +277,8 @@ class Tests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    write_string_to_file_script(_sample_embed_ips2)
+    unittest.main()
+    # write_string_to_file_script(_sample_embed_ips2)
 
 
 # other usefull techniques:
