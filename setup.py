@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from ipydex.release import __version__
 
 with open("requirements.txt") as requirements_file:
@@ -22,5 +22,5 @@ setup(name='ipydex',
       license='GPLv3+',
       install_requires=requirements,
       setup_requires=requirements,
-      packages=['ipydex'],
+      packages=find_packages(),
       zip_safe=False)

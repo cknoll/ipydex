@@ -1,6 +1,9 @@
 ipydex
 ======
 
+.. image:: https://travis-ci.org/cknoll/ipydex.svg?branch=master
+    :target: https://travis-ci.org/cknoll/ipydex
+
 .. image:: https://img.shields.io/pypi/v/ipydex.svg
     :target: https://pypi.python.org/pypi/ipydex
     :alt: Link to PyPi
@@ -14,22 +17,16 @@ displaytools
 ------------
 * a jupyter-notebook-extension (``%loadext ipydex.displaytools``)
 
-* introduces magic comments (like ``##`` and ``##:``) which cause,
+* introduces magic comments (like ``##:``, ``##:T``, ``##:S``) which cause
   that either the return value or the right hand side of an assignment of a line
-  is displayed
+  is displayed (``T`` means additional transposition and ``S`` means only ``.shape`` attribute is displayed)
 
 * display intermediate results  (→ more readable notebooks),
   whithout introducing addional ``print`` or ``display`` statements
 
-* Example invocation 1: ``my_random_variable = np.random.rand() ##``
+* Example invocation: ``x = np.random.rand() ##:``
 
-  * inserts the line ``display(my_random_variable)`` to the source code of the cell (before its execution)
-
-* Example invocation 2: ``y = a**2 + c*x ##:``
-
-  * additionally triggers the printing of the left hand side of the assignment (here: ``y``)
-
-  * useful for longer cells with multiple assignments
+  * inserts the line ``display("x := {}".format(x))`` to the source code of the cell (before its execution)
 
 * see `documentation-notebook <http://nbviewer.jupyter.org/github/cknoll/ipydex/blob/master/examples/displaytools-example.ipynb>`_
 
