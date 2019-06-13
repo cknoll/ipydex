@@ -327,6 +327,7 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     while diff_index is not None:
         index += diff_index
         tb_printer.printout(end_offset=index)
+        print("\n")
         current_frame = tb_frame_list[index]
         diff_index = IPS(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb}, print_tb=False)
 

@@ -145,7 +145,7 @@ def ipy_io(spawn_instance, fname, command):
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
-class Tests(unittest.TestCase):
+class TestE1(unittest.TestCase):
 
     def setUp(self):
         pass

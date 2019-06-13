@@ -13,7 +13,7 @@ def bool_sum(x):
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
-class Tests(unittest.TestCase):
+class TestDT1(unittest.TestCase):
 
     def setUp(self):
         pass
