@@ -1,5 +1,9 @@
 import unittest
 
+import sys
+from contextlib import contextmanager
+from io import StringIO
+
 from ipydex import displaytools as dt
 from ipydex import IPS, activate_ips_on_exception
 activate_ips_on_exception()
@@ -10,6 +14,17 @@ def bool_sum(x):
         return 1
     else:
         return 0
+
+
+@contextmanager
+def captured_output():
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
@@ -370,6 +385,26 @@ z = 0
         self.assertFalse(dt.is_single_name("abc/xyz-1"))
         self.assertFalse(dt.is_single_name("abc%xyz-1"))
         self.assertFalse(dt.is_single_name("abc^xyz-1"))
+
+    def test_custom_display(self):
+        # ensure that no error occurs
+
+        with captured_output() as (out, err):
+            r1 = dt.custom_display("a", 3.1)
+
+        self.assertEqual(r1, None)
+        o1 = out.getvalue().strip()
+        self.assertEqual(o1, 'a := 3.1')
+
+        try:
+            # noinspection PyPackageRequirements
+            import numpy as np
+            with captured_output() as (out, err):
+                r1 = dt.custom_display("a", np.array([1, 3.0, 500]))
+                o1 = out.getvalue().strip()
+            self.assertEqual(o1, 'a := array([  1.,   3., 500.])')
+        except ImportError:
+            pass
 
 
 if __name__ == "__main__":

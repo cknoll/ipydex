@@ -319,7 +319,7 @@ def custom_display(lhs, rhs):
         raise TypeError('unexpexted Type for lhs object: %s' %type(lhs))
 
     new_format_dict = {}
-    for key, value in list(format_dict.item_list()):
+    for key, value in list(format_dict.items()):
         if 'text/plain' in key:
             prefix = "{} := ".format(lhs)
             if value.startswith("array") or value.startswith("matrix"):
@@ -382,9 +382,6 @@ def info(arg):
         final = res.format(C.type, "str repr", str(arg))
 
     return final
-
-
-
 
 
 def get_np_linewidth():
