@@ -652,8 +652,45 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
 class Container(object):
     """General purpose container class to conveniently store data attributes
 
-    The main debugging usecase for this container is to collect all data from
-    the local namespace of a function an make it available outside.
+    There are three main usecases for this container data type (see below) which are triggered by args and keyword args:
+
+    (1) Store some data:
+
+        C = Container()
+        C.x = x
+        C.y = y
+
+    (2) Collect provided variables:
+
+        x = 7
+        y = 8
+        C = Container(cargs=(x, y))
+
+        # now by some `inspect`-magic x and y are available as attributes
+        assert C.x == x
+        assert C.y == y
+
+
+    (3) Collect all variables from local namespace and (by some `inspect`-magic) make them available as
+        attributes (usefull for debugging).
+
+        def func1(x, debug=False):
+            y = complicated_func1(x)
+            res = complicated_func2(x, y)
+
+            C = Container(fetch_local=True)
+
+            if debug:
+                return C
+            else:
+                return res
+
+        C = func1(100, debug=True)
+
+        # investigate internal behavior
+        print(C.x)
+        print(C.y)
+        print(C.res)
     """
 
     def __init__(self, cargs=None, **kwargs):
