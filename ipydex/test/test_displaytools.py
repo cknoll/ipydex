@@ -402,7 +402,10 @@ z = 0
             with captured_output() as (out, err):
                 r1 = dt.custom_display("a", np.array([1, 3.0, 500]))
                 o1 = out.getvalue().strip()
-            self.assertEqual(o1, 'a := array([  1.,   3., 500.])')
+
+            # number of spaces depends on python version...
+            o1_expected = 'a := array([  1.,   3., 500.])'.replace(" ", "")
+            self.assertEqual(o1.replace(" ", ""), o1_expected)
         except ImportError:
             pass
 
