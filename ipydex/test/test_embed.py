@@ -13,8 +13,6 @@ import sys
 import unittest
 from IPython.utils.tempdir import NamedFileInTemporaryDirectory
 import pexpect
-# from ipydex import IPS, activate_ips_on_exception
-# activate_ips_on_exception()
 
 _exit = b"exit\r"
 _mu1 = b"__mu = 1; exit\n"

@@ -13,7 +13,10 @@ def run_all():
     suite = loader.discover(current_path)
 
     runner = unittest.TextTestRunner()
-    runner.run(suite)
+    res = runner.run(suite)
+
+    # cause CI to fail if tests have failed (otherwise this script returns 0 despite of failing tests)
+    assert res.wasSuccessful()
 
 
 if __name__ == '__main__':

@@ -5,8 +5,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 from ipydex import displaytools as dt
-from ipydex import IPS, activate_ips_on_exception
-activate_ips_on_exception()
+from ipydex import IPS
 
 
 def bool_sum(x):
