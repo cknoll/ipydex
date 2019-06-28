@@ -2,11 +2,18 @@
 import os
 import inspect
 import unittest
+import importlib
 
 # this module enables the command: python -c "from ipydex.test import run_all; run_all()"
 
 
 def run_all():
+
+    mod_name = __name__.split('.')[0]
+    release = importlib.import_module(mod_name+".release")
+
+    print("Running all tests for module `{}` {}.".format(mod_name, release.__version__))
+
     current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
     loader = unittest.TestLoader()
