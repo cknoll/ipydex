@@ -88,6 +88,9 @@ class TestCore1(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             ipd.Container(cargs=x)
 
+    def test_in_ipynb(self):
+        self.assertFalse(ipd.in_ipynb())
+
 
 def f1(*args1, **kwargs1):
     """

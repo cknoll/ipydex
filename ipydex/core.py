@@ -540,7 +540,10 @@ def in_ipynb():
     Test whether this functions is called from within an ipython notebook on jupyter
     """
 
-    test_str = "\n".join(get_frame_list()[2])
+    frame_info_list = get_frame_list()[1]
+    filenames = [fi.filename for fi in frame_info_list]
+
+    test_str = "\n".join(filenames)
     # this should be made more reliable
     if "ipykernel_launcher" in test_str and \
        "ipykernel/kernelapp.py" in test_str and \
