@@ -678,7 +678,7 @@ class Container(object):
             y = complicated_func1(x)
             res = complicated_func2(x, y)
 
-            C = Container(fetch_local=True)
+            C = Container(fetch_locals=True)
 
             if debug:
                 return C
