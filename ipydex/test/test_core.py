@@ -88,6 +88,22 @@ class TestCore1(unittest.TestCase):
         with self.assertRaises(TypeError) as cm:
             ipd.Container(cargs=x)
 
+    def test_container3(self):
+        C1 = ipd.Container(a=1.25, xaz=(42,), s="test", d={"a": 1, 2: "b"})
+
+        fname = "container.pcl"
+        C1.save_with_pickle(fname)
+        C2 = ipd.Container.load_with_pickle(fname)
+
+        C2.publish_attrs()
+
+        self.assertEqual(a, 1.25)
+        self.assertEqual(s, "test")
+        self.assertEqual(xaz, (42,))
+        self.assertEqual(d, {"a": 1, 2: "b"})
+
+
+
     def test_in_ipynb(self):
         self.assertFalse(ipd.in_ipynb())
 

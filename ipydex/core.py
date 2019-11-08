@@ -7,6 +7,7 @@ import sys
 import os
 import tokenize as tk
 import io
+import pickle
 
 from IPython.terminal.ipapp import load_default_config
 from IPython.terminal.embed import InteractiveShellEmbed
@@ -535,7 +536,7 @@ def get_notebook_name():
                 return os.path.join(ss['notebook_dir'], relative_path)
 
 
-def in_ipynb():
+def in_ipynb(debug=False):
     """
     Test whether this functions is called from within an ipython notebook on jupyter
     """
@@ -547,10 +548,18 @@ def in_ipynb():
     # this should be made more reliable
     if "ipykernel_launcher" in test_str and \
        "ipykernel/kernelapp.py" in test_str and \
-       "zmq/eventloop" in test_str:
-        return True
+       "zmqshell" in test_str:
+        res = True
     else:
-        return False
+        res = False
+
+    if debug:
+        dbgc = Container(fetch_locals=True)
+        return dbgc
+    else:
+        return res
+
+
 
 
 def save_current_nb_as_html(info=False):
@@ -808,6 +817,22 @@ class Container(object):
         ilist.sort(key=keyfnc)
         return ilist
 
+    def save_with_pickle(self, fname):
+
+        attribute_dict = dict(self.item_list())
+
+        with open(fname, "wb") as pfile:
+            pickle.dump(attribute_dict, pfile)
+
+    @staticmethod
+    def load_with_pickle(fname):
+        with open(fname, "rb") as pfile:
+            attribute_dict = pickle.load(pfile)
+        C = Container(**attribute_dict)
+        return C
+
+# End of class Container
+
 
 def get_whole_assignment_expression(line, varname, seq_type):
     """
@@ -939,6 +964,9 @@ def line_to_token_list(line):
     tokens = [TokenInfo(*t) for t in tokens]
 
     return tokens
+
+
+
 
 
 
