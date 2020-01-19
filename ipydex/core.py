@@ -136,15 +136,30 @@ class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
 
 
 # noinspection PyPep8Naming
-def IPS(frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False, code_context=1, print_tb=True,
-        add_context_for_latest=6):
-    """Starts IPython embedded shell. This is similar to IPython.embed() but with some
+def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False,
+        code_context=1, print_tb=True, add_context_for_latest=6):
+    """
+
+    :param condition:           return immediately if False
+    :param frame:
+    :param ns_extension:
+    :param copy_namespaces:
+    :param overwrite_globals:
+    :param code_context:
+    :param print_tb:
+    :param add_context_for_latest:
+    :return:
+
+    Starts IPython embedded shell. This is similar to IPython.embed() but with some
     additional features:
 
     1. Print a list of the calling frames before entering the prompt
     2. (optionally) copy local name space to global one to prevent certain IPython bug.
     3. while doing so optionally overwrite names in the global namespace
     """
+
+    if not condition:
+        return None
 
     C = Container()
     C.copy_namespaces = copy_namespaces
