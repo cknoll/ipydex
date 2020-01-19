@@ -16,15 +16,15 @@ https://www.gnu.org/licenses/gpl-3.0.en.html
 
 This module is an experimental ipython extension.
 
-Background: insert some logic to display the 'result' of an assignment
+Provide special comments to display the 'result' of an assignment or to show similar information (like length or shape)
 
 
 
-# load it with %reload_ext ipydex.displaytools
+# load it with %load_ext ipydex.displaytools
 
 usage:
 
-`my_random_variable =  np.random.rand() ##`
+`my_random_variable =  np.random.rand() ##:`
 
 inserts the source line `display(my_random_variable)` to the source code,
 that is actually executed.
@@ -127,31 +127,58 @@ def get_line_segments(line):
     if isinstance(myast, ast.Assign):
         left_most_assignment = myast.targets[-1]
         # note that indent was stripped away
-        lhs_start_idx = left_most_assignment.col_offset + len(indent)
 
-        for eqs_idx in equality_signs:
-            if eqs_idx > lhs_start_idx:
-                # take the first equality sign which comes after the beginning of the last assignment
-                # as delimiter
-                lhs_end_idx = eqs_idx-1
-                break
-        else:
-            # no break
-            msg = "unexpected locations of equality signs in the line `{}`".format(line)
-            raise ValueError(msg)
-        lhs = line[lhs_start_idx:lhs_end_idx].strip()
-        rhs_start_idx = lhs_end_idx + 2
+        lhs = get_lhs_from_ast(myast)
+        rhs = get_rhs_from_ast(myast, line, len(indent), comment_tuple[0])
+
     else:
         lhs = None
-        rhs_start_idx = 0
+        rhs = line[0:comment_tuple[0]].strip()
 
-    # from the last `=` until the beginning of the comment
-    rhs = line[rhs_start_idx:comment_tuple[0]].strip()
     if rhs == "":
         rhs = None
     comment = comment_tuple[1].strip()
 
     return indent, lhs, rhs, comment
+
+
+def get_lhs_from_ast(myast):
+    """
+    Handle different possibilities for rhs (expression, numeric literal, )
+
+    :param myast:       ast object
+    :param tokens:      ordered list of tokens for this line
+    :param len_indent:  length of indent
+    :return:
+    """
+
+    t = myast.targets[-1]
+
+    if isinstance(t, ast.Name):
+        return t.id
+    elif isinstance(t, ast.Tuple):
+        if all(isinstance(e, ast.Name) for e in t.elts):
+            seq = ", ".join(e.id for e in t.elts)
+            return seq
+
+    else:
+        # this also includes nested tuples
+        return "<unable to extract lhs>"
+
+
+def get_rhs_from_ast(myast, line, len_indent, comment_start):
+    """
+    Handle different possibilities for rhs (expression, numeric literal, )
+
+    :param line:
+    :param myast:       ast object
+    :param len_indent:  length of indent
+    :param comment_start:
+    :return:
+    """
+
+    start_idx = myast.value.col_offset + len_indent
+    return line[start_idx:comment_start].strip()
 
 
 def classify_comment(cmt):

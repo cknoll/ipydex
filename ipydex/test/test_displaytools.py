@@ -148,6 +148,10 @@ class TestDT1(unittest.TestCase):
         ind, lhs, rhs, cmt = sgm = dt.get_line_segments(l1)
         self.assertEqual((ind, lhs, rhs, cmt), ("", "x", "func1(a=a, b = b)", "##:"))
 
+        l1 = "xyz=x ##:i"
+        ind, lhs, rhs, cmt = sgm = dt.get_line_segments(l1)
+        self.assertEqual((ind, lhs, rhs, cmt), ("", "xyz", "x", "##:i"))
+
     def test_insert_disp_lines1(self):
         raw_cell1 = """\
 x = 0
@@ -339,6 +343,46 @@ z = 0
         self.assertEqual(eres1, res1)
         # --------------------
         # --------------------
+
+    def test_insert_disp_lines3(self):
+        raw_cell1 = """\
+y=x ##:
+y=x ##:i
+z = 0
+"""
+        eres1 = """\
+y=x ##:
+custom_display("y", y); print("---")
+y=x ##:i
+custom_display("info(y)", _ipydex__info(y)); print("---")
+z = 0
+"""
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
+
+    def t_est_logical_lines(self):
+
+        raw_cell1 = """\
+x=0 ##:
+y = x ##:i
+z1 = [ 1,
+       2,
+       3 ]
+
+z2 = [ 1,
+       2,
+       3 ]  ##:
+
+z3 = [ 1,  # some comment
+       2,  # more comments
+       3 ] ##: 
+"""
+
+        aa = dt.ast.parse(raw_cell1)
+
+        IPS()
+
+
 
     def test_info1(self):
         res1 = dt.info(1)

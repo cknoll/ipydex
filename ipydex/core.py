@@ -532,9 +532,15 @@ def get_notebook_name():
     """
     # taken from https://github.com/jupyter/notebook/issues/1000#issuecomment-359875246
 
-    from requests.compat import urljoin
+    try:
+        import requests
+        from requests.compat import urljoin
+    except ImportError:
+        msg = "This functions depends on the module requests."
+        # it is not an official dependency because this is not a core functionality
+        raise ImportError(msg)
+
     import ipykernel
-    import requests
     import json
     import re
     from notebook.notebookapp import list_running_servers
