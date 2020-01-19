@@ -868,7 +868,7 @@ def get_whole_assignment_expression(line, varname, seq_type):
     :return:
     """
 
-    tokens = line_to_token_list(line)
+    tokens = str_to_token_list(line)
 
     if issubclass(seq_type, tuple):
         L, R = "()"
@@ -964,7 +964,7 @@ def get_carg_vars_from_frame(frame, seq_type, return_varnames=False):
         return results
 
 
-def line_to_token_list(line):
+def str_to_token_list(line, raise_TE=False):
 
     if sys.version_info[0] >= 3:
         # in python3 line is already unicode
@@ -975,10 +975,13 @@ def line_to_token_list(line):
 
     try:
         tokens = list(tk.generate_tokens(io.StringIO(uline).readline))
-    except tk.TokenError:
+    except tk.TokenError as err:
         # this happens e.g. for a multi-line-string
         # ignore this line
-        tokens = list(tk.generate_tokens(io.StringIO(u"").readline))
+        if raise_TE:
+            raise err
+        else:
+            tokens = list(tk.generate_tokens(io.StringIO(u"").readline))
 
     # for python2-compatibility explicitly convert to named tuple
     TokenInfo = collections.namedtuple("TokenInfo", ["type", "string", "start", "end", "line"])

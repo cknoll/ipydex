@@ -192,7 +192,7 @@ z = 0
         raw_cell1 = """\
 x = 0
 # y = 1 ##:
-z = 0
+ZZ = 0
 """
 
         eres1 = raw_cell1
@@ -360,11 +360,19 @@ z = 0
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
 
-    def t_est_logical_lines(self):
+    def test_logical_lines1(self):
+        raw_cell1 = """\
+x = 0
+# y = 1 ##:
+ZZ = 0
+"""
+        ll_list = dt.get_logical_lines_of_cell(raw_cell1)
+        self.assertEqual(len(ll_list), 3)
+
+
+    def test_logical_lines2(self):
 
         raw_cell1 = """\
-x=0 ##:
-y = x ##:i
 z1 = [ 1,
        2,
        3 ]
@@ -375,14 +383,15 @@ z2 = [ 1,
 
 z3 = [ 1,  # some comment
        2,  # more comments
-       3 ] ##: 
+       3 ] ##:
+       
+z4 = [ 1,  
+       2,  
+       3 ] ##:
 """
 
         aa = dt.ast.parse(raw_cell1)
-
-        IPS()
-
-
+        dt.get_logical_lines_of_cell(raw_cell1)
 
     def test_info1(self):
         res1 = dt.info(1)
