@@ -160,6 +160,7 @@ def get_line_segments_from_logical_line(ll):
             no_removed_physical_lines += 1
 
     comment_strings = []
+    comment_tokens = []
     initial_indent = ""
 
     for i, t in enumerate(tokens):
@@ -168,6 +169,7 @@ def get_line_segments_from_logical_line(ll):
         if t.type == tk.COMMENT:
             # store string_index and comment string
             comment_strings.append(t.string)
+            comment_tokens.append(t)
 
     assert tokens[-1].type in (tk.NEWLINE, tk.ENDMARKER)
 
@@ -217,13 +219,33 @@ def get_line_segments_from_logical_line(ll):
 
         # right hand side is all left from the final comment (which might be "virtual")
         rhs = get_rhs_from_ast(myast, dedented_line, no_removed_physical_lines, final_comment_start)
+        rhs_start_line = myast.value.lineno - 1
 
     else:
         lhs = None
         rhs = dedented_line[0:final_comment_start[1]].strip()
+        rhs_start_line = 0
+
+    # in multiline strings, there might reside some comment strings inside rhs
+    # we want to cancel them:
+    # brute force replace will fail if the same string occurs inside a quote (regular code)
 
     if rhs == "":
         rhs = None
+    else:
+        old_rhs = rhs
+        rhs_lines = rhs.split("\n")
+        for ct in comment_tokens:
+            line_idx = ct.start[0] -1 - rhs_start_line
+            line = rhs_lines[line_idx]
+            if line.endswith(ct.string):
+                # for single lines this and last physical line of a multiline-rhs this is not the case
+                rhs_lines[line_idx] = line[:-len(ct.string)].rstrip()
+        new_rhs = "\n".join(rhs_lines)
+        if rhs.endswith("\n"):
+            rhs = "{}\n".format(new_rhs)
+        else:
+            rhs = new_rhs
 
     comment = "".join(comment_strings).strip()
 

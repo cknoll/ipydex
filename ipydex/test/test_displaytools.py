@@ -376,13 +376,17 @@ z1 = [ 1,
        2,
        3 ]
 
+
+
 z2 = [ 1,
        2,
        3 ]  ##:
 
 z3 = [ 1,  # some comment
-       2,  # more comments
-       3 ] ##:
+       2,  ##:
+       3 ] # more comments
+
+# note the spaces in the  "empty" line below
        
 z4 = [ 1,  
        2,  
@@ -390,7 +394,19 @@ z4 = [ 1,
 """
 
         aa = dt.ast.parse(raw_cell1)
-        dt.get_logical_lines_of_cell(raw_cell1)
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+
+        self.assertEqual(ll[0].txt, 'z1 = [ 1,\n       2,\n       3 ]\n')
+        self.assertEqual(ll[1].txt, '\n\n\nz2 = [ 1,\n       2,\n       3 ]  ##:\n')
+        self.assertEqual(ll[2].txt, '\nz3 = [ 1,  # some comment\n       2,  ##:\n       3 ] # more comments\n')
+
+        eres = '\n# note the spaces in the  "empty" line below\n       \nz4 = [ 1,  \n       2,  \n       3 ] ##:\n'
+        self.assertEqual(ll[3].txt, eres)
+
+        indent, lhs, rhs, comments = dt.get_line_segments_from_logical_line(ll[2])
+        self.assertEqual(indent, "")
+        self.assertEqual(lhs, "z3")
+        self.assertEqual(rhs, "[ 1,\n       2,\n       3 ]")
 
     def test_info1(self):
         res1 = dt.info(1)
@@ -500,20 +516,14 @@ Z2 = 2# abc
 """
 
         ll = dt.get_logical_lines_of_cell(raw_cell1)
-        if 0:
-            res = dt.str_to_token_list(raw_cell1)
-            IPS()
 
-        if 0:
-            res = dt.get_line_segments_from_logical_line(ll[2])
-            self.assertEqual(res, ("    ", "WW", "10", ""))
+        res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
 
-        if 1:
-            res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
+        self.assertEqual(res[0], ("", "x", "0", ""))
+        self.assertEqual(res[2], ("    ", "WW", "10", ""))
+        self.assertEqual(res[3], ("    ", "XX", "0", "# abc1"))
 
-            self.assertEqual(res[0], ("", "x", "0", ""))
-            self.assertEqual(res[2], ("    ", "WW", "10", ""))
-            self.assertEqual(res[3], ("    ", "XX", "0", "# abc1"))
+
 
 
 
