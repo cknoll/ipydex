@@ -78,10 +78,38 @@ class LogicalLine(Container):
     def __init__(self, txt, tokens, start, end):
         # TODO: when python2 support is dropped: change this to super().__init__(...)
         super(LogicalLine, self).__init__()
-        self.txt = txt
         self.tokens = tokens
+        self.txt = txt
         self.start = start
         self.end = end
+
+        # !! TODO Cleanup
+
+        self.original_txt = txt
+        self.original_tokens = tokens[:]
+        if 0:
+
+            physical_lines = txt.split("\n")
+
+            # some logical lines start with a comment and after NL comes code
+            # The comment should be stripped from the tokens
+
+            while tokens[0].type == tk.COMMENT:
+                assert tokens[1].type == tk.NL
+
+                tokens = tokens[2:]
+
+            self.tokens = tokens
+
+            self.txt = "".join([t.string for t in tokens])
+
+    def __repr__(self):
+
+        if self.txt.endswith("\n"):
+            idx = -1
+        else:
+            idx = None
+        return "<LL: {}>".format(self.txt[:idx])
 
 
 # generate Special Comment Container
@@ -111,17 +139,27 @@ def get_line_segments_from_logical_line(ll):
     :return:
     """
 
+    # logical lines might start with physical lines which are only comments.
+    # we dont want them here. (This has no influence to the indent-logic)
+
+    tokens = ll.tokens[:]
+
+    while tokens[0].type == tk.COMMENT:
+        assert tokens[1].type == tk.NL
+
+        tokens = tokens[2:]
+
     comment_strings = []
     initial_indent = ""
 
-    for i, t in enumerate(ll.tokens):
+    for i, t in enumerate(tokens):
         if t.type == tk.INDENT:
             initial_indent = t.string
         if t.type == tk.COMMENT:
             # store string_index and comment string
             comment_strings.append(t.string)
 
-    assert ll.tokens[-1].type in (tk.NEWLINE, tk.ENDMARKER)
+    assert tokens[-1].type in (tk.NEWLINE, tk.ENDMARKER)
 
     if not ll.txt.startswith(initial_indent):
         ll.txt = "{}{}".format(initial_indent, ll.txt)
@@ -158,6 +196,7 @@ def get_line_segments_from_logical_line(ll):
 
     if rhs == "":
         rhs = None
+
     comment = "".join(comment_strings).strip()
 
     return initial_indent, lhs, rhs, comment
@@ -564,15 +603,19 @@ def get_logical_lines_of_cell(raw_cell):
         if tok.type == tk.NEWLINE:
             # append a new empty list
             logical_lines_tk_list.append([])
-        if tok.type == tk.NL and last_tok.type == tk.COMMENT:
 
-            # the parser does not consider this as a real NEWLINE (just NL, whatever this means)
+        # !! TODO Cleanup
+        if 0 and tok.type == tk.NL and last_tok.type == tk.COMMENT:
+
+            # the parser does not consider this as a real NEWLINE (end of logical line)
+            # (just NL, end of physical line)
             # this happens after a pure comment line
             # also append a new empty list
 
             # create a new namedtuple with .type = tk.NEWLINE
-            NEWLINE_tok = type(tok)(tk.NEWLINE, *tok[1:])
-            logical_lines_tk_list[-1].append(NEWLINE_tok)
+            # -> this leads to nasty bugs
+            # NEWLINE_tok = type(tok)(tk.NEWLINE, *tok[1:])
+            # logical_lines_tk_list[-1].append(NEWLINE_tok)
 
             logical_lines_tk_list.append([])
 

@@ -462,5 +462,37 @@ z4 = [ 1,
             pass
 
 
+# noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
+class TestDT2(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def testLL1(self):
+        raw_cell1 = """\
+x = 0
+if 1:
+    # a = 0 
+    # b = 1 ##:
+    XX = 0
+    if 1: 
+        YY = 1
+ZZ = 2
+"""
+
+        if 0:
+            res = dt.str_to_token_list(raw_cell1)
+            IPS()
+
+        if 1:
+            ll = dt.get_logical_lines_of_cell(raw_cell1)
+
+            res2 = dt.get_line_segments_from_logical_line(ll[2])
+            res3 = dt.get_line_segments_from_logical_line(ll[4])
+            res4 = dt.get_line_segments_from_logical_line(ll[5])
+
+            IPS()
+
+
 if __name__ == "__main__":
     unittest.main()
