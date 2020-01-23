@@ -180,6 +180,7 @@ def get_line_segments_from_logical_line(ll):
             if tok.type in ignorable_tokens:
                 continue
             if tok.type == tk.COMMENT:
+                # useful for debugging
                 final_comment_token = tok
                 final_comment_start = tok.start
                 break
@@ -225,7 +226,6 @@ def get_line_segments_from_logical_line(ll):
         rhs = None
 
     comment = "".join(comment_strings).strip()
-
 
     return initial_indent, lhs, rhs, comment
 
@@ -476,12 +476,15 @@ def insert_disp_lines(raw_cell):
 
     res = []
     for line in lines_of_new_cell:
-        res.append(line)
-        if not line.endswith("\n"):
-            res.append("\n")
+        res.append("{}\n".format(line.rstrip()))
     new_raw_cell = "".join(res+[""])
 
-    return new_raw_cell
+    # there might still be lines like "    \n" in -> split and merge again
+    new_raw_cell2 = "\n".join([line.rstrip() for line in new_raw_cell.split("\n")])
+
+    IPS("y1, y2" in res)
+
+    return new_raw_cell2
 
 
 def custom_display(lhs, rhs):

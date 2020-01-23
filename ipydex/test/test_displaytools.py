@@ -367,8 +367,7 @@ x = 0
 ZZ = 0
 """
         ll_list = dt.get_logical_lines_of_cell(raw_cell1)
-        self.assertEqual(len(ll_list), 3)
-
+        self.assertEqual(len(ll_list), 2)
 
     def test_logical_lines2(self):
 
@@ -516,7 +515,6 @@ Z2 = 2# abc
             self.assertEqual(res[2], ("    ", "WW", "10", ""))
             self.assertEqual(res[3], ("    ", "XX", "0", "# abc1"))
 
-            IPS()
 
 
 if __name__ == "__main__":
