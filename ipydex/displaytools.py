@@ -43,6 +43,7 @@ duplication of manually adding `display(my_random_variable)`.
 import types
 import collections
 import ast
+import textwrap
 
 import tokenize as tk
 
@@ -143,11 +144,13 @@ def get_line_segments_from_logical_line(ll):
     # we dont want them here. (This has no influence to the indent-logic)
 
     tokens = ll.tokens[:]
+    no_removed_physical_lines = 0
 
     while tokens[0].type == tk.COMMENT:
         assert tokens[1].type == tk.NL
 
         tokens = tokens[2:]
+        no_removed_physical_lines += 1
 
     comment_strings = []
     initial_indent = ""
@@ -164,15 +167,26 @@ def get_line_segments_from_logical_line(ll):
     if not ll.txt.startswith(initial_indent):
         ll.txt = "{}{}".format(initial_indent, ll.txt)
 
+    ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
+    ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
     try:
-        if ll.tokens[-2].type == tk.COMMENT:
-            # the last token before newline is a comment
-            final_comment_start = ll.tokens[-2].start
-        elif ll.tokens[-2].type == tk.NL and ll.tokens[-3].type == tk.COMMENT:
-            final_comment_start = ll.tokens[-3].start
+        # look from behind if the first "relevant" token is a comment
+        for tok in tokens[::-1]:
+            if tok.type in ignorable_tokens:
+                continue
+            if tok.type == tk.COMMENT:
+                final_comment_token = tok
+                final_comment_start = tok.start
+                break
         else:
             # no final comment
-            final_comment_start = ll.tokens[-1].start
+            # use the last token (except DEDENT and ENDMARKER) as virtual final comment
+            for tok in tokens[::-1]:
+                if tok.type in ignorable_final_tokens:
+                    continue
+                break
+            final_comment_token = tok
+            final_comment_start = tok.start
             # be sure that in the last physical line there is no comment
             assert not any(t for t in ll.tokens if t.type == tk.COMMENT and t.start[0] == ll.tokens[-1].start[0])
 
@@ -181,14 +195,22 @@ def get_line_segments_from_logical_line(ll):
         return "", None, None, ""
 
     try:
-        myast = ast.parse(ll.txt.strip()).body[0]
+        dedented_line = textwrap.dedent(ll.txt)
+        myast = ast.parse(dedented_line).body[0]
+
+        # correct the start line and the start index of the final comment
+        final_comment_start = (final_comment_start[0],
+                               final_comment_start[1] - len(initial_indent))
     except (IndexError, SyntaxError):
         myast = None
+        dedented_line = ""
 
     if isinstance(myast, ast.Assign):
 
         lhs = get_lhs_from_ast(myast)
-        rhs = get_rhs_from_ast(myast, ll.txt, len(initial_indent), final_comment_start)
+
+        # right hand side is all left from the final comment (which might be "virtual")
+        rhs = get_rhs_from_ast(myast, dedented_line, no_removed_physical_lines, final_comment_start)
 
     else:
         lhs = None
@@ -198,6 +220,8 @@ def get_line_segments_from_logical_line(ll):
         rhs = None
 
     comment = "".join(comment_strings).strip()
+
+    IPS("abc1" in ll.txt)
 
     return initial_indent, lhs, rhs, comment
 
@@ -275,30 +299,35 @@ def get_lhs_from_ast(myast):
         return "<unable to extract lhs>"
 
 
-def get_rhs_from_ast(myast, txt, len_indent, comment_start_tuple):
+def get_rhs_from_ast(myast, txt, no_lines_removed, comment_start_tuple):
     """
     Handle different possibilities for rhs (expression, numeric literal, )
 
     :param txt:
     :param myast:       ast object
-    :param len_indent:  length of indent
+    :param no_lines_removed:
+                        number of physical lines which have been removed by the caller (leading comment lines)
     :param comment_start_tuple:
                         2-tuple: (lineno, col_offset)
     :return:
     """
 
     physical_lines = txt.split("\n")
+    # myast.value.lineno -> this is the line number (w.r.t 1, 2, 3, ...) where the assignation result starts
+    # n_line := (myast.value.lineno - 1) is the number of lines above it -> physical_lines[:n_line] returns them
     n_line = myast.value.lineno - 1
     # count chars from previous lines (including the char "\n")
     previous_chars_start = sum(len(line) for line in physical_lines[:n_line]) + n_line
 
-    start_idx = previous_chars_start + myast.value.col_offset + len_indent
+    start_idx = previous_chars_start + myast.value.col_offset
 
     # count chars from previous lines (including the char "\n") for the comment
-    n_line = comment_start_tuple[0] - 1
+    n_line = comment_start_tuple[0] - 1  # - no_lines_removed
     previous_chars_end = sum(len(line) for line in physical_lines[:n_line]) + n_line
 
-    end_idx = previous_chars_end + comment_start_tuple[1] + len_indent*0
+    end_idx = previous_chars_end + comment_start_tuple[1]
+
+    IPS("WW" in txt)
 
     return txt[start_idx:end_idx].strip()
 
@@ -630,8 +659,14 @@ def get_logical_lines_of_cell(raw_cell):
         # .start is a 2-tuple: (lineno, col_offset)
         start_line = ll_tokens[0].start[0] - 1
         end_line = ll_tokens[-1].end[0] - 1
-        txt = "\n".join(physical_lines[start_line:end_line+1]).strip() + "\n"
-        ll = LogicalLine(txt, ll_tokens, start_line, end_line)
+
+        # to track the indentation independently from preceding lines,
+        # we perform tokenization again for each logical line
+
+        txt = "\n".join(physical_lines[start_line:end_line+1]).rstrip() + "\n"
+        new_tokens = str_to_token_list(txt)
+
+        ll = LogicalLine(txt, new_tokens, start_line, end_line)
         logical_lines.append(ll)
 
     return logical_lines

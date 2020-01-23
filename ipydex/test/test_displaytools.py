@@ -469,27 +469,44 @@ class TestDT2(unittest.TestCase):
         pass
 
     def testLL1(self):
+
+        """
+        Erkenntnis: Identation steckt nur in der ersten logical line drin.
+
+        entweder indentation mit zählen, oder die logical lines nochmal separat tokenizen
+
+        :return:
+        """
+
         raw_cell1 = """\
 x = 0
 if 1:
     # a = 0 
     # b = 1 ##:
-    XX = 0
+    WW = 10
+    XX = 0 # abc1
     if 1: 
         YY = 1
-ZZ = 2
+Z1 = 1
+Z2 = 2# abc 
 """
 
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
         if 0:
             res = dt.str_to_token_list(raw_cell1)
             IPS()
 
+        if 0:
+            res = dt.get_line_segments_from_logical_line(ll[2])
+            self.assertEqual(res, ("    ", "WW", "10", ""))
+
         if 1:
             ll = dt.get_logical_lines_of_cell(raw_cell1)
+            res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
 
-            res2 = dt.get_line_segments_from_logical_line(ll[2])
-            res3 = dt.get_line_segments_from_logical_line(ll[4])
-            res4 = dt.get_line_segments_from_logical_line(ll[5])
+            self.assertEqual(res[0], ("", "x", "0", ""))
+            self.assertEqual(res[2], ("    ", "WW", "10", ""))
+            self.assertEqual(res[3], ("    ", "XX", "0", "# abc1"))
 
             IPS()
 
