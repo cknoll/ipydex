@@ -852,6 +852,10 @@ class Container(object):
         C = Container(**attribute_dict)
         return C
 
+    def __repr__(self):
+        # basically return the representation of the dict
+        return "<Container: {}>".format(self.__dict__)
+
 # End of class Container
 
 
@@ -964,6 +968,17 @@ def get_carg_vars_from_frame(frame, seq_type, return_varnames=False):
         return results
 
 
+def _tokenize(ustr1):
+    """
+    More convenient interface to tokenize.generate_tokens
+
+    :param ustr1:   unicode-str to be tokenized
+    :return: List of tokens
+    """
+
+    return list(tk.generate_tokens(io.StringIO(ustr1).readline))
+
+
 def str_to_token_list(line, raise_TE=False):
 
     if sys.version_info[0] >= 3:
@@ -974,18 +989,21 @@ def str_to_token_list(line, raise_TE=False):
         uline = line.decode()
 
     try:
-        tokens = list(tk.generate_tokens(io.StringIO(uline).readline))
+        tokens = _tokenize(line)
     except tk.TokenError as err:
         # this happens e.g. for a multi-line-string
         # ignore this line
         if raise_TE:
             raise err
         else:
-            tokens = list(tk.generate_tokens(io.StringIO(u"").readline))
+            tokens = _tokenize(u"")
 
-    # for python2-compatibility explicitly convert to named tuple
-    TokenInfo = collections.namedtuple("TokenInfo", ["type", "string", "start", "end", "line"])
-    tokens = [TokenInfo(*t) for t in tokens]
+    def unpac_token_info(ti):
+        ti_dict = dict(zip(["type", "string", "start", "end", "line"], ti))
+        ti_dict["type_name"] = tk.tok_name[ti.type]
+        return ti_dict
+
+    tokens = [Container(**unpac_token_info(t)) for t in tokens]
 
     return tokens
 
