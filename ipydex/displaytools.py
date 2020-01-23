@@ -142,15 +142,22 @@ def get_line_segments_from_logical_line(ll):
 
     # logical lines might start with physical lines which are only comments.
     # we dont want them here. (This has no influence to the indent-logic)
+    # but we want them, if there is no real operation happening
 
     tokens = ll.tokens[:]
     no_removed_physical_lines = 0
 
-    while tokens[0].type == tk.COMMENT:
-        assert tokens[1].type == tk.NL
+    ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
+    ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
+    aux_only_tokens = ignorable_tokens + (tk.INDENT, tk.COMMENT)
 
-        tokens = tokens[2:]
-        no_removed_physical_lines += 1
+    if any([(tok.type not in aux_only_tokens) for tok in tokens]):
+
+        while tokens[0].type == tk.COMMENT:
+            assert tokens[1].type == tk.NL
+
+            tokens = tokens[2:]
+            no_removed_physical_lines += 1
 
     comment_strings = []
     initial_indent = ""
@@ -167,8 +174,6 @@ def get_line_segments_from_logical_line(ll):
     if not ll.txt.startswith(initial_indent):
         ll.txt = "{}{}".format(initial_indent, ll.txt)
 
-    ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
-    ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
     try:
         # look from behind if the first "relevant" token is a comment
         for tok in tokens[::-1]:
@@ -214,14 +219,13 @@ def get_line_segments_from_logical_line(ll):
 
     else:
         lhs = None
-        rhs = ll.txt[0:final_comment_start[1]].strip()
+        rhs = dedented_line[0:final_comment_start[1]].strip()
 
     if rhs == "":
         rhs = None
 
     comment = "".join(comment_strings).strip()
 
-    IPS("abc1" in ll.txt)
 
     return initial_indent, lhs, rhs, comment
 
@@ -327,7 +331,7 @@ def get_rhs_from_ast(myast, txt, no_lines_removed, comment_start_tuple):
 
     end_idx = previous_chars_end + comment_start_tuple[1]
 
-    IPS("WW" in txt)
+    IPS("abx" in txt)
 
     return txt[start_idx:end_idx].strip()
 
