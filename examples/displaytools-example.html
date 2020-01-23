@@ -13239,7 +13239,7 @@ ydot1_obj := $\displaystyle \frac{\partial}{\partial t} \cos{\left(2 \pi t \righ
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The supported syntax is somewhat flexible (and does not rely on spaces). In case of multiple assignments the rightmost is used.</p>
+<p>The supported syntax is somewhat flexible (and does not anymore rely on spaces). In case of multiple assignments the rightmost is used.</p>
 
 </div>
 </div>
@@ -13344,6 +13344,163 @@ w := $\displaystyle \left( 10, \  20\right)$
 
 <div class="output_latex output_subarea ">
 (w1, w2) := $\displaystyle \left( 10, \  20\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Compatibility with indentation is also given:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">u</span> <span class="o">=</span> <span class="mi">10</span> 
+<span class="n">v</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1">##:</span>
+<span class="k">if</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">##:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">##:</span>
+    <span class="k">if</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1">##:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+v := $\displaystyle 20$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+w := $\displaystyle 0$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+x := $\displaystyle 1$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+z := $\displaystyle 3$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+b := $\displaystyle 1$
 </div>
 
 </div>
@@ -14110,6 +14267,15 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
 </li>
 <li>It saves typing effort during the development process (when internal information is of interest to understand and debug the code)</li>
 </ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<h3 id="New-features">New features<a class="anchor-link" href="#New-features">&#182;</a></h3><p>Below some features are shown which did not work in earlier versions:</p>
 
 </div>
 </div>
