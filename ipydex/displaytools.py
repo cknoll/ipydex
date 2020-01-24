@@ -131,6 +131,8 @@ def get_line_segments_from_logical_line(ll):
 
     tokens = ll.tokens[:]
     no_removed_physical_lines = 0
+    no_removed_empty_plines = 0
+    no_removed_comment_plines = 0
 
     ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
     ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
@@ -145,9 +147,11 @@ def get_line_segments_from_logical_line(ll):
 
                 tokens = tokens[2:]
                 no_removed_physical_lines += 1
+                no_removed_comment_plines += 1
             elif tokens[0].type == tk.NL:
                 tokens = tokens[1:]
                 no_removed_physical_lines += 1
+                no_removed_empty_plines += 1
             else:
                 # tok is something important
                 break
@@ -197,6 +201,10 @@ def get_line_segments_from_logical_line(ll):
 
     try:
         dedented_line = textwrap.dedent(ll.txt)
+        assert dedented_line.startswith("\n"*no_removed_empty_plines)
+
+        # omit the leading linebreaks
+        dedented_line = dedented_line[no_removed_empty_plines:]
         myast = ast.parse(dedented_line).body[0]
 
         # correct the start line and the start index of the final comment
@@ -212,7 +220,9 @@ def get_line_segments_from_logical_line(ll):
 
         # right hand side is all left from the final comment (which might be "virtual")
         rhs = get_rhs_from_ast(myast, dedented_line, no_removed_physical_lines, final_comment_start)
-        rhs_start_line = myast.value.lineno - 1 - no_removed_physical_lines
+        rhs_start_line = myast.value.lineno - 1
+
+        assert rhs_start_line >= 0
 
     else:
         lhs = None

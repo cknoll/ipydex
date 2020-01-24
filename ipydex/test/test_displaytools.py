@@ -490,6 +490,34 @@ class TestDT2(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_demo4(self):
+        raw_cell1 = """\
+if:
+    # van-der-Pol-Oszillator
+    f = sp.Matrix([x2, (1-x1**2)*x2 - x1])
+    y = h = x1
+
+    
+selector ##:
+n = len(f)
+f ##:
+y ##:
+"""
+
+        eres1 = """\
+if:
+    # van-der-Pol-Oszillator
+    f = sp.Matrix([x2, (1-x1**2)*x2 - x1])
+    y = h = x1
+custom_display("(selector)", (selector)); print("---")
+n = len(f)
+custom_display("(f)", (f)); print("---")
+custom_display("(y)", (y)); print("---")
+"""
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(res1, eres1)
+
     def testLL3(self):
         raw_cell1 = """\
 xx = sp.Matrix(sp.symbols('x1:11'))
