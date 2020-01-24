@@ -420,6 +420,9 @@ def process_line(line, line_flags, expr_to_disp, indent):
 
 def insert_disp_lines(raw_cell):
 
+    if "##!! raise TestException !!" in raw_cell:
+        raise SyntaxError("Virtual syntax error (only for testing)")
+
     original_raw_cell = raw_cell
     raw_cell = raw_cell.strip()
 
@@ -427,7 +430,6 @@ def insert_disp_lines(raw_cell):
     logical_lines = get_logical_lines_of_cell(raw_cell)
     nphy = len(physical_lines)
     nlog = len(logical_lines)
-
 
     lines_of_new_cell = []
 
@@ -631,12 +633,6 @@ def get_logical_lines_of_cell(raw_cell):
 
     tokens = str_to_token_list(raw_cell)
 
-    # TODO !! delete?
-    if 0 and len(tokens) <= 1:
-        # this happens only when there are syntax errors
-        msg = "There are syntax errors in the cell. Displaytools could not parse."
-        raise SyntaxError(msg)
-
     logical_lines_tk_list = [[]]
     last_tok = None
     for tok in tokens:
@@ -675,7 +671,15 @@ def load_ipython_extension(ip):
 
     def new_run_cell(self, raw_cell, *args, **kwargs):
 
-        new_raw_cell = insert_disp_lines(raw_cell)
+        # noinspection PyBroadException
+        try:
+            new_raw_cell = insert_disp_lines(raw_cell)
+        except Exception as e:
+            msg = "There was an error in the displaytools extension (probably due to unsupported syntax).\n"\
+                  "This is the error message:\n\n{}\n\n"\
+                  "We leave this cell unchanged."
+            print(msg.format(e))
+            new_raw_cell = raw_cell
 
         q = 0
         if q:
