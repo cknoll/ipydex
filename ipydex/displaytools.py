@@ -84,26 +84,6 @@ class LogicalLine(Container):
         self.start = start
         self.end = end
 
-        # !! TODO Cleanup
-
-        self.original_txt = txt
-        self.original_tokens = tokens[:]
-        if 0:
-
-            physical_lines = txt.split("\n")
-
-            # some logical lines start with a comment and after NL comes code
-            # The comment should be stripped from the tokens
-
-            while tokens[0].type == tk.COMMENT:
-                assert tokens[1].type == tk.NL
-
-                tokens = tokens[2:]
-
-            self.tokens = tokens
-
-            self.txt = "".join([t.string for t in tokens])
-
     def __repr__(self):
 
         if self.txt.endswith("\n"):
@@ -135,6 +115,11 @@ sc_list = SCC.value_list()
 
 def get_line_segments_from_logical_line(ll):
     """
+    Split up a logical line into (indent, lhs, rhs, comment)
+
+    lhs ist defined as the rightmost assignment
+
+    (line does not need to be an assignment)
 
     :param ll:  LogicalLine object
     :return:
@@ -252,55 +237,6 @@ def get_line_segments_from_logical_line(ll):
     return initial_indent, lhs, rhs, comment
 
 
-# TODO: make this obsolete
-def get_line_segments(line):
-    """
-    Split up a line into (indent, lhs, rhs, comment)
-
-    lhs ist defined as the leftmost assignment
-
-    (line does not need to be an assignment)
-
-    :param line:
-    :return: lhs, rhs, comment
-    """
-    ll = get_logical_lines_of_cell(line)[0]
-    return get_line_segments_from_logical_line(ll)
-
-
-    1/0
-
-    tokens = str_to_token_list(line)
-    comment_tuple = None, ""
-    indent = ""
-
-    for i, t in enumerate(tokens):
-        if t.type == tk.INDENT:
-            indent = t.string
-        if t.type == tk.COMMENT:
-            # store string_index and comment string
-            comment_tuple = t.start[1], t.string
-    try:
-        myast = ast.parse(line.strip()).body[0]
-    except (IndexError, SyntaxError):
-        myast = None
-
-    if isinstance(myast, ast.Assign):
-
-        lhs = get_lhs_from_ast(myast)
-        rhs = get_rhs_from_ast(myast, line, len(indent), comment_tuple[0])
-
-    else:
-        lhs = None
-        rhs = line[0:comment_tuple[0]].strip()
-
-    if rhs == "":
-        rhs = None
-    comment = comment_tuple[1].strip()
-
-    return indent, lhs, rhs, comment
-
-
 def get_lhs_from_ast(myast):
     """
     Handle different possibilities for rhs (expression, numeric literal, )
@@ -352,8 +288,6 @@ def get_rhs_from_ast(myast, txt, no_lines_removed, comment_start_tuple):
     previous_chars_end = sum(len(line) for line in physical_lines[:n_line]) + n_line
 
     end_idx = previous_chars_end + comment_start_tuple[1]
-
-    IPS("abx" in txt)
 
     return txt[start_idx:end_idx].strip()
 
@@ -503,8 +437,6 @@ def insert_disp_lines(raw_cell):
 
     # there might still be lines like "    \n" in -> split and merge again
     new_raw_cell2 = "\n".join([line.rstrip() for line in new_raw_cell.split("\n")])
-
-    IPS("y1, y2" in res)
 
     return new_raw_cell2
 
@@ -662,22 +594,7 @@ def get_logical_lines_of_cell(raw_cell):
             # append a new empty list
             logical_lines_tk_list.append([])
 
-        # !! TODO Cleanup
-        if 0 and tok.type == tk.NL and last_tok.type == tk.COMMENT:
-
-            # the parser does not consider this as a real NEWLINE (end of logical line)
-            # (just NL, end of physical line)
-            # this happens after a pure comment line
-            # also append a new empty list
-
-            # create a new namedtuple with .type = tk.NEWLINE
-            # -> this leads to nasty bugs
-            # NEWLINE_tok = type(tok)(tk.NEWLINE, *tok[1:])
-            # logical_lines_tk_list[-1].append(NEWLINE_tok)
-
-            logical_lines_tk_list.append([])
-
-        last_tok = tok
+        last_tok = tok  # for debugging
 
     assert logical_lines_tk_list[-1][-1].type == tk.ENDMARKER
     if len(logical_lines_tk_list) > 1:
@@ -709,14 +626,12 @@ def load_ipython_extension(ip):
 
         q = 0
         if q:
-            #debug
+            # debug
             print("cell:")
             print(raw_cell)
             print("new_cell:")
             print(new_raw_cell)
             print('-'*5)
-            #print("args", args)
-            #print("kwargs", kwargs)
 
         return ip.old_run_cell(new_raw_cell, *args, **kwargs)
 

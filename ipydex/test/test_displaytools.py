@@ -105,51 +105,54 @@ class TestDT1(unittest.TestCase):
 
         l1 = "x = 0"
 
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        def f(txt):
+            return dt.get_logical_lines_of_cell(txt)[0]
+
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", "x", "0", ""))
 
         l1 = "# abx"
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, "# abx"))
 
         l1 = "     "
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, ""))
 
         l1 = ""
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, ""))
 
         l1 = "x + y  ##"
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", None, "x + y", "##"))
 
         l1 = "x + y + 'z=#'  ##:"
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", None, "x + y + 'z=#'", "##:"))
 
         l1 = "A =     '#xyz=7'  # abcd ##: efg    "
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", "A", "'#xyz=7'", "# abcd ##: efg"))
 
         l1 = "    A = X  # Z"
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("    ", "A", "X", "# Z"))
 
         l1 = "    y, x, z = A = X  # Z"
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("    ", "A", "X", "# Z"))
 
         l1 = "    A = y, x, z = X  # Z"
-        ind, lhs, rhs, cmt = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("    ", "y, x, z", "X", "# Z"))
 
         l1 = "x = func1(a=a, b = b) ##:"
-        ind, lhs, rhs, cmt = sgm = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = sgm = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", "x", "func1(a=a, b = b)", "##:"))
 
         l1 = "xyz=x ##:i"
-        ind, lhs, rhs, cmt = sgm = dt.get_line_segments(l1)
+        ind, lhs, rhs, cmt = sgm = dt.get_line_segments_from_logical_line(f(l1))
         self.assertEqual((ind, lhs, rhs, cmt), ("", "xyz", "x", "##:i"))
 
     def test_insert_disp_lines1(self):
