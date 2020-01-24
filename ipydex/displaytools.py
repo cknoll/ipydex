@@ -380,6 +380,7 @@ def process_line(line, line_flags, expr_to_disp, indent):
 
 def insert_disp_lines(raw_cell):
 
+    original_raw_cell = raw_cell
     raw_cell = raw_cell.strip()
 
     physical_lines = raw_cell.split('\n')
@@ -438,7 +439,18 @@ def insert_disp_lines(raw_cell):
     # there might still be lines like "    \n" in -> split and merge again
     new_raw_cell2 = "\n".join([line.rstrip() for line in new_raw_cell.split("\n")])
 
-    return new_raw_cell2
+    # ensure the same number of "\n"-chars at the end
+    # count original number
+    lb_count = 0
+    for c in original_raw_cell[::-1]:
+        if c != "\n":
+            break
+        else:
+            lb_count += 1
+
+    new_raw_cell3 = "{}{}".format(new_raw_cell2.rstrip(), "\n"*lb_count)
+
+    return new_raw_cell3
 
 
 def custom_display(lhs, rhs):
@@ -597,7 +609,8 @@ def get_logical_lines_of_cell(raw_cell):
         last_tok = tok  # for debugging
 
     assert logical_lines_tk_list[-1][-1].type == tk.ENDMARKER
-    if len(logical_lines_tk_list) > 1:
+    if 0 and len(logical_lines_tk_list) > 1 and len(logical_lines_tk_list[-1]) == 1:
+        # if the last logical line only consists of ENDMARKER
         logical_lines_tk_list.pop()  # ignore last token
 
     logical_lines = []

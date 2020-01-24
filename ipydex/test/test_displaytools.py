@@ -370,7 +370,11 @@ x = 0
 ZZ = 0
 """
         ll_list = dt.get_logical_lines_of_cell(raw_cell1)
-        self.assertEqual(len(ll_list), 2)
+        self.assertEqual(len(ll_list), 3)
+
+        # test whether the last logical line only consists of ENDMARKER and friends
+        ignorable_tokens = [dt.tk.ENDMARKER, dt.tk.NL]
+        self.assertTrue(all(elt.type in ignorable_tokens for elt in ll_list[-1].tokens))
 
     def test_logical_lines2(self):
 
