@@ -113,6 +113,57 @@ SCC = def_special_comments()
 sc_list = SCC.value_list()
 
 
+ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
+ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
+aux_only_tokens = ignorable_tokens + (tk.INDENT, tk.COMMENT)
+
+
+def preprocess_logical_line(ll):
+    """
+    # logical lines might start with physical lines which are only comments, or with empty physical lines.
+    # we dont want strip that, except when the logical line does not contain any "real code" at all
+
+    :param ll:
+
+    :return: ll
+    """
+
+    ll.original_tokens = ll.tokens[:]
+    ll.removed_start_txt = ""
+
+    if all([(tok.type in aux_only_tokens) for tok in ll.tokens]):
+        # this logical line does not do anything real (only comments an newlines)
+        return ll
+
+    ll.removed_plines = []
+    ll.removed_comment_plines = []
+    ll.removed_empty_plines = []
+
+    while True:
+        if ll.tokens[0].type == tk.COMMENT:
+            assert ll.tokens[1].type == tk.NL
+            rm_line = "".join((ll.tokens[0].string, ll.tokens[1].string))
+            ll.removed_comment_plines.append(rm_line)
+            ll.removed_plines.append(rm_line)
+            ll.tokens = ll.tokens[2:]
+
+        elif ll.tokens[0].type == tk.NL:
+            rm_line = ll.tokens[0].string
+            ll.removed_empty_plines.append(rm_line)
+            ll.removed_plines.append(rm_line)
+            ll.tokens = ll.tokens[1:]
+        else:
+            # tok is some "real" code
+            break
+
+    ll.no_removed_physical_lines = len(ll.removed_plines)
+    ll.no_removed_empty_plines = len(ll.removed_empty_plines)
+    ll.no_removed_comment_plines = len(ll.removed_comment_plines)
+    ll.removed_start_txt = "".join(ll.removed_plines)
+
+    return ll
+
+
 def get_line_segments_from_logical_line(ll):
     """
     Split up a logical line into (indent, lhs, rhs, comment)
@@ -125,42 +176,13 @@ def get_line_segments_from_logical_line(ll):
     :return:
     """
 
-    # logical lines might start with physical lines which are only comments.
-    # we dont want them here. (This has no influence to the indent-logic)
-    # but we want them, if there is no real operation happening at all
-
-    tokens = ll.tokens[:]
-    no_removed_physical_lines = 0
-    no_removed_empty_plines = 0
-    no_removed_comment_plines = 0
-
-    ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
-    ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
-    aux_only_tokens = ignorable_tokens + (tk.INDENT, tk.COMMENT)
-
-    if any([(tok.type not in aux_only_tokens) for tok in tokens]):
-        # in this logical line something real happens (wo dont have only aux-tokens)
-
-        while True:
-            if tokens[0].type == tk.COMMENT:
-                assert tokens[1].type == tk.NL
-
-                tokens = tokens[2:]
-                no_removed_physical_lines += 1
-                no_removed_comment_plines += 1
-            elif tokens[0].type == tk.NL:
-                tokens = tokens[1:]
-                no_removed_physical_lines += 1
-                no_removed_empty_plines += 1
-            else:
-                # tok is something important
-                break
+    ll = preprocess_logical_line(ll)
 
     comment_strings = []
     comment_tokens = []
     initial_indent = ""
 
-    for i, t in enumerate(tokens):
+    for i, t in enumerate(ll.tokens):
         if t.type == tk.INDENT:
             initial_indent = t.string
         if t.type == tk.COMMENT:
@@ -168,14 +190,14 @@ def get_line_segments_from_logical_line(ll):
             comment_strings.append(t.string)
             comment_tokens.append(t)
 
-    assert tokens[-1].type in (tk.NEWLINE, tk.ENDMARKER)
+    assert ll.tokens[-1].type in (tk.NEWLINE, tk.ENDMARKER)
 
     if not ll.txt.startswith(initial_indent):
         ll.txt = "{}{}".format(initial_indent, ll.txt)
 
     try:
         # look from behind if the first "relevant" token is a comment
-        for tok in tokens[::-1]:
+        for tok in ll.tokens[::-1]:
             if tok.type in ignorable_tokens:
                 continue
             if tok.type == tk.COMMENT:
@@ -186,7 +208,7 @@ def get_line_segments_from_logical_line(ll):
         else:
             # no final comment
             # use the last token (except DEDENT and ENDMARKER) as virtual final comment
-            for tok in tokens[::-1]:
+            for tok in ll.tokens[::-1]:
                 if tok.type in ignorable_final_tokens:
                     continue
                 break
@@ -201,10 +223,10 @@ def get_line_segments_from_logical_line(ll):
 
     try:
         dedented_line = textwrap.dedent(ll.txt)
-        assert dedented_line.startswith("\n"*no_removed_empty_plines)
+        assert dedented_line.startswith(ll.removed_start_txt)
 
-        # omit the leading linebreaks
-        dedented_line = dedented_line[no_removed_empty_plines:]
+        # omit the leading linebreaks/comment-lines
+        dedented_line = dedented_line[len(ll.removed_start_txt):]
         myast = ast.parse(dedented_line).body[0]
 
         # correct the start line and the start index of the final comment
@@ -219,7 +241,7 @@ def get_line_segments_from_logical_line(ll):
         lhs = get_lhs_from_ast(myast)
 
         # right hand side is all left from the final comment (which might be "virtual")
-        rhs = get_rhs_from_ast(myast, dedented_line, no_removed_physical_lines, final_comment_start)
+        rhs = get_rhs_from_ast(myast, dedented_line, ll.no_removed_physical_lines, final_comment_start)
         rhs_start_line = myast.value.lineno - 1
 
         assert rhs_start_line >= 0
@@ -239,7 +261,7 @@ def get_line_segments_from_logical_line(ll):
         old_rhs = rhs
         rhs_lines = rhs.split("\n")
         for ct in comment_tokens:
-            line_idx = ct.start[0] - 1 - rhs_start_line - no_removed_physical_lines
+            line_idx = ct.start[0] - 1 - rhs_start_line - ll.no_removed_physical_lines
             line = rhs_lines[line_idx]
             if line.endswith(ct.string):
                 # for single lines this and last physical line of a multiline-rhs this is not the case

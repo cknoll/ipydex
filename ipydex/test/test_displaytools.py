@@ -490,6 +490,41 @@ class TestDT2(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_demo5(self):
+        raw_cell1 = """\
+# numpy arrays and matrices are indented to take left-hand-side into account
+
+
+np.random.seed(0)
+
+A = np.random.random((5, 4)) ##:
+np.matrix(A) ##:
+
+# heuristic to insert a newline if indentation would be too long
+A_with_long_name = A ##:
+
+"""
+
+        eres1 = """\
+# numpy arrays and matrices are indented to take left-hand-side into account
+
+
+np.random.seed(0)
+
+A = np.random.random((5, 4)) ##:
+custom_display("A", A); print("---")
+custom_display("(np.matrix(A))", (np.matrix(A))); print("---")
+
+# heuristic to insert a newline if indentation would be too long
+A_with_long_name = A ##:
+custom_display("A_with_long_name", A_with_long_name); print("---")
+
+"""
+
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(res1, eres1)
+
     def test_demo4(self):
         raw_cell1 = """\
 if:
