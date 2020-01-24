@@ -127,7 +127,7 @@ def get_line_segments_from_logical_line(ll):
 
     # logical lines might start with physical lines which are only comments.
     # we dont want them here. (This has no influence to the indent-logic)
-    # but we want them, if there is no real operation happening
+    # but we want them, if there is no real operation happening at all
 
     tokens = ll.tokens[:]
     no_removed_physical_lines = 0
@@ -137,12 +137,20 @@ def get_line_segments_from_logical_line(ll):
     aux_only_tokens = ignorable_tokens + (tk.INDENT, tk.COMMENT)
 
     if any([(tok.type not in aux_only_tokens) for tok in tokens]):
+        # in this logical line something real happens (wo dont have only aux-tokens)
 
-        while tokens[0].type == tk.COMMENT:
-            assert tokens[1].type == tk.NL
+        while True:
+            if tokens[0].type == tk.COMMENT:
+                assert tokens[1].type == tk.NL
 
-            tokens = tokens[2:]
-            no_removed_physical_lines += 1
+                tokens = tokens[2:]
+                no_removed_physical_lines += 1
+            elif tokens[0].type == tk.NL:
+                tokens = tokens[1:]
+                no_removed_physical_lines += 1
+            else:
+                # tok is something important
+                break
 
     comment_strings = []
     comment_tokens = []
@@ -204,7 +212,7 @@ def get_line_segments_from_logical_line(ll):
 
         # right hand side is all left from the final comment (which might be "virtual")
         rhs = get_rhs_from_ast(myast, dedented_line, no_removed_physical_lines, final_comment_start)
-        rhs_start_line = myast.value.lineno - 1
+        rhs_start_line = myast.value.lineno - 1 - no_removed_physical_lines
 
     else:
         lhs = None
@@ -221,7 +229,7 @@ def get_line_segments_from_logical_line(ll):
         old_rhs = rhs
         rhs_lines = rhs.split("\n")
         for ct in comment_tokens:
-            line_idx = ct.start[0] -1 - rhs_start_line
+            line_idx = ct.start[0] - 1 - rhs_start_line - no_removed_physical_lines
             line = rhs_lines[line_idx]
             if line.endswith(ct.string):
                 # for single lines this and last physical line of a multiline-rhs this is not the case

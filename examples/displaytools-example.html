@@ -13112,7 +13112,7 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>&#39;0.10.5&#39;</pre>
+<pre>&#39;0.11.0&#39;</pre>
 </div>
 
 </div>
@@ -13239,7 +13239,8 @@ ydot1_obj := $\displaystyle \frac{\partial}{\partial t} \cos{\left(2 \pi t \righ
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The supported syntax is somewhat flexible (and does not anymore rely on spaces). In case of multiple assignments the rightmost is used.</p>
+<hr>
+<p>If there is no assignment taking place, <code>##:</code> nevertheless causes the display of the respective result.</p>
 
 </div>
 </div>
@@ -13247,6 +13248,789 @@ ydot1_obj := $\displaystyle \frac{\partial}{\partial t} \cos{\left(2 \pi t \righ
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">t</span><span class="p">)</span> <span class="c1">##:</span>
+<span class="n">y2</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">t</span><span class="p">)</span> <span class="c1">##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+(y1.diff(t,t)) := $\displaystyle - 4 \pi^{2} \cos{\left(2 \pi t \right)}$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+(y2.diff(t,t)) := $\displaystyle - 4 \pi \left(\pi t \cos{\left(2 \pi t \right)} + \sin{\left(2 \pi t \right)}\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Transposition">Transposition<a class="anchor-link" href="#Transposition">&#182;</a></h3><p>Sometimes, it can save much space if some return value is displayed in transposed form (while still being assigned not transposed). Compare these examples:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">xx</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;x1:11&#39;</span><span class="p">))</span> <span class="c1">##:</span>
+<span class="n">yy</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;y1:11&#39;</span><span class="p">))</span> <span class="c1">##:T</span>
+
+<span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">yy</span><span class="o">.</span><span class="n">shape</span> <span class="c1">##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+xx := $\displaystyle \left[\begin{matrix}x_{1}\\x_{2}\\x_{3}\\x_{4}\\x_{5}\\x_{6}\\x_{7}\\x_{8}\\x_{9}\\x_{10}\end{matrix}\right]$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+yy.T := $\displaystyle \left[\begin{matrix}y_{1} & y_{2} & y_{3} & y_{4} & y_{5} & y_{6} & y_{7} & y_{8} & y_{9} & y_{10}\end{matrix}\right]$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+(xx.shape, yy.shape) := $\displaystyle \left( \left( 10, \  1\right), \  \left( 10, \  1\right)\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Sometimes the actual content is not of interest or simply too big to be displayed. Nevertheless the <em>shape</em> is already informative.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">zz</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;z1:101&#39;</span><span class="p">))</span> <span class="c1">##:S</span>
+<span class="n">zz2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">##:S</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+zz.shape := $\displaystyle \left( 100, \  1\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+zz2.shape := $\displaystyle \left( 14, \  5\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># special comments can be combined with other comments:</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1"># comment ##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+a := $\displaystyle 3$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Multiline statements are not yet supported:</span>
+<span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> 
+     <span class="mi">2</span><span class="p">]</span> <span class="c1">##:</span>
+
+
+<span class="c1"># indended lines are</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="o">+</span><span class="n">x</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span> <span class="c1">##:</span>
+    <span class="k">return</span> <span class="n">b</span>
+
+
+<span class="c1"># in the case of multiple assignments the rightmost ist taken:</span>
+
+<span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">cc</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span> <span class="c1">##:</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+a := $\displaystyle \left[ 1, \  2\right]$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+cc := $\displaystyle \left[ 100, \  200\right]$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+b := $\displaystyle \left[ 13, \  20\right]$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+b := $\displaystyle \left[ 14, \  20\right]$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># numpy arrays and matrices are indented to take left-hand-side into account</span>
+
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span> <span class="c1">##:</span>
+<span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="c1">##:</span>
+
+<span class="c1"># heuristic to insert a newline if indentation would be too long</span>
+<span class="n">A_with_long_name</span> <span class="o">=</span> <span class="n">A</span> <span class="c1">##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>A := array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
+            [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
+            [0.96366276, 0.38344152, 0.79172504, 0.52889492],
+            [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
+            [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>(np.matrix(A)) := matrix([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
+                          [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
+                          [0.96366276, 0.38344152, 0.79172504, 0.52889492],
+                          [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
+                          [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>A_with_long_name := 
+array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
+       [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
+       [0.96366276, 0.38344152, 0.79172504, 0.52889492],
+       [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
+       [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># that new-line feature is aware of the configured linewidth</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">110</span><span class="p">)</span>
+
+<span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="c1">##:</span>
+<span class="n">B_with_long_name</span> <span class="o">=</span> <span class="n">B</span> <span class="c1">##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>B := array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 0.14335329],
+            [0.94466892, 0.52184832, 0.41466194, 0.26455561, 0.77423369, 0.45615033, 0.56843395],
+            [0.0187898 , 0.6176355 , 0.61209572, 0.616934  , 0.94374808, 0.6818203 , 0.3595079 ],
+            [0.43703195, 0.6976312 , 0.06022547, 0.66676672, 0.67063787, 0.21038256, 0.1289263 ],
+            [0.31542835, 0.36371077, 0.57019677, 0.43860151, 0.98837384, 0.10204481, 0.20887676]])</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>B_with_long_name := 
+array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 0.14335329],
+       [0.94466892, 0.52184832, 0.41466194, 0.26455561, 0.77423369, 0.45615033, 0.56843395],
+       [0.0187898 , 0.6176355 , 0.61209572, 0.616934  , 0.94374808, 0.6818203 , 0.3595079 ],
+       [0.43703195, 0.6976312 , 0.06022547, 0.66676672, 0.67063787, 0.21038256, 0.1289263 ],
+       [0.31542835, 0.36371077, 0.57019677, 0.43860151, 0.98837384, 0.10204481, 0.20887676]])</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<p>With <code>##:i</code> some general type information is diplayed</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">B</span> <span class="c1">##:i</span>
+<span class="nb">list</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="c1">##:i</span>
+<span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">##:i</span>
+<span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="c1">##:i</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info(C) := &#34;&lt;class &#39;numpy.ndarray&#39;&gt; with shape: (5, 7)&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info((list(C))) := &#34;&lt;class &#39;list&#39;&gt; with length: 5&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info((C[0])) := &#34;&lt;class &#39;numpy.ndarray&#39;&gt; with shape: (7,)&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>info((C[0, 0])) := &#34;&lt;class &#39;numpy.float64&#39;&gt; with value: 1.957236684465528&#34;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>---
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Why-this-extension-might-be-useful?">Why this extension might be useful?<a class="anchor-link" href="#Why-this-extension-might-be-useful?">&#182;</a></h3><p><a id='why-usefull'></a></p>
+<ul>
+<li>It saves space in the final document, when intermediate results shall be displayed (e.g. for didactic purpose)<ul>
+<li>allows to focus more on the content/results instead of boilerplate printing code</li>
+</ul>
+</li>
+<li>It saves typing effort during the development process (when internal information is of interest to understand and debug the code)</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<hr>
+<h3 id="New-features">New features<a class="anchor-link" href="#New-features">&#182;</a></h3><p>Below some features are shown which did not work in earlier versions:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The supported syntax is somewhat flexible (and does not anymore rely on spaces). In case of multiple assignments the rightmost is used.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">w</span><span class="o">=</span><span class="mi">0</span> <span class="c1">##:</span>
@@ -13373,7 +14157,7 @@ w := $\displaystyle \left( 10, \  20\right)$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">u</span> <span class="o">=</span> <span class="mi">10</span> 
@@ -13520,769 +14304,9 @@ b := $\displaystyle 1$
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<p>If there is no assignment taking place, <code>##:</code> nevertheless causes the display of the respective result.</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">t</span><span class="p">)</span> <span class="c1">##:</span>
-<span class="n">y2</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">t</span><span class="p">)</span> <span class="c1">##:</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-(y1.diff(t,t)) := $\displaystyle - 4 \pi^{2} \cos{\left(2 \pi t \right)}$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-(y2.diff(t,t)) := $\displaystyle - 4 \pi \left(\pi t \cos{\left(2 \pi t \right)} + \sin{\left(2 \pi t \right)}\right)$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Transposition">Transposition<a class="anchor-link" href="#Transposition">&#182;</a></h3><p>Sometimes, it can save much space if some return value is displayed in transposed form (while still being assigned not transposed). Compare these examples:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">xx</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;x1:11&#39;</span><span class="p">))</span> <span class="c1">##:</span>
-<span class="n">yy</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;y1:11&#39;</span><span class="p">))</span> <span class="c1">##:T</span>
-
-<span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">yy</span><span class="o">.</span><span class="n">shape</span> <span class="c1">##:</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-xx := $\displaystyle \left[\begin{matrix}x_{1}\\x_{2}\\x_{3}\\x_{4}\\x_{5}\\x_{6}\\x_{7}\\x_{8}\\x_{9}\\x_{10}\end{matrix}\right]$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-yy.T := $\displaystyle \left[\begin{matrix}y_{1} & y_{2} & y_{3} & y_{4} & y_{5} & y_{6} & y_{7} & y_{8} & y_{9} & y_{10}\end{matrix}\right]$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-(xx.shape, yy.shape) := $\displaystyle \left( \left( 10, \  1\right), \  \left( 10, \  1\right)\right)$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Sometimes the actual content is not of interest or simply too big to be displayed. Nevertheless the <em>shape</em> is already informative.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">zz</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;z1:101&#39;</span><span class="p">))</span> <span class="c1">##:S</span>
-<span class="n">zz2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1">##:S</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-zz.shape := $\displaystyle \left( 100, \  1\right)$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-zz2.shape := $\displaystyle \left( 14, \  5\right)$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># special comments can be combined with other comments:</span>
-<span class="n">a</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1"># comment ##:</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-a := $\displaystyle 3$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Multiline statements are not yet supported:</span>
-<span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> 
-     <span class="mi">2</span><span class="p">]</span> <span class="c1">##:</span>
-
-
-<span class="c1"># indended lines are</span>
-
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="o">+</span><span class="n">x</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span> <span class="c1">##:</span>
-    <span class="k">return</span> <span class="n">b</span>
-
-
-<span class="c1"># in the case of multiple assignments the rightmost ist taken:</span>
-
-<span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">cc</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span> <span class="c1">##:</span>
-
-<span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-cc := $\displaystyle \left[ 100, \  200\right]$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-b := $\displaystyle \left[ 13, \  20\right]$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-b := $\displaystyle \left[ 14, \  20\right]$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># numpy arrays and matrices are indented to take left-hand-side into account</span>
-
-
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span> <span class="c1">##:</span>
-<span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="c1">##:</span>
-
-<span class="c1"># heuristic to insert a newline if indentation would be too long</span>
-<span class="n">A_with_long_name</span> <span class="o">=</span> <span class="n">A</span> <span class="c1">##:</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>A := array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
-            [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
-            [0.96366276, 0.38344152, 0.79172504, 0.52889492],
-            [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
-            [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>(np.matrix(A)) := matrix([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
-                          [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
-                          [0.96366276, 0.38344152, 0.79172504, 0.52889492],
-                          [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
-                          [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>A_with_long_name := 
-array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
-       [0.4236548 , 0.64589411, 0.43758721, 0.891773  ],
-       [0.96366276, 0.38344152, 0.79172504, 0.52889492],
-       [0.56804456, 0.92559664, 0.07103606, 0.0871293 ],
-       [0.0202184 , 0.83261985, 0.77815675, 0.87001215]])</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># that new-line feature is aware of the configured linewidth</span>
-
-<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">110</span><span class="p">)</span>
-
-<span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="c1">##:</span>
-<span class="n">B_with_long_name</span> <span class="o">=</span> <span class="n">B</span> <span class="c1">##:</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>B := array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 0.14335329],
-            [0.94466892, 0.52184832, 0.41466194, 0.26455561, 0.77423369, 0.45615033, 0.56843395],
-            [0.0187898 , 0.6176355 , 0.61209572, 0.616934  , 0.94374808, 0.6818203 , 0.3595079 ],
-            [0.43703195, 0.6976312 , 0.06022547, 0.66676672, 0.67063787, 0.21038256, 0.1289263 ],
-            [0.31542835, 0.36371077, 0.57019677, 0.43860151, 0.98837384, 0.10204481, 0.20887676]])</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>B_with_long_name := 
-array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 0.14335329],
-       [0.94466892, 0.52184832, 0.41466194, 0.26455561, 0.77423369, 0.45615033, 0.56843395],
-       [0.0187898 , 0.6176355 , 0.61209572, 0.616934  , 0.94374808, 0.6818203 , 0.3595079 ],
-       [0.43703195, 0.6976312 , 0.06022547, 0.66676672, 0.67063787, 0.21038256, 0.1289263 ],
-       [0.31542835, 0.36371077, 0.57019677, 0.43860151, 0.98837384, 0.10204481, 0.20887676]])</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<p>With <code>##:i</code> some general type information is diplayed</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">B</span> <span class="c1">##:i</span>
-<span class="nb">list</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="c1">##:i</span>
-<span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">##:i</span>
-<span class="n">C</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="c1">##:i</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>info(C) := &#34;&lt;class &#39;numpy.ndarray&#39;&gt; with shape: (5, 7)&#34;</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>info((list(C))) := &#34;&lt;class &#39;list&#39;&gt; with length: 5&#34;</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>info((C[0])) := &#34;&lt;class &#39;numpy.ndarray&#39;&gt; with shape: (7,)&#34;</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_text output_subarea ">
-<pre>info((C[0, 0])) := &#34;&lt;class &#39;numpy.float64&#39;&gt; with value: 1.957236684465528&#34;</pre>
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Why-this-extension-might-be-useful?">Why this extension might be useful?<a class="anchor-link" href="#Why-this-extension-might-be-useful?">&#182;</a></h3><p><a id='why-usefull'></a></p>
-<ul>
-<li>It saves space in the final document, when intermediate results shall be displayed (e.g. for didactic purpose)<ul>
-<li>allows to focus more on the content/results instead of boilerplate printing code</li>
-</ul>
-</li>
-<li>It saves typing effort during the development process (when internal information is of interest to understand and debug the code)</li>
-</ul>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<hr>
-<h3 id="New-features">New features<a class="anchor-link" href="#New-features">&#182;</a></h3><p>Below some features are shown which did not work in earlier versions:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">ipydex</span> <span class="k">import</span> <span class="n">save_current_nb_as_html</span>

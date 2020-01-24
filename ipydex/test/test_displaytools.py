@@ -490,6 +490,23 @@ class TestDT2(unittest.TestCase):
     def setUp(self):
         pass
 
+    def testLL3(self):
+        raw_cell1 = """\
+xx = sp.Matrix(sp.symbols('x1:11'))
+yy = sp.Matrix(sp.symbols('y1:11'))
+
+xx.shape, yy.shape ##:
+"""
+        eres1 = """\
+xx = sp.Matrix(sp.symbols('x1:11'))
+yy = sp.Matrix(sp.symbols('y1:11'))
+custom_display("(xx.shape, yy.shape)", (xx.shape, yy.shape)); print("---")
+"""
+
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(res1, eres1)
+
     def testLL1(self):
         raw_cell1 = """\
 x = 0
@@ -529,9 +546,6 @@ Z2 = 2# abc
         self.assertEqual(res[0], ("", "x", "0", ""))
         self.assertEqual(res[2], ("    ", "WW", "10", ""))
         self.assertEqual(res[3], ("    ", "XX", "0", "# abc1"))
-
-
-
 
 
 if __name__ == "__main__":
