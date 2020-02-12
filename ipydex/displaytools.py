@@ -403,17 +403,19 @@ def process_line(line, line_flags, expr_to_disp, indent):
     if line_flags.transpose:
         expr_to_disp = "{}.T".format(expr_to_disp)
 
+    print_delim = 'display({{"text/plain": "{}"}}, raw=True)'.format(delim)
+
     if line_flags.lhs:
         if line_flags.shape:
-            new_line = '{}custom_display("{}.shape", {}.shape); print("{}")'
-            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, delim)
+            new_line = '{}custom_display("{}.shape", {}.shape); {}'
+            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, print_delim)
         elif line_flags.info:
-            new_line = '{}custom_display("info({})", _ipydex__info({})); print("{}")'
-            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, delim)
+            new_line = '{}custom_display("info({})", _ipydex__info({})); {}'
+            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, print_delim)
         else:
-            new_line = '{}custom_display("{}", {}); print("{}")'.format(indent, expr_to_disp, expr_to_disp, delim)
+            new_line = '{}custom_display("{}", {}); {}'.format(indent, expr_to_disp, expr_to_disp, print_delim)
     else:
-        new_line = '{}display({}); print("{}")'.format(indent, expr_to_disp, delim)
+        new_line = '{}display({}); {}'.format(indent, expr_to_disp, print_delim)
 
     return new_line
 

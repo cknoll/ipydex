@@ -165,7 +165,7 @@ z = 0
         eres1 = """\
 x = 0
 y = 1 ##:
-custom_display("y", y); print("---")
+custom_display("y", y); display({"text/plain": "---"}, raw=True)
 z = 0
 """
 
@@ -183,7 +183,7 @@ z = 0
         eres1 = """\
 x = 0
 y = 1 # more comments ##: more comments
-custom_display("y", y); print("---")
+custom_display("y", y); display({"text/plain": "---"}, raw=True)
 z = 0
 """
 
@@ -216,7 +216,7 @@ z = 0
 x = 0
 if 1:
     y = 1 ##:
-    custom_display("y", y); print("---")
+    custom_display("y", y); display({"text/plain": "---"}, raw=True)
 z = 0
 """
 
@@ -235,8 +235,8 @@ C.xyz ##:
         eres1 = """\
 x = 0
 if 1:
-    custom_display("(y)", (y)); print("---")
-custom_display("(C.xyz)", (C.xyz)); print("---")
+    custom_display("(y)", (y)); display({"text/plain": "---"}, raw=True)
+custom_display("(C.xyz)", (C.xyz)); display({"text/plain": "---"}, raw=True)
 """
 
         res1 = dt.insert_disp_lines(raw_cell1)
@@ -260,16 +260,16 @@ z = 0
 x = 0
 if 1:
     y1, y2 = 1, 2 ##:
-    custom_display("(y1, y2)", (y1, y2)); print("---")
+    custom_display("(y1, y2)", (y1, y2)); display({"text/plain": "---"}, raw=True)
 
     y1, y2 = yy = 1, 2 ##:
-    custom_display("yy", yy); print("---")
+    custom_display("yy", yy); display({"text/plain": "---"}, raw=True)
 
     yy = y1, y2 = 1, 2 ##:
-    custom_display("(y1, y2)", (y1, y2)); print("---")
+    custom_display("(y1, y2)", (y1, y2)); display({"text/plain": "---"}, raw=True)
 
     y1, y2 = yy = 1, 2 ##:T
-    custom_display("yy.T", yy.T); print("---")
+    custom_display("yy.T", yy.T); display({"text/plain": "---"}, raw=True)
 z = 0
 """
 
@@ -301,10 +301,10 @@ if 1:
 
         eres1 = """\
 x = func1(a=a, b = b) ##:
-custom_display("x", x); print("---")
+custom_display("x", x); display({"text/plain": "---"}, raw=True)
 if 1:
     y = func2(a=a, b = b) ##:T
-    custom_display("y.T", y.T); print("---")
+    custom_display("y.T", y.T); display({"text/plain": "---"}, raw=True)
 """
 
         res1 = dt.insert_disp_lines(raw_cell1)
@@ -322,7 +322,7 @@ z = 0
 
         eres1 = """\
 y = x ##:S
-custom_display("y.shape", y.shape); print("---")
+custom_display("y.shape", y.shape); display({"text/plain": "---"}, raw=True)
 z = 0
 """
 
@@ -338,7 +338,7 @@ z = 0
 
         eres1 = """\
 y = x ##:i
-custom_display("info(y)", _ipydex__info(y)); print("---")
+custom_display("info(y)", _ipydex__info(y)); display({"text/plain": "---"}, raw=True)
 z = 0
 """
 
@@ -355,9 +355,9 @@ z = 0
 """
         eres1 = """\
 y=x ##:
-custom_display("y", y); print("---")
+custom_display("y", y); display({"text/plain": "---"}, raw=True)
 y=x ##:i
-custom_display("info(y)", _ipydex__info(y)); print("---")
+custom_display("info(y)", _ipydex__info(y)); display({"text/plain": "---"}, raw=True)
 z = 0
 """
         res1 = dt.insert_disp_lines(raw_cell1)
@@ -512,12 +512,12 @@ A_with_long_name = A ##:
 np.random.seed(0)
 
 A = np.random.random((5, 4)) ##:
-custom_display("A", A); print("---")
-custom_display("(np.matrix(A))", (np.matrix(A))); print("---")
+custom_display("A", A); display({"text/plain": "---"}, raw=True)
+custom_display("(np.matrix(A))", (np.matrix(A))); display({"text/plain": "---"}, raw=True)
 
 # heuristic to insert a newline if indentation would be too long
 A_with_long_name = A ##:
-custom_display("A_with_long_name", A_with_long_name); print("---")
+custom_display("A_with_long_name", A_with_long_name); display({"text/plain": "---"}, raw=True)
 
 """
 
@@ -544,10 +544,10 @@ if:
     # van-der-Pol-Oszillator
     f = sp.Matrix([x2, (1-x1**2)*x2 - x1])
     y = h = x1
-custom_display("(selector)", (selector)); print("---")
+custom_display("(selector)", (selector)); display({"text/plain": "---"}, raw=True)
 n = len(f)
-custom_display("(f)", (f)); print("---")
-custom_display("(y)", (y)); print("---")
+custom_display("(f)", (f)); display({"text/plain": "---"}, raw=True)
+custom_display("(y)", (y)); display({"text/plain": "---"}, raw=True)
 """
         ll = dt.get_logical_lines_of_cell(raw_cell1)
         res1 = dt.insert_disp_lines(raw_cell1)
@@ -563,7 +563,7 @@ xx.shape, yy.shape ##:
         eres1 = """\
 xx = sp.Matrix(sp.symbols('x1:11'))
 yy = sp.Matrix(sp.symbols('y1:11'))
-custom_display("(xx.shape, yy.shape)", (xx.shape, yy.shape)); print("---")
+custom_display("(xx.shape, yy.shape)", (xx.shape, yy.shape)); display({"text/plain": "---"}, raw=True)
 """
 
         ll = dt.get_logical_lines_of_cell(raw_cell1)
