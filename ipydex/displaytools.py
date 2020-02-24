@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 
 """
 This module was written by Carsten Knoll, see
@@ -161,6 +162,19 @@ def preprocess_logical_line(ll):
     ll.no_removed_comment_plines = len(ll.removed_comment_plines)
     ll.removed_start_txt = "".join(ll.removed_plines)
 
+    # tag_issue_comment_at_end_of_indented_blocks
+    # There is a known problem with all-comment lines at the end of indented blocks.
+    # they are handled as the beginning of the next (not) indented logical line
+    # mark this as special case
+
+    # find length of leading whitespace of original string
+    ll.lws_len = len(re.match(r"\s*", ll.txt, re.UNICODE).group(0))
+
+    if ll.lws_len > 0 and ll.txt[ll.lws_len] == "#":
+        ll.special_case_indendeted_comment_start = True
+    else:
+        ll.special_case_indendeted_comment_start = False
+
     return ll
 
 
@@ -222,8 +236,17 @@ def get_line_segments_from_logical_line(ll):
         return "", None, None, ""
 
     try:
+        # remove *common* leading whitespaces
         dedented_line = textwrap.dedent(ll.txt)
-        assert dedented_line.startswith(ll.removed_start_txt)
+        if not dedented_line.startswith(ll.removed_start_txt):
+            # this is unusual
+            if not ll.special_case_indendeted_comment_start:
+                # now this is unexpected
+                msg = "unexpected indendation trouble"
+                raise ValueError(msg)
+            else:
+                # see tag_issue_comment_at_end_of_indented_blocks
+                assert dedented_line.startswith(" "*ll.lws_len + ll.removed_start_txt)
 
         # omit the leading linebreaks/comment-lines
         dedented_line = dedented_line[len(ll.removed_start_txt):]

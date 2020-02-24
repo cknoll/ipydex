@@ -490,7 +490,7 @@ class TestDT2(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_demo5(self):
+    def test_demo1(self):
         raw_cell1 = """\
 # numpy arrays and matrices are indented to take left-hand-side into account
 
@@ -525,14 +525,14 @@ custom_display("A_with_long_name", A_with_long_name); display({"text/plain": "--
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(res1, eres1)
 
-    def test_demo4(self):
+    def test_demo2(self):
         raw_cell1 = """\
-if:
+if 1:
     # van-der-Pol-Oszillator
     f = sp.Matrix([x2, (1-x1**2)*x2 - x1])
     y = h = x1
 
-    
+
 selector ##:
 n = len(f)
 f ##:
@@ -540,7 +540,7 @@ y ##:
 """
 
         eres1 = """\
-if:
+if 1:
     # van-der-Pol-Oszillator
     f = sp.Matrix([x2, (1-x1**2)*x2 - x1])
     y = h = x1
@@ -552,6 +552,51 @@ custom_display("(y)", (y)); display({"text/plain": "---"}, raw=True)
         ll = dt.get_logical_lines_of_cell(raw_cell1)
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(res1, eres1)
+
+    def test_demo3(self):
+        raw_cell1 = """\
+if 1:
+    # van-der-Pol-Oszillator
+    f = sp.Matrix([x2, (1-x1**2)*x2 - x1])
+    y = h = x1 ##:
+
+a = 0
+"""
+
+        eres1 = """\
+if 1:
+    # van-der-Pol-Oszillator
+    f = sp.Matrix([x2, (1-x1**2)*x2 - x1])
+    y = h = x1 ##:
+    custom_display("h", h); display({"text/plain": "---"}, raw=True)
+
+a = 0
+"""
+
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(res1, eres1)
+
+    def test_demo4(self):
+        # tag_issue_comment_at_end_of_indented_blocks
+        raw_cell1 = """\
+if 0:
+    pass
+    # some comment
+
+1 == 1
+"""
+
+        eres1 = """\
+if 0:
+    pass
+    # some comment
+
+1 == 1
+"""
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(res1, eres1)
+
 
     def testLL3(self):
         raw_cell1 = """\
