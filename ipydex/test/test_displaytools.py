@@ -436,6 +436,11 @@ z4 = [ 1,
         self.assertEqual(res1, eres1)
         # --------------------
 
+        res1 = dt.info("foobar")
+        eres1 = "<class 'str'> with length: 6"
+        self.assertEqual(res1, eres1)
+        # --------------------
+
         try:
             # noinspection PyPackageRequirements
             import numpy as np

@@ -603,10 +603,11 @@ def info(arg):
 
     try:
         tmp = float(arg)
-        C.is_number = tmp == arg
-    except TypeError:
+    except (TypeError, ValueError):
 
         C.is_number = False
+    else:
+        C.is_number = tmp == arg
 
     res = "{} with {}: {}"
     if C.is_number:
