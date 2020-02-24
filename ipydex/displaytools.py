@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
-
 """
 This module was written by Carsten Knoll, see
 
@@ -45,6 +43,8 @@ import types
 import collections
 import ast
 import textwrap
+import re
+
 
 import tokenize as tk
 
@@ -591,7 +591,7 @@ def custom_display(lhs, rhs):
 
 def info(arg):
     """
-    Print some short and usefull information about arg
+    Print some short and useful information about arg
     :param arg:
     :return:
     """
@@ -600,6 +600,9 @@ def info(arg):
     C.type = type(arg)
     C.shape = getattr(arg, "shape", None)
     C.len = getattr(arg, "__len__", None)
+
+    # if symbtools is installed sympy objects have this property (shortcut for count ops)
+    C.co = getattr(arg, "co", None)
 
     try:
         tmp = float(arg)
@@ -612,6 +615,8 @@ def info(arg):
     res = "{} with {}: {}"
     if C.is_number:
         final = res.format(C.type, "value", arg)
+    elif C.co is not None:
+        final = res.format(C.type, "count_ops", C.co)
     elif C.shape is not None:
         final = res.format(C.type, "shape", C.shape)
     elif C.len is not None:

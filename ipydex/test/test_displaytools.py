@@ -445,11 +445,25 @@ z4 = [ 1,
             # noinspection PyPackageRequirements
             import numpy as np
         except ImportError:
-            return
+            pass
+        else:
+            res1 = dt.info(np.zeros((12, 15)))
+            eres1 = "<class 'numpy.ndarray'> with shape: (12, 15)"
+            self.assertEqual(res1, eres1)
 
-        res1 = dt.info(np.zeros((12, 15)))
-        eres1 = "<class 'numpy.ndarray'> with shape: (12, 15)"
-        self.assertEqual(res1, eres1)
+        # --------------------
+        try:
+            # noinspection PyPackageRequirements
+            import symbtools as st
+        except ImportError:
+            pass
+        else:
+            xx = st.symb_vector("x1:4")
+            expr = xx*3
+            expr[0, 0] += st.sp.cos(xx[0])
+            res1 = dt.info(expr)
+            eres1 = "<class 'sympy.matrices.dense.MutableDenseMatrix'> with count_ops: Matrix([[4], [2], [2]])"
+            self.assertEqual(res1, eres1)
         # --------------------
 
     def test_is_single_name(self):
