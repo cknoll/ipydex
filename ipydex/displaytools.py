@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 
 """
 This module was written by Carsten Knoll, see
@@ -43,13 +44,14 @@ duplication of manually adding `display(my_random_variable)`.
 import types
 import collections
 import ast
+import textwrap
 
 import tokenize as tk
 
 import IPython
 from IPython.display import display
 # noinspection PyUnresolvedReferences
-from .core import Container, IPS, line_to_token_list
+from .core import Container, IPS, str_to_token_list
 
 
 class FC(Container):
@@ -74,6 +76,24 @@ class FC(Container):
         super(FC, self).__init__(**kwargs)
 
 
+class LogicalLine(Container):
+    def __init__(self, txt, tokens, start, end):
+        # TODO: when python2 support is dropped: change this to super().__init__(...)
+        super(LogicalLine, self).__init__()
+        self.tokens = tokens
+        self.txt = txt
+        self.start = start
+        self.end = end
+
+    def __repr__(self):
+
+        if self.txt.endswith("\n"):
+            idx = -1
+        else:
+            idx = None
+        return "<LL: {}>".format(self.txt[:idx])
+
+
 # generate Special Comment Container
 
 def def_special_comments():
@@ -94,52 +114,190 @@ SCC = def_special_comments()
 sc_list = SCC.value_list()
 
 
-def get_line_segments(line):
-    """
-    Split up a line into (indent, lhs, rhs, comment)
+ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
+ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
+aux_only_tokens = ignorable_tokens + (tk.INDENT, tk.COMMENT)
 
-    lhs ist defined as the leftmost assignment
+
+def preprocess_logical_line(ll):
+    """
+    # logical lines might start with physical lines which are only comments, or with empty physical lines.
+    # we dont want strip that, except when the logical line does not contain any "real code" at all
+
+    :param ll:
+
+    :return: ll
+    """
+
+    ll.original_tokens = ll.tokens[:]
+    ll.removed_start_txt = ""
+
+    if all([(tok.type in aux_only_tokens) for tok in ll.tokens]):
+        # this logical line does not do anything real (only comments an newlines)
+        return ll
+
+    ll.removed_plines = []
+    ll.removed_comment_plines = []
+    ll.removed_empty_plines = []
+
+    while True:
+        if ll.tokens[0].type == tk.COMMENT:
+            assert ll.tokens[1].type == tk.NL
+            rm_line = "".join((ll.tokens[0].string, ll.tokens[1].string))
+            ll.removed_comment_plines.append(rm_line)
+            ll.removed_plines.append(rm_line)
+            ll.tokens = ll.tokens[2:]
+
+        elif ll.tokens[0].type == tk.NL:
+            rm_line = ll.tokens[0].string
+            ll.removed_empty_plines.append(rm_line)
+            ll.removed_plines.append(rm_line)
+            ll.tokens = ll.tokens[1:]
+        else:
+            # tok is some "real" code
+            break
+
+    ll.no_removed_physical_lines = len(ll.removed_plines)
+    ll.no_removed_empty_plines = len(ll.removed_empty_plines)
+    ll.no_removed_comment_plines = len(ll.removed_comment_plines)
+    ll.removed_start_txt = "".join(ll.removed_plines)
+
+    # tag_issue_comment_at_end_of_indented_blocks
+    # There is a known problem with all-comment lines at the end of indented blocks.
+    # they are handled as the beginning of the next (not) indented logical line
+    # mark this as special case
+
+    # find length of leading whitespace of original string
+    ll.lws_len = len(re.match(r"\s*", ll.txt, re.UNICODE).group(0))
+
+    if ll.lws_len > 0 and ll.txt[ll.lws_len] == "#":
+        ll.special_case_indendeted_comment_start = True
+    else:
+        ll.special_case_indendeted_comment_start = False
+
+    return ll
+
+
+def get_line_segments_from_logical_line(ll):
+    """
+    Split up a logical line into (indent, lhs, rhs, comment)
+
+    lhs ist defined as the rightmost assignment
 
     (line does not need to be an assignment)
 
-    :param line:
-    :return: lhs, rhs, comment
+    :param ll:  LogicalLine object
+    :return:
     """
 
-    tokens = line_to_token_list(line)
-    equality_signs = []
-    comment_tuple = None, ""
-    indent = ""
+    ll = preprocess_logical_line(ll)
 
-    for i, t in enumerate(tokens):
+    comment_strings = []
+    comment_tokens = []
+    initial_indent = ""
+
+    for i, t in enumerate(ll.tokens):
         if t.type == tk.INDENT:
-            indent = t.string
+            initial_indent = t.string
         if t.type == tk.COMMENT:
             # store string_index and comment string
-            comment_tuple = t.start[1], t.string
-        if t.type == tk.OP and t.string == "=":
-            equality_signs.append(t.start[1])
+            comment_strings.append(t.string)
+            comment_tokens.append(t)
+
+    assert ll.tokens[-1].type in (tk.NEWLINE, tk.ENDMARKER)
+
+    if not ll.txt.startswith(initial_indent):
+        ll.txt = "{}{}".format(initial_indent, ll.txt)
+
     try:
-        myast = ast.parse(line.strip()).body[0]
+        # look from behind if the first "relevant" token is a comment
+        for tok in ll.tokens[::-1]:
+            if tok.type in ignorable_tokens:
+                continue
+            if tok.type == tk.COMMENT:
+                # useful for debugging
+                final_comment_token = tok
+                final_comment_start = tok.start
+                break
+        else:
+            # no final comment
+            # use the last token (except DEDENT and ENDMARKER) as virtual final comment
+            for tok in ll.tokens[::-1]:
+                if tok.type in ignorable_final_tokens:
+                    continue
+                break
+            final_comment_token = tok
+            final_comment_start = tok.start
+            # be sure that in the last physical line there is no comment
+            assert not any(t for t in ll.tokens if t.type == tk.COMMENT and t.start[0] == ll.tokens[-1].start[0])
+
+    except IndexError:
+        # this is an unexpected short line
+        return "", None, None, ""
+
+    try:
+        # remove *common* leading whitespaces
+        dedented_line = textwrap.dedent(ll.txt)
+        if not dedented_line.startswith(ll.removed_start_txt):
+            # this is unusual
+            if not ll.special_case_indendeted_comment_start:
+                # now this is unexpected
+                msg = "unexpected indendation trouble"
+                raise ValueError(msg)
+            else:
+                # see tag_issue_comment_at_end_of_indented_blocks
+                assert dedented_line.startswith(" "*ll.lws_len + ll.removed_start_txt)
+
+        # omit the leading linebreaks/comment-lines
+        dedented_line = dedented_line[len(ll.removed_start_txt):]
+        myast = ast.parse(dedented_line).body[0]
+
+        # correct the start line and the start index of the final comment
+        final_comment_start = (final_comment_start[0],
+                               final_comment_start[1] - len(initial_indent))
     except (IndexError, SyntaxError):
         myast = None
+        dedented_line = ""
 
     if isinstance(myast, ast.Assign):
-        left_most_assignment = myast.targets[-1]
-        # note that indent was stripped away
 
         lhs = get_lhs_from_ast(myast)
-        rhs = get_rhs_from_ast(myast, line, len(indent), comment_tuple[0])
+
+        # right hand side is all left from the final comment (which might be "virtual")
+        rhs = get_rhs_from_ast(myast, dedented_line, ll.no_removed_physical_lines, final_comment_start)
+        rhs_start_line = myast.value.lineno - 1
+
+        assert rhs_start_line >= 0
 
     else:
         lhs = None
-        rhs = line[0:comment_tuple[0]].strip()
+        rhs = dedented_line[0:final_comment_start[1]].strip()
+        rhs_start_line = 0
+
+    # in multiline strings, there might reside some comment strings inside rhs
+    # we want to cancel them:
+    # brute force replace will fail if the same string occurs inside a quote (regular code)
 
     if rhs == "":
         rhs = None
-    comment = comment_tuple[1].strip()
+    else:
+        old_rhs = rhs
+        rhs_lines = rhs.split("\n")
+        for ct in comment_tokens:
+            line_idx = ct.start[0] - 1 - rhs_start_line - ll.no_removed_physical_lines
+            line = rhs_lines[line_idx]
+            if line.endswith(ct.string):
+                # for single lines this and last physical line of a multiline-rhs this is not the case
+                rhs_lines[line_idx] = line[:-len(ct.string)].rstrip()
+        new_rhs = "\n".join(rhs_lines)
+        if rhs.endswith("\n"):
+            rhs = "{}\n".format(new_rhs)
+        else:
+            rhs = new_rhs
 
-    return indent, lhs, rhs, comment
+    comment = "".join(comment_strings).strip()
+
+    return initial_indent, lhs, rhs, comment
 
 
 def get_lhs_from_ast(myast):
@@ -166,19 +324,35 @@ def get_lhs_from_ast(myast):
         return "<unable to extract lhs>"
 
 
-def get_rhs_from_ast(myast, line, len_indent, comment_start):
+def get_rhs_from_ast(myast, txt, no_lines_removed, comment_start_tuple):
     """
     Handle different possibilities for rhs (expression, numeric literal, )
 
-    :param line:
+    :param txt:
     :param myast:       ast object
-    :param len_indent:  length of indent
-    :param comment_start:
+    :param no_lines_removed:
+                        number of physical lines which have been removed by the caller (leading comment lines)
+    :param comment_start_tuple:
+                        2-tuple: (lineno, col_offset)
     :return:
     """
 
-    start_idx = myast.value.col_offset + len_indent
-    return line[start_idx:comment_start].strip()
+    physical_lines = txt.split("\n")
+    # myast.value.lineno -> this is the line number (w.r.t 1, 2, 3, ...) where the assignation result starts
+    # n_line := (myast.value.lineno - 1) is the number of lines above it -> physical_lines[:n_line] returns them
+    n_line = myast.value.lineno - 1
+    # count chars from previous lines (including the char "\n")
+    previous_chars_start = sum(len(line) for line in physical_lines[:n_line]) + n_line
+
+    start_idx = previous_chars_start + myast.value.col_offset
+
+    # count chars from previous lines (including the char "\n") for the comment
+    n_line = comment_start_tuple[0] - 1  # - no_lines_removed
+    previous_chars_end = sum(len(line) for line in physical_lines[:n_line]) + n_line
+
+    end_idx = previous_chars_end + comment_start_tuple[1]
+
+    return txt[start_idx:end_idx].strip()
 
 
 def classify_comment(cmt):
@@ -215,7 +389,7 @@ def is_single_name(expr):
     :return:
     """
 
-    tokens = line_to_token_list(expr)
+    tokens = str_to_token_list(expr)
 
     type_counter = collections.defaultdict(int)
 
@@ -252,36 +426,52 @@ def process_line(line, line_flags, expr_to_disp, indent):
     if line_flags.transpose:
         expr_to_disp = "{}.T".format(expr_to_disp)
 
+    print_delim = 'display({{"text/plain": "{}"}}, raw=True)'.format(delim)
+
     if line_flags.lhs:
         if line_flags.shape:
-            new_line = '{}custom_display("{}.shape", {}.shape); print("{}")'
-            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, delim)
+            new_line = '{}custom_display("{}.shape", {}.shape); {}'
+            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, print_delim)
         elif line_flags.info:
-            new_line = '{}custom_display("info({})", _ipydex__info({})); print("{}")'
-            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, delim)
+            new_line = '{}custom_display("info({})", _ipydex__info({})); {}'
+            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, print_delim)
         else:
-            new_line = '{}custom_display("{}", {}); print("{}")'.format(indent, expr_to_disp, expr_to_disp, delim)
+            new_line = '{}custom_display("{}", {}); {}'.format(indent, expr_to_disp, expr_to_disp, print_delim)
     else:
-        new_line = '{}display({}); print("{}")'.format(indent, expr_to_disp, delim)
-
+        new_line = '{}display({}); {}'.format(indent, expr_to_disp, print_delim)
 
     return new_line
 
 
 def insert_disp_lines(raw_cell):
-    lines = raw_cell.split('\n')
-    N = len(lines)
+
+    if "##!! raise TestException !!" in raw_cell:
+        raise SyntaxError("Virtual syntax error (only for testing)")
+
+    original_raw_cell = raw_cell
+    raw_cell = raw_cell.strip()
+
+    physical_lines = raw_cell.split('\n')
+    logical_lines = get_logical_lines_of_cell(raw_cell)
+    nphy = len(physical_lines)
+    nlog = len(logical_lines)
+
+    lines_of_new_cell = []
 
     # iterate from behind -> insert does not change the lower indices
-    for i in range(N-1, -1, -1):
-        line = lines[i]
+    for i in range(nlog-1, -1, -1):
+        # line = physical_lines[i]
 
-        indent, lhs, rhs, cmt = sgm = get_line_segments(line)
+        ll = logical_lines[i]
+
+        # indent, lhs, rhs, cmt = get_line_segments(line)
+        indent, lhs, rhs, cmt = get_line_segments_from_logical_line(ll)
         cmt_flags = classify_comment(cmt)
 
         if rhs is None or not cmt_flags.sc:
             # no actual statement on that line or
             # no special comment
+            lines_of_new_cell.insert(0, ll.txt)
             continue
 
         # we have a special comment
@@ -292,8 +482,10 @@ def insert_disp_lines(raw_cell):
             # lhs = rhs ##: sc
 
             cmt_flags.assignment = True
-            new_line = process_line(line, cmt_flags, lhs, indent)
-            lines.insert(i+1, new_line)
+            new_line = process_line(ll, cmt_flags, lhs, indent)
+            lines_of_new_cell.insert(0, new_line)
+            lines_of_new_cell.insert(0, ll.txt)
+            ## physical_lines.insert(i+1, new_line)
         else:
             # situation
             # rhs ##: sc
@@ -302,12 +494,30 @@ def insert_disp_lines(raw_cell):
             # -> it is replaced by `display(line)`
             # in practise this case is not so important
             cmt_flags.assignment = False
-            new_line = process_line(line, cmt_flags, rhs, indent)
-            lines[i] = new_line
+            new_line = process_line(ll, cmt_flags, rhs, indent)
+            lines_of_new_cell.insert(0, new_line)
+            # physical_lines[i] = new_line
 
-    new_raw_cell = "\n".join(lines)
+    res = []
+    for line in lines_of_new_cell:
+        res.append("{}\n".format(line.rstrip()))
+    new_raw_cell = "".join(res+[""])
 
-    return new_raw_cell
+    # there might still be lines like "    \n" in -> split and merge again
+    new_raw_cell2 = "\n".join([line.rstrip() for line in new_raw_cell.split("\n")])
+
+    # ensure the same number of "\n"-chars at the end
+    # count original number
+    lb_count = 0
+    for c in original_raw_cell[::-1]:
+        if c != "\n":
+            break
+        else:
+            lb_count += 1
+
+    new_raw_cell3 = "{}{}".format(new_raw_cell2.rstrip(), "\n"*lb_count)
+
+    return new_raw_cell3
 
 
 def custom_display(lhs, rhs):
@@ -442,21 +652,68 @@ def format_np_array(value, prefixlen):
     return separation.join(rows)
 
 
+def get_logical_lines_of_cell(raw_cell):
+
+    physical_lines = raw_cell.split("\n")
+
+    tokens = str_to_token_list(raw_cell)
+
+    logical_lines_tk_list = [[]]
+    last_tok = None
+    for tok in tokens:
+        # append tok to the last list
+        logical_lines_tk_list[-1].append(tok)
+        if tok.type == tk.NEWLINE:
+            # append a new empty list
+            logical_lines_tk_list.append([])
+
+        last_tok = tok  # for debugging
+
+    assert logical_lines_tk_list[-1][-1].type == tk.ENDMARKER
+    if 0 and len(logical_lines_tk_list) > 1 and len(logical_lines_tk_list[-1]) == 1:
+        # if the last logical line only consists of ENDMARKER
+        logical_lines_tk_list.pop()  # ignore last token
+
+    logical_lines = []
+    for ll_tokens in logical_lines_tk_list:
+        # .start is a 2-tuple: (lineno, col_offset)
+        start_line = ll_tokens[0].start[0] - 1
+        end_line = ll_tokens[-1].end[0] - 1
+
+        # to track the indentation independently from preceding lines,
+        # we perform tokenization again for each logical line
+
+        txt = "\n".join(physical_lines[start_line:end_line+1]).rstrip() + "\n"
+        new_tokens = str_to_token_list(txt)
+
+        ll = LogicalLine(txt, new_tokens, start_line, end_line)
+        logical_lines.append(ll)
+
+    return logical_lines
+
+
 def load_ipython_extension(ip):
 
     def new_run_cell(self, raw_cell, *args, **kwargs):
 
-        new_raw_cell = insert_disp_lines(raw_cell)
+        # noinspection PyBroadException
+        try:
+            new_raw_cell = insert_disp_lines(raw_cell)
+        except Exception as e:
+            msg = "There was an error in the displaytools extension (probably due to unsupported syntax).\n"\
+                  "This is the error message:\n\n{}\n\n"\
+                  "We leave this cell unchanged."
+            print(msg.format(e))
+            new_raw_cell = raw_cell
 
-        if 0:
-            #debug
+        q = 0
+        if q:
+            # debug
             print("cell:")
             print(raw_cell)
             print("new_cell:")
             print(new_raw_cell)
             print('-'*5)
-            #print("args", args)
-            #print("kwargs", kwargs)
 
         return ip.old_run_cell(new_raw_cell, *args, **kwargs)
 

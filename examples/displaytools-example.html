@@ -13078,7 +13078,7 @@ div#notebook {
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>This is an example for the extension <code>displaytools</code> from the package <a href="https://github.com/cknoll/ipydex">ipydex</a> for the IPython Notebook.</p>
-<p>The extension introduces some "magic" comments (like <code>##:</code>, <code>##:T</code>, <code>##:S</code>, and <code>##:i</code> ) which trigger additional output (normally only the return value of the last line of a cell is printed). See <a href="#why-usefull">Why is this useful?</a></p>
+<p>The extension introduces some "magic" comments (like <code>##:</code>, <code>##:T</code>, <code>##:S</code>, and <code>##:i</code> ) which trigger additional output (normally only the return value of the last line of a cell is printed). See below for <a href="#why-usefull">why is this useful?</a></p>
 <p>Note that this extension is not yet in mature state and is likely to have some issues .</p>
 <p>This example was tested successfully under python3.6. However it should also work on python 2.7.</p>
 
@@ -13112,7 +13112,7 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>&#39;0.10.5&#39;</pre>
+<pre>&#39;0.11.2&#39;</pre>
 </div>
 
 </div>
@@ -13178,10 +13178,12 @@ ydot1 := $\displaystyle - 2 \pi \sin{\left(2 \pi t \right)}$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13202,10 +13204,12 @@ ydot2 := $\displaystyle - 2 \pi t \sin{\left(2 \pi t \right)} + \cos{\left(2 \pi
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13226,294 +13230,12 @@ ydot1_obj := $\displaystyle \frac{\partial}{\partial t} \cos{\left(2 \pi t \righ
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
 
-</div>
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The supported syntax is somewhat flexible (and does not anymore rely on spaces). In case of multiple assignments the rightmost is used.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w</span><span class="o">=</span><span class="mi">0</span> <span class="c1">##:</span>
-<span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span> <span class="c1">##:</span>
-<span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span><span class="o">=</span><span class="n">w</span><span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span> <span class="c1">##:</span>
-<span class="n">w</span> <span class="o">=</span> <span class="n">w1</span><span class="p">,</span> <span class="n">w2</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span> <span class="c1">##:</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-w := $\displaystyle 0$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-(w1, w2) := $\displaystyle \left( 10, \  20\right)$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-w := $\displaystyle \left( 10, \  20\right)$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-(w1, w2) := $\displaystyle \left( 10, \  20\right)$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Compatibility with indentation is also given:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">u</span> <span class="o">=</span> <span class="mi">10</span> 
-<span class="n">v</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1">##:</span>
-<span class="k">if</span> <span class="mi">1</span><span class="p">:</span>
-    <span class="n">w</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">##:</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">##:</span>
-    <span class="k">if</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1">##:</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">##:</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-v := $\displaystyle 20$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-w := $\displaystyle 0$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-x := $\displaystyle 1$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-z := $\displaystyle 3$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-<div class="output_latex output_subarea ">
-b := $\displaystyle 1$
-</div>
-
-</div>
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
-</div>
 </div>
 
 </div>
@@ -13531,7 +13253,7 @@ b := $\displaystyle 1$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">y1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">t</span><span class="p">)</span> <span class="c1">##:</span>
@@ -13564,10 +13286,12 @@ b := $\displaystyle 1$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13588,10 +13312,12 @@ b := $\displaystyle 1$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -13608,7 +13334,7 @@ b := $\displaystyle 1$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">xx</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;x1:11&#39;</span><span class="p">))</span> <span class="c1">##:</span>
@@ -13643,10 +13369,12 @@ xx := $\displaystyle \left[\begin{matrix}x_{1}\\x_{2}\\x_{3}\\x_{4}\\x_{5}\\x_{6
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13667,10 +13395,12 @@ yy.T := $\displaystyle \left[\begin{matrix}y_{1} & y_{2} & y_{3} & y_{4} & y_{5}
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13691,10 +13421,12 @@ yy.T := $\displaystyle \left[\begin{matrix}y_{1} & y_{2} & y_{3} & y_{4} & y_{5}
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -13711,7 +13443,7 @@ yy.T := $\displaystyle \left[\begin{matrix}y_{1} & y_{2} & y_{3} & y_{4} & y_{5}
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">zz</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;z1:101&#39;</span><span class="p">))</span> <span class="c1">##:S</span>
@@ -13744,10 +13476,12 @@ zz.shape := $\displaystyle \left( 100, \  1\right)$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13768,10 +13502,12 @@ zz2.shape := $\displaystyle \left( 14, \  5\right)$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -13780,7 +13516,7 @@ zz2.shape := $\displaystyle \left( 14, \  5\right)$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># special comments can be combined with other comments:</span>
@@ -13813,10 +13549,12 @@ a := $\displaystyle 3$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -13825,7 +13563,7 @@ a := $\displaystyle 3$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Multiline statements are not yet supported:</span>
@@ -13864,6 +13602,32 @@ a := $\displaystyle 3$
 
 
 <div class="output_latex output_subarea ">
+a := $\displaystyle \left[ 1, \  2\right]$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
 cc := $\displaystyle \left[ 100, \  200\right]$
 </div>
 
@@ -13874,10 +13638,12 @@ cc := $\displaystyle \left[ 100, \  200\right]$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13898,10 +13664,12 @@ b := $\displaystyle \left[ 13, \  20\right]$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -13922,10 +13690,12 @@ b := $\displaystyle \left[ 14, \  20\right]$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -13934,7 +13704,7 @@ b := $\displaystyle \left[ 14, \  20\right]$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># numpy arrays and matrices are indented to take left-hand-side into account</span>
@@ -13979,10 +13749,12 @@ b := $\displaystyle \left[ 14, \  20\right]$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -14007,10 +13779,12 @@ b := $\displaystyle \left[ 14, \  20\right]$
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -14036,10 +13810,12 @@ array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -14048,7 +13824,7 @@ array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># that new-line feature is aware of the configured linewidth</span>
@@ -14089,10 +13865,12 @@ array([[0.5488135 , 0.71518937, 0.60276338, 0.54488318],
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -14118,10 +13896,12 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -14139,7 +13919,7 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">B</span> <span class="c1">##:i</span>
@@ -14174,10 +13954,12 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -14198,10 +13980,12 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -14222,10 +14006,12 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 <div class="output_area">
@@ -14246,10 +14032,12 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>---
-</pre>
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
 </div>
+
 </div>
 
 </div>
@@ -14280,9 +14068,375 @@ array([[0.97861834, 0.79915856, 0.46147936, 0.78052918, 0.11827443, 0.63992102, 
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The supported syntax is somewhat flexible (and does not anymore rely on spaces). In case of multiple assignments the rightmost is used.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w</span><span class="o">=</span><span class="mi">0</span> <span class="c1">##:</span>
+<span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span> <span class="c1">##:</span>
+<span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span><span class="o">=</span><span class="n">w</span><span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span> <span class="c1">##:</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">w1</span><span class="p">,</span> <span class="n">w2</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span> <span class="c1">##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+w := $\displaystyle 0$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+(w1, w2) := $\displaystyle \left( 10, \  20\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+w := $\displaystyle \left( 10, \  20\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+(w1, w2) := $\displaystyle \left( 10, \  20\right)$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Compatibility with indentation is also given:</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">u</span> <span class="o">=</span> <span class="mi">10</span> 
+<span class="n">v</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1">##:</span>
+<span class="k">if</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">##:</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">##:</span>
+    <span class="k">if</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="mi">3</span> <span class="c1">##:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">##:</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+v := $\displaystyle 20$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+w := $\displaystyle 0$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+x := $\displaystyle 1$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+z := $\displaystyle 3$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_latex output_subarea ">
+b := $\displaystyle 1$
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_text output_subarea ">
+<pre>---</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If something goes wrong inside displaytools, a message is printed the cell is left unchanged and executed normally.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">##:</span>
+
+<span class="c1">##!! raise TestException !!</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="mi">1234</span> <span class="c1">##:</span>
+
+
+<span class="n">y</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>There was an error in the displaytools extension (probably due to unsupported syntax).
+This is the error message:
+
+Virtual syntax error (only for testing)
+
+We leave this cell unchanged.
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[14]:</div>
+
+
+
+
+<div class="output_latex output_subarea output_execute_result">
+$\displaystyle 1234$
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">ipydex</span> <span class="k">import</span> <span class="n">save_current_nb_as_html</span>
