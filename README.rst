@@ -22,7 +22,7 @@ displaytools
   is displayed (``T`` means additional transposition and ``S`` means only ``.shape`` attribute is displayed)
 
 * display intermediate results  (→ more readable notebooks),
-  whithout introducing addional ``print`` or ``display`` statements
+  without introducing additional ``print`` or ``display`` statements
 
 * Example invocation: ``x = np.random.rand() ##:``
 
@@ -31,9 +31,9 @@ displaytools
 * see `documentation-notebook <http://nbviewer.jupyter.org/github/cknoll/ipydex/blob/master/examples/displaytools-example.ipynb>`_
 
 
-**Security advice**: Because, the extension manipulates the source code before its execution it might cause unwanted and strange behavior. Thus, this program is distributed in the hope that it will be useful, *but without any warrenty*.
+**Security advice**: Because the extension manipulates the source code before its execution, it might cause unwanted and strange behavior. Thus, this program is distributed in the hope that it will be useful, *but without any warranty*.
 
-useful functions
+Useful functions
 ----------------
 
 The following functions are meant to be used in ordinary python-scripts:
@@ -54,7 +54,7 @@ The following functions are meant to be used in ordinary python-scripts:
 
   - activate an embedded IPython shell in the scope where an exception occurred
 
-  - useful to investigated what happend
+  - useful to investigate what happened
 
 * ``dirsearch(name, obj)``
 
