@@ -357,6 +357,24 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0):
     return res
 
 
+def calling_stack_info(print_res=True, code_context=1):
+    """
+    Debugging helper function. Can be called anywhere and returns (and optionally prints) a stacktrace
+    :param print_res:
+    :return:
+    """
+
+    start_frame = inspect.currentframe().f_back
+
+    fil = generate_frame_list_info(start_frame, code_context=code_context)
+
+    if print_res:
+        # noinspection PyUnresolvedReferences
+        print(fil.tb_txt)
+    return fil
+
+
+
 class TBPrinter(object):
 
     def __init__(self, excType, excValue, traceback):

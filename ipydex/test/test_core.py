@@ -2,6 +2,7 @@ import unittest
 
 import ipydex as ipd
 
+# run with e.g. rednose ipydex.test.test_core
 
 zz_global = 5678
 
@@ -102,10 +103,33 @@ class TestCore1(unittest.TestCase):
         self.assertEqual(xaz, (42,))
         self.assertEqual(d, {"a": 1, 2: "b"})
 
-
-
     def test_in_ipynb(self):
         self.assertFalse(ipd.in_ipynb())
+
+
+class TestCore2(unittest.TestCase):
+
+    def test_calling_stack_info(self):
+        def foobar_xyz():
+            return foobar_abc()
+
+        def foobar_abc():
+            return foobar_123()
+
+        def foobar_123():
+            res = ipd.calling_stack_info(print_res=False)
+
+            return res
+        res1 = foobar_xyz()
+        res2 = foobar_123()
+
+        self.assertTrue("foobar_abc" in res1.tb_txt)
+        self.assertTrue("foobar_xyz" in res1.tb_txt)
+        self.assertTrue("foobar_123" in res1.tb_txt)
+
+        self.assertFalse("foobar_abc" in res2.tb_txt)
+        self.assertFalse("foobar_xyz" in res2.tb_txt)
+        self.assertTrue("foobar_123" in res2.tb_txt)
 
 
 def f1(*args1, **kwargs1):
