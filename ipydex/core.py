@@ -599,8 +599,6 @@ def in_ipynb(debug=False):
         return res
 
 
-
-
 def save_current_nb_as_html(info=False):
     """
     Save the current notebook as html file in the same directory
@@ -628,6 +626,27 @@ def save_current_nb_as_html(info=False):
 # formally it would belong to an own module
 
 ###############################
+
+
+def dump_to_tmpfile(obj):
+    """
+    Write str(obj) to temporary file and return the path. Useful to open that file in a text editor for advanced
+    examination of its content (for debugging).
+
+    :param obj:
+    :return:
+    """
+
+    import tempfile
+
+    fname = tempfile.mktemp()
+    with open(fname, "w") as txtfile:
+        txtfile.write(str(obj))
+
+    print("str(obj) was written to {}".format(fname))
+
+    return fname
+
 
 def dirsearch(word, obj, only_keys = True, deep = 0):
     """
