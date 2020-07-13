@@ -479,6 +479,22 @@ z4 = [ 1,
         self.assertFalse(dt.is_single_name("abc%xyz-1"))
         self.assertFalse(dt.is_single_name("abc^xyz-1"))
 
+    def test_get_lhs_from_ast(self):
+        s1 = "x, y = 123, 789 ##:"
+        s2 = "C.x, y = 123, 789 ##:"
+
+        ll1 = dt.get_logical_lines_of_cell(s1)[0]
+        ll2 = dt.get_logical_lines_of_cell(s2)[0]
+
+        ast1 = dt.ast.parse(s1).body[0]
+        ast2 = dt.ast.parse(s2).body[0]
+
+        lhs1 = dt.get_lhs_from_ast(ast1)
+        lhs2 = dt.get_lhs_from_ast(ast2)
+
+        self.assertEqual(lhs1, "x, y")
+        self.assertEqual(lhs2, "C.x, y")
+
     def test_custom_display(self):
         # ensure that no error occurs
 
@@ -677,13 +693,21 @@ custom_display("(xx.shape, yy.shape)", (xx.shape, yy.shape)); display({"text/pla
 
         raw_cell1 = """\
 C.x = 123 ##:
+x, y = 123, 789 ##:
+C.x, C.y = 123, 789 ##:
+
+if 1:
+    C.x = 123 ##:
+    C.x, ABC, C.y = 123, 789, 456 ##:
 """
 
         ll = dt.get_logical_lines_of_cell(raw_cell1)
 
         res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
 
-        self.assertEqual(res[0], ("",     "C.x", "123", "##:"))
+        self.assertEqual(res[0], ("", "C.x", "123", "##:"))
+        self.assertEqual(res[1], ("", "x, y", "123, 789", "##:"))
+        self.assertEqual(res[2], ("", "C.x, C.y", "123, 789", "##:"))
 
 
 if __name__ == "__main__":

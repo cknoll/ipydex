@@ -302,26 +302,39 @@ def get_line_segments_from_logical_line(ll):
 
 def get_lhs_from_ast(myast):
     """
-    Handle different possibilities for rhs (expression, numeric literal, )
+    Handle different possibilities for lhs (Tuple, numeric literal, )
 
     :param myast:       ast object
-    :param tokens:      ordered list of tokens for this line
-    :param len_indent:  length of indent
     :return:
     """
 
     t = myast.targets[-1]
 
     if isinstance(t, ast.Name):
-        return t.id
+        res = t.id
     elif isinstance(t, ast.Tuple):
-        if all(isinstance(e, ast.Name) for e in t.elts):
-            seq = ", ".join(e.id for e in t.elts)
-            return seq
 
+        # example situation: C.x, y = 1, 2 (types: (ast.Attribute, ast.Name))
+
+        seq_list = []
+        for elt in t.elts:
+            if isinstance(elt, ast.Name):
+                seq_list.append(elt.id)
+            elif isinstance(elt, ast.Attribute):
+                seq_list.append("{}.{}".format(elt.value.id, elt.attr))
+            else:
+                msg = "Unexpected AST-type when evaluating lhs-tuple"
+                raise ValueError(msg)
+
+        res = ", ".join(seq_list)
+
+    elif isinstance(t, ast.Attribute):
+        res = "{}.{}".format(t.value.id, t.attr)
     else:
-        # this also includes nested tuples
-        return "<unable to extract lhs>"
+        msg = "Unexpected AST-type when evaluating lhs"
+        raise ValueError(msg)
+
+    return res
 
 
 def get_rhs_from_ast(myast, txt, no_lines_removed, comment_start_tuple):
@@ -712,7 +725,7 @@ def load_ipython_extension(ip):
             print(msg.format(e))
             new_raw_cell = raw_cell
 
-        q = 1
+        q = 0
         if q:
             # debug
             print("cell:")
