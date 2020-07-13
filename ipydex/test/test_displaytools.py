@@ -616,24 +616,6 @@ if 0:
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(res1, eres1)
 
-
-    def testLL3(self):
-        raw_cell1 = """\
-xx = sp.Matrix(sp.symbols('x1:11'))
-yy = sp.Matrix(sp.symbols('y1:11'))
-
-xx.shape, yy.shape ##:
-"""
-        eres1 = """\
-xx = sp.Matrix(sp.symbols('x1:11'))
-yy = sp.Matrix(sp.symbols('y1:11'))
-custom_display("(xx.shape, yy.shape)", (xx.shape, yy.shape)); display({"text/plain": "---"}, raw=True)
-"""
-
-        ll = dt.get_logical_lines_of_cell(raw_cell1)
-        res1 = dt.insert_disp_lines(raw_cell1)
-        self.assertEqual(res1, eres1)
-
     def testLL1(self):
         raw_cell1 = """\
 x = 0
@@ -673,6 +655,35 @@ Z2 = 2# abc
         self.assertEqual(res[0], ("", "x", "0", ""))
         self.assertEqual(res[2], ("    ", "WW", "10", ""))
         self.assertEqual(res[3], ("    ", "XX", "0", "# abc1"))
+
+    def testLL3(self):
+        raw_cell1 = """\
+xx = sp.Matrix(sp.symbols('x1:11'))
+yy = sp.Matrix(sp.symbols('y1:11'))
+
+xx.shape, yy.shape ##:
+"""
+        eres1 = """\
+xx = sp.Matrix(sp.symbols('x1:11'))
+yy = sp.Matrix(sp.symbols('y1:11'))
+custom_display("(xx.shape, yy.shape)", (xx.shape, yy.shape)); display({"text/plain": "---"}, raw=True)
+"""
+
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(res1, eres1)
+
+    def testLL4(self):
+
+        raw_cell1 = """\
+C.x = 123 ##:
+"""
+
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+
+        res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
+
+        self.assertEqual(res[0], ("",     "C.x", "123", "##:"))
 
 
 if __name__ == "__main__":

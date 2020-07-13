@@ -712,7 +712,7 @@ def load_ipython_extension(ip):
             print(msg.format(e))
             new_raw_cell = raw_cell
 
-        q = 0
+        q = 1
         if q:
             # debug
             print("cell:")
