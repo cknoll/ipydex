@@ -132,6 +132,28 @@ class TestCore2(unittest.TestCase):
         self.assertTrue("foobar_123" in res2.tb_txt)
 
 
+class TestCore3(unittest.TestCase):
+
+    def test_dirsearch(self):
+        import sys
+
+        res = ipd.dirsearch("pa", sys)
+
+        self.assertEqual(res, ('__package__', 'meta_path', 'path', 'path_hooks', 'path_importer_cache'))
+
+        res = ipd.dirsearch("pa", sys, only_keys=False, maxlength=50)
+
+        expeced_res = \
+            [('__doc__', 'This module provides access to some objects used..'),
+             ('__package__', ''),
+             ('meta_path', "[<class '_frozen_importlib.BuiltinImporter'>, <c.."),
+             ('path', "['/home/ck/miniconda3/bin', '/home/ck/miniconda3.."),
+             ('path_hooks', "[<class 'zipimport.zipimporter'>, <function File.."),
+             ('path_importer_cache', "{'/home/ck/miniconda3/lib/python37.zip': None, '..")]
+
+        self.assertEqual(res, expeced_res)
+
+
 def f1(*args1, **kwargs1):
     """
     This function serves to test manually how ips_after_exception behaves

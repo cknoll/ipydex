@@ -648,24 +648,26 @@ def dump_to_tmpfile(obj):
     return fname
 
 
-def dirsearch(word, obj, only_keys = True, deep = 0):
+def dirsearch(s, obj, only_keys=True, deep=0, maxlength=20):
     """
-        search a string in dir(<some object>)
-        if object is a dict, then search in keys
+    Search a string `s` (case-insensitive) in `dir(obj)`. If `obj` is a dict, then search in its keys.
 
-        optional arg only_keys: if False, returns also a str-version of
-        the attribute (or dict-value) instead only the key
+    :param s:           str. The string to search for.
+    :param obj:         The object or dict to search in.
+    :param only_keys:   default: True. If False, return also a str-version of attributes or dict-values (not only the
+                        keys). Note, this implies that matches are also found in attributes/dict-values if they fulfill
+                        isinstance(value, str).
 
-        this function is not case sensitive
+    :param maxlength:   int. default=20; maximum displayed lenghth of the above str.-version
+    :param deep:        recursion level
+
     """
-    word = word.lower()
+    s = s.lower()
 
     if isinstance(obj, dict):
         # only consider keys which are basestrings
-        items = [(key, val) for key, val in list(obj.items()) \
-                                                if isinstance(key, str)]
+        items = [(key, val) for key, val in list(obj.items()) if isinstance(key, str)]
     else:
-        #d = dir(obj)
 
         items = []
         for key in dir(obj):
@@ -688,29 +690,29 @@ def dirsearch(word, obj, only_keys = True, deep = 0):
         else:
             # search also in value (if it is of type basestring)
             if not isinstance(value, str):
-                value = "" # only local change
+                value = ""  # only local change
 
             return (word in key.lower()) or (word in value.lower())
 
-    res = [(k, maxlen(str(v), 20)) for k,v in items if match(word, k, v)]
-    # res is a list of (key,value)-pairs
+    res = [(k, maxlen(str(v), maxlength)) for k, v in items if match(s, k, v)]
+
+    # res is a list like [(key1, value1), (key2, value2), ...]
 
     if deep > 0:
+        # recursively search in the attributes/values
 
         def interesting(obj):
             module = type(sys)
-            deep_types  = (module, type, dict)
+            deep_types = (module, type, dict)
+            # noinspection PyShadowingNames
             res = isinstance(type(obj), deep_types)
-            #res = res and not (obj is type)
             return res
 
-        deeper_items = [(name, obj) for name, obj in items \
-                                    if interesting(obj)]
+        deeper_items = [(name, obj) for name, obj in items if interesting(obj)]
 
         for name, obj in deeper_items:
-            deep_res = dirsearch(word, obj, only_keys=False, deep = deep-1)
-            deep_res = [("%s.%s" %(name, d_name), d_obj)
-                                        for d_name, d_obj in deep_res]
+            deep_res = dirsearch(s, obj, only_keys=False, deep=deep - 1, maxlength=maxlength)
+            deep_res = [("%s.%s" %(name, d_name), d_obj) for d_name, d_obj in deep_res]
             res.extend(deep_res)
 
     if only_keys and len(res) >0:
