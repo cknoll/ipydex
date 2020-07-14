@@ -263,7 +263,12 @@ def get_line_segments_from_logical_line(ll):
 
     if isinstance(myast, ast.Assign):
 
-        lhs = get_lhs_from_ast(myast)
+        # noinspection PyBroadException
+        try:
+            lhs_container = get_lhs_from_ast(myast)
+        except Exception as lhs_exception:
+            # parsing errors are only relevant if there is a special comment at all
+            lhs_container = Container(lhs_str=None, parsing_exception=lhs_exception)
 
         # right hand side is all left from the final comment (which might be "virtual")
         rhs = get_rhs_from_ast(myast, dedented_line, ll.no_removed_physical_lines, final_comment_start)
@@ -272,7 +277,7 @@ def get_line_segments_from_logical_line(ll):
         assert rhs_start_line >= 0
 
     else:
-        lhs = None
+        lhs_container = Container(lhs_str=None, parsing_exception=None)
         rhs = dedented_line[0:final_comment_start[1]].strip()
         rhs_start_line = 0
 
@@ -299,7 +304,7 @@ def get_line_segments_from_logical_line(ll):
 
     comment = "".join(comment_strings).strip()
 
-    return initial_indent, lhs, rhs, comment
+    return initial_indent, lhs_container, rhs, comment
 
 
 def get_lhs_from_ast(myast):
@@ -325,7 +330,7 @@ def get_lhs_from_ast(myast):
             elif isinstance(elt, ast.Attribute):
                 seq_list.append(_resolove_ast_attribute(elt))
             else:
-                msg = "Unexpected AST-type when evaluating lhs-tuple"
+                msg = "Unexpected AST-type {} when evaluating lhs-tuple".format(type(elt))
                 raise ValueError(msg)
 
         res = ", ".join(seq_list)
@@ -336,7 +341,8 @@ def get_lhs_from_ast(myast):
         msg = "Unexpected AST-type when evaluating lhs"
         raise ValueError(msg)
 
-    return res
+    lhs_container = Container(lhs_str=res, parsing_exception=None)
+    return lhs_container
 
 
 def _resolove_ast_attribute(elt):
@@ -508,7 +514,8 @@ def insert_disp_lines(raw_cell):
         ll = logical_lines[i]
 
         # indent, lhs, rhs, cmt = get_line_segments(line)
-        indent, lhs, rhs, cmt = get_line_segments_from_logical_line(ll)
+        indent, lhs_container, rhs, cmt = get_line_segments_from_logical_line(ll)
+        lhs_str = lhs_container.lhs_str
         cmt_flags = classify_comment(cmt)
 
         if rhs is None or not cmt_flags.sc:
@@ -519,16 +526,19 @@ def insert_disp_lines(raw_cell):
 
         # we have a special comment
 
-        if lhs is not None:
+        # if there was an parsing exception earlier, now its time to raise it
+        if lhs_container.parsing_exception:
+            raise lhs_container.parsing_exception
+
+        if lhs_str is not None:
 
             # situation
             # lhs = rhs ##: sc
 
             cmt_flags.assignment = True
-            new_line = process_line(ll, cmt_flags, lhs, indent)
+            new_line = process_line(ll, cmt_flags, lhs_str, indent)
             lines_of_new_cell.insert(0, new_line)
             lines_of_new_cell.insert(0, ll.txt)
-            ## physical_lines.insert(i+1, new_line)
         else:
             # situation
             # rhs ##: sc

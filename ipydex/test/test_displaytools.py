@@ -643,7 +643,7 @@ C.xyz ##:
         ll = dt.get_logical_lines_of_cell(raw_cell1)
 
         if 1:
-            res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
+            res = [unpack_lhs_container(dt.get_line_segments_from_logical_line(elt)) for elt in ll]
 
             self.assertEqual(res[0], ("",     "x", "0", ""))
             self.assertEqual(res[2], ("    ", None, "y", "##:"))
@@ -666,7 +666,7 @@ Z2 = 2# abc
 
         ll = dt.get_logical_lines_of_cell(raw_cell1)
 
-        res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
+        res = [unpack_lhs_container(dt.get_line_segments_from_logical_line(elt)) for elt in ll]
 
         self.assertEqual(res[0], ("", "x", "0", ""))
         self.assertEqual(res[2], ("    ", "WW", "10", ""))
@@ -706,7 +706,7 @@ if 1:
 
         ll = dt.get_logical_lines_of_cell(raw_cell1)
 
-        res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
+        res = [unpack_lhs_container(dt.get_line_segments_from_logical_line(elt)) for elt in ll]
 
         self.assertEqual(res[0], ("", "C.x", "123", "##:"))
         self.assertEqual(res[1], ("", "x, y", "123, 789", "##:"))
@@ -719,7 +719,8 @@ if 1:
         raw_cell1 = """\
 for k in range(N):
 
-    # g3.append(l1*cos(st[0,0])+l2*cos(st[1,0])+l3*cos(st[2,0])-l4*cos(st[5,0])-l5*cos(st[4,0])-l6*cos(st[3,0]))
+    pass
+
     #...
 
 ng1, ng2, ng3 = len(g1), len(g2), len(g3)  ##:
@@ -732,6 +733,44 @@ g = cs.vertcat(g1_.reshape((-1, 1)), g2_.reshape((-1, 1)))
             res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
 
         self.assertIn("comment line as last line of indented block", cm.exception.args[0])
+
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+
+    def testLL6(self):
+        raw_cell1 = """\
+x, (y, z) = f()
+"""
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+        # this should pass without error
+        res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
+
+        raw_cell1 = """\
+x, (y, z) = f() ##:
+"""
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+
+        with self.assertRaises(ValueError) as cm:
+            res1 = dt.insert_disp_lines(raw_cell1)
+
+        self.assertIn("Unexpected AST-type", cm.exception.args[0])
+
+
+# ------------------------------------------------------
+# utility functions
+# ------------------------------------------------------
+
+
+def unpack_lhs_container(ls_tuple):
+    """
+    Due to an interface change the lhs_str is now nested inside a container.
+    This function serves to expose it to get a flat tuple-structure as before that change
+
+    :type ls_tuple: 4-tuple where idx-1 element is expected to be a container which has attribute: `lhs_str`
+    :return: 4-tuple with idx-1 element == `lhs_str`
+    """
+
+    assert hasattr(ls_tuple[1], "lhs_str")
+    return (ls_tuple[0], ls_tuple[1].lhs_str, *ls_tuple[2:])
 
 
 if __name__ == "__main__":
