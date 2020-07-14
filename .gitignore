@@ -1,3 +1,11 @@
+# ipydex specific
+# ===============
+
+container.pcl
+
+# generic patterns
+# ================
+
 *.py[co]
 
 # Packages
