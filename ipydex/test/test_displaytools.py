@@ -696,6 +696,9 @@ C.x = 123 ##:
 x, y = 123, 789 ##:
 C.x, C.y = 123, 789 ##:
 
+C.x.y.z = 123 ##:
+C.z.z.z = 123 ##:
+
 if 1:
     C.x = 123 ##:
     C.x, ABC, C.y = 123, 789, 456 ##:
@@ -708,6 +711,8 @@ if 1:
         self.assertEqual(res[0], ("", "C.x", "123", "##:"))
         self.assertEqual(res[1], ("", "x, y", "123, 789", "##:"))
         self.assertEqual(res[2], ("", "C.x, C.y", "123, 789", "##:"))
+        self.assertEqual(res[3], ("", "C.x.y.z", "123", "##:"))
+        self.assertEqual(res[4], ("", "C.z.z.z", "123", "##:"))
 
 
 if __name__ == "__main__":

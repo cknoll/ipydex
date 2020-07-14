@@ -321,7 +321,7 @@ def get_lhs_from_ast(myast):
             if isinstance(elt, ast.Name):
                 seq_list.append(elt.id)
             elif isinstance(elt, ast.Attribute):
-                seq_list.append("{}.{}".format(elt.value.id, elt.attr))
+                seq_list.append(_resolove_ast_attribute(elt))
             else:
                 msg = "Unexpected AST-type when evaluating lhs-tuple"
                 raise ValueError(msg)
@@ -329,12 +329,40 @@ def get_lhs_from_ast(myast):
         res = ", ".join(seq_list)
 
     elif isinstance(t, ast.Attribute):
-        res = "{}.{}".format(t.value.id, t.attr)
+        res = _resolove_ast_attribute(t)
     else:
         msg = "Unexpected AST-type when evaluating lhs"
         raise ValueError(msg)
 
     return res
+
+
+def _resolove_ast_attribute(elt):
+    """
+    Handle the ast-object corresponding e.g. to `C.x.y.z`.
+
+    :param elt: object of type ast.Attribute
+    :return:         string representation of that object
+    """
+
+    assert isinstance(elt, ast.Attribute)
+
+    res = []
+    obj = elt
+    # docstring example: obj.attr -> "z"; obj.value.attr -> "y"; obj.value.value.attr -> "x";
+    # obj.value.value.value.id -> "C"
+    while True:
+        res.insert(0, obj.attr)
+        if isinstance(obj.value, ast.Attribute):
+            obj = obj.value
+        else:
+            break
+
+    # ensure that we reached the end (i.e. beginning) of the chain: there must be a ast.Name-object
+    assert isinstance(obj.value, ast.Name)
+    res.insert(0, obj.value.id)
+
+    return ".".join(res)
 
 
 def get_rhs_from_ast(myast, txt, no_lines_removed, comment_start_tuple):
