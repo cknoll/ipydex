@@ -135,21 +135,29 @@ class TestCore2(unittest.TestCase):
 class TestCore3(unittest.TestCase):
 
     def test_dirsearch(self):
-        import sys
+        import math
 
-        res = ipd.dirsearch("pa", sys)
+        res = ipd.dirsearch("log", math)
 
-        self.assertEqual(res, ('__package__', 'meta_path', 'path', 'path_hooks', 'path_importer_cache'))
+        expeced_res = ('log', 'log10', 'log1p', 'log2')
 
-        res = ipd.dirsearch("pa", sys, only_keys=False, maxlength=50)
+        self.assertEqual(res, expeced_res)
 
+        res = ipd.dirsearch("log", math, only_keys=False)
         expeced_res = \
-            [('__doc__', 'This module provides access to some objects used..'),
-             ('__package__', ''),
-             ('meta_path', "[<class '_frozen_importlib.BuiltinImporter'>, <c.."),
-             ('path', "['/home/ck/miniconda3/bin', '/home/ck/miniconda3.."),
-             ('path_hooks', "[<class 'zipimport.zipimporter'>, <function File.."),
-             ('path_importer_cache', "{'/home/ck/miniconda3/lib/python37.zip': None, '..")]
+            [('log', '<built-in function..'),
+             ('log10', '<built-in function..'),
+             ('log1p', '<built-in function..'),
+             ('log2', '<built-in function..')]
+
+        self.assertEqual(res, expeced_res)
+
+        res = ipd.dirsearch("log", math, only_keys=False, maxlength=50)
+        expeced_res = \
+            [('log', '<built-in function log>'),
+             ('log10', '<built-in function log10>'),
+             ('log1p', '<built-in function log1p>'),
+             ('log2', '<built-in function log2>')]
 
         self.assertEqual(res, expeced_res)
 
