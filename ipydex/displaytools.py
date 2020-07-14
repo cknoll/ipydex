@@ -246,7 +246,9 @@ def get_line_segments_from_logical_line(ll):
                 raise ValueError(msg)
             else:
                 # see tag_issue_comment_at_end_of_indented_blocks
-                assert dedented_line.startswith(" "*ll.lws_len + ll.removed_start_txt)
+                if not dedented_line.startswith(" "*ll.lws_len + ll.removed_start_txt):
+                    msg = "Currently not supported: comment line as last line of indented block "
+                    raise ValueError(msg)
 
         # omit the leading linebreaks/comment-lines
         dedented_line = dedented_line[len(ll.removed_start_txt):]

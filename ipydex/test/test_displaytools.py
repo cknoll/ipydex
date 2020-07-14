@@ -714,6 +714,25 @@ if 1:
         self.assertEqual(res[3], ("", "C.x.y.z", "123", "##:"))
         self.assertEqual(res[4], ("", "C.z.z.z", "123", "##:"))
 
+    def testLL5(self):
+
+        raw_cell1 = """\
+for k in range(N):
+
+    # g3.append(l1*cos(st[0,0])+l2*cos(st[1,0])+l3*cos(st[2,0])-l4*cos(st[5,0])-l5*cos(st[4,0])-l6*cos(st[3,0]))
+    #...
+
+ng1, ng2, ng3 = len(g1), len(g2), len(g3)  ##:
+g = cs.vertcat(g1_.reshape((-1, 1)), g2_.reshape((-1, 1)))  
+"""
+
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+
+        with self.assertRaises(ValueError) as cm:
+            res = [dt.get_line_segments_from_logical_line(elt) for elt in ll]
+
+        self.assertIn("comment line as last line of indented block", cm.exception.args[0])
+
 
 if __name__ == "__main__":
     unittest.main()
