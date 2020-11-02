@@ -146,7 +146,7 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     :param copy_namespaces:
     :param overwrite_globals:
     :param code_context:
-    :param print_tb:
+    :param print_tb:            boolean or negative integer (number of printed last tracebacks)
     :param add_context_for_latest:
     :return:
 
@@ -175,14 +175,19 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
         C.ns_extension = ns_extension
 
     # let the user know, where this shell is 'waking up'
-    fli = generate_frame_list_info(frame, code_context, add_context_for_latest)
+    if isinstance(print_tb, int) and not isinstance(print_tb, bool):
+        assert print_tb < 0, "print_tb:{}".format(print_tb)
+        limit_to = print_tb
+    else:
+        limit_to = 0
+
+    fli = generate_frame_list_info(frame, code_context, add_context_for_latest, limit_to=limit_to)
     custom_header2 = "\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n"
 
     C.ns_extension["_ips_fli"] = fli
 
-    # noinspection PyUnresolvedReferences
-
     if print_tb:
+        # noinspection PyUnresolvedReferences
         C.custom_header = "{0}{1}".format(fli.tb_txt, custom_header2)
     else:
         C.custom_header = ""
@@ -348,12 +353,14 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
         diff_index = IPS(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb}, print_tb=False)
 
 
-def generate_frame_list_info(frame, code_context, add_context_for_latest=0):
+def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limit_to=0):
     res = Container()
     TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
     res.frame_list, res.frame_info_list = get_frame_list(frame, code_context, add_context_for_latest)
     formated_records = [TB.format_record(frame, *fi) for fi in res.frame_info_list]
-    res.tb_txt = "\n".join(formated_records)
+
+    assert isinstance(limit_to, int) and limit_to <= 0
+    res.tb_txt = "\n".join(formated_records[limit_to:])
     return res
 
 
