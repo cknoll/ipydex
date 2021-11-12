@@ -8,6 +8,7 @@ import os
 import tokenize as tk
 import io
 import pickle
+import subprocess
 
 from IPython.terminal.ipapp import load_default_config
 from IPython.terminal.embed import InteractiveShellEmbed
@@ -606,7 +607,7 @@ def in_ipynb(debug=False):
         return res
 
 
-def save_current_nb_as_html(info=False):
+def save_current_nb_as_html(info=None, return_res=False):
     """
     Save the current notebook as html file in the same directory
     """
@@ -617,15 +618,24 @@ def save_current_nb_as_html(info=False):
 
     wd_save = os.getcwd()
     os.chdir(path)
-    cmd = 'jupyter nbconvert --to html "{}"'.format(filename)
-    os.system(cmd)
+    cmd_list = ["jupyter", "nbconvert", "--to", "html", filename]
+
+    res = subprocess.run(cmd_list, capture_output=True)
+    res.exited = res.returncode
+    res.stdout = res.stdout.decode("utf8")
+    res.stderr = res.stderr.decode("utf8")
+
     os.chdir(wd_save)
 
-    if info:
+    if info == True:
         print("target dir: ", path)
         print("cmd: ", cmd)
         print("working dir: ", wd_save)
+    elif info is None:
+        print("`{}`".format(filename), "written.")
 
+    if return_res:
+        return res
 
 #################################
 
