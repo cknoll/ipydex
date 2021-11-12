@@ -1054,18 +1054,47 @@ def str_to_token_list(line, raise_TE=False):
     return tokens
 
 
+# trivial helper function
+# copied from https://github.com/pdbpp/pdbpp/
+def always(*args, **kwargs):
+    return True
+
+# two class decorators which trigger IPS() if an attribute or an internal storrage changes
 
 
+# copied from https://github.com/pdbpp/pdbpp/
+def break_on_setattr(attrname, condition=always):
+    def decorator(cls):
+        old___setattr__ = cls.__setattr__
+
+        def __setattr__(self, attr, value):
+            if attr == attrname and condition(self, value):
+                IPS()
+            old___setattr__(self, attr, value)
+        cls.__setattr__ = __setattr__
+        return cls
+    return decorator
 
 
+class SurveiledDict(dict):
+    """
+    Dictionary which triggeres IPS if a value is set (and an optional condition is met)
+    """
 
+    def __init__(self, *args, **kwargs):
+        self._set_condition(always)
+        super().__init__(*args, **kwargs)
 
+    def _set_condition(self, condition):
+        self._condition_func = condition
 
+    def __setitem__(self, key, value):
+        if self._condition_func(self, key, value):
+            IPS()
+        super().__setitem__(key, value)
 
-
-
-
-
-
-
+    def update(self, *args, **kwargs):
+        if self._condition_func(self, *args, **kwargs):
+            IPS()
+        super().update(*args, **kwargs)
 
