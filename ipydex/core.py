@@ -618,7 +618,7 @@ def save_current_nb_as_html(info=None, return_res=False):
 
     wd_save = os.getcwd()
     os.chdir(path)
-    cmd_list = ["jupyter", "nbconvert", "--to", "html", filename]
+    cmd_list = ["jupyter", "nbconvert", filename, "--to", "html", "--template", "classic"]
 
     res = subprocess.run(cmd_list, capture_output=True)
     res.exited = res.returncode
