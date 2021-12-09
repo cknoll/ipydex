@@ -1,0 +1,11 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run: pip install -r requirements.txt
+      - run: pip install -e .
+      - run: python -m unittest
