@@ -912,6 +912,13 @@ class Container(object):
         # basically return the representation of the dict
         return "<Container: {}>".format(self.__dict__)
 
+    def __eq__(self, other):
+        if not isinstance(other, Container):
+            return False
+        
+        return self.__dict__ == other.__dict__
+
+
 # End of class Container
 
 

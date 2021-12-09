@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 from ipydex import displaytools as dt
-from ipydex import IPS
+from ipydex import IPS, Container
 
 
 def bool_sum(x):
@@ -13,6 +13,11 @@ def bool_sum(x):
         return 1
     else:
         return 0
+
+
+# helper function to abbreviate test notation
+def lhsc(mystr):
+    return Container(lhs_str=mystr, parsing_exception=None)
 
 
 @contextmanager
@@ -102,6 +107,7 @@ class TestDT1(unittest.TestCase):
         self.assertFalse(r1.transpose)
 
     def test_get_line_segments(self):
+        ##!!
 
         l1 = "x = 0"
 
@@ -109,51 +115,52 @@ class TestDT1(unittest.TestCase):
             return dt.get_logical_lines_of_cell(txt)[0]
 
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", "x", "0", ""))
+        
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc("x"), "0", ""))
 
         l1 = "# abx"
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, "# abx"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc(None), None, "# abx"))
 
         l1 = "     "
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, ""))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc(None), None, ""))
 
         l1 = ""
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", None, None, ""))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc(None), None, ""))
 
         l1 = "x + y  ##"
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", None, "x + y", "##"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc(None), "x + y", "##"))
 
         l1 = "x + y + 'z=#'  ##:"
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", None, "x + y + 'z=#'", "##:"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc(None), "x + y + 'z=#'", "##:"))
 
         l1 = "A =     '#xyz=7'  # abcd ##: efg    "
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", "A", "'#xyz=7'", "# abcd ##: efg"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc("A"), "'#xyz=7'", "# abcd ##: efg"))
 
         l1 = "    A = X  # Z"
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("    ", "A", "X", "# Z"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("    ", lhsc("A"), "X", "# Z"))
 
         l1 = "    y, x, z = A = X  # Z"
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("    ", "A", "X", "# Z"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("    ", lhsc("A"), "X", "# Z"))
 
         l1 = "    A = y, x, z = X  # Z"
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("    ", "y, x, z", "X", "# Z"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("    ", lhsc("y, x, z"), "X", "# Z"))
 
         l1 = "x = func1(a=a, b = b) ##:"
         ind, lhs, rhs, cmt = sgm = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", "x", "func1(a=a, b = b)", "##:"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc("x"), "func1(a=a, b = b)", "##:"))
 
         l1 = "xyz=x ##:i"
         ind, lhs, rhs, cmt = sgm = dt.get_line_segments_from_logical_line(f(l1))
-        self.assertEqual((ind, lhs, rhs, cmt), ("", "xyz", "x", "##:i"))
+        self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc("xyz"), "x", "##:i"))
 
     def test_insert_disp_lines1(self):
         raw_cell1 = """\
@@ -412,7 +419,7 @@ z4 = [ 1,
 
         indent, lhs, rhs, comments = dt.get_line_segments_from_logical_line(ll[2])
         self.assertEqual(indent, "")
-        self.assertEqual(lhs, "z3")
+        self.assertEqual(lhs, lhsc("z3"))
         self.assertEqual(rhs, "[ 1,\n       2,\n       3 ]")
 
     def test_info1(self):
@@ -492,8 +499,8 @@ z4 = [ 1,
         lhs1 = dt.get_lhs_from_ast(ast1)
         lhs2 = dt.get_lhs_from_ast(ast2)
 
-        self.assertEqual(lhs1, "x, y")
-        self.assertEqual(lhs2, "C.x, y")
+        self.assertEqual(lhs1, lhsc("x, y"))
+        self.assertEqual(lhs2, lhsc("C.x, y"))
 
     def test_custom_display(self):
         # ensure that no error occurs

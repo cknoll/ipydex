@@ -103,6 +103,16 @@ class TestCore1(unittest.TestCase):
         self.assertEqual(xaz, (42,))
         self.assertEqual(d, {"a": 1, 2: "b"})
 
+    def test_container_equality(self):
+        C1 = ipd.Container(arg1=0, arg2="abc", arg3=[10, 2.5, "xyz", tuple()])
+        C2 = ipd.Container(arg1=0, arg2="abc", arg3=[10, 2.5, "xyz", tuple()])
+        C3 = ipd.Container(arg1=1, arg2="abc", arg3=[10, 2.5, "xyz", tuple()])
+        C4 = ipd.Container(arg1=0, arg2="abc", arg3=[2.5, 10, "xyz", tuple()])
+
+        self.assertEqual(C1, C2)
+        self.assertNotEqual(C1, C3)
+        self.assertNotEqual(C1, C4)
+
     def test_in_ipynb(self):
         self.assertFalse(ipd.in_ipynb())
 
