@@ -2,8 +2,7 @@ ipydex
 ======
 
 [![CircleCI](https://circleci.com/gh/cknoll/ipydex/tree/master.svg?style=shield)](https://circleci.com/gh/cknoll/ipydex/tree/master)
-
-[![Link to PyPi](https://img.shields.io/pypi/v/ipydex.svg)](https://pypi.python.org/pypi/ipydex)
+[![PyPI version](https://badge.fury.io/py/ipydex.svg)](https://badge.fury.io/py/ipydex)
 
 \"IPython based debugging and exploring\"
 
