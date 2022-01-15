@@ -451,6 +451,13 @@ class TBPrinter(object):
 
 
 def activate_ips_on_exception():
+
+    if os.environ.get("NO_IPS_EXCEPTHOOK"):
+        # this is useful in the context of calling python programs from other processes
+        # e.g. via subprocess.run(...). Then this flag allows to prevent dropping
+        # into an IP-Shell after an exception
+        return
+    
     # set the hook
     sys.excepthook = ips_excepthook
 
