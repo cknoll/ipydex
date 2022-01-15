@@ -522,13 +522,13 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
 
 
 # noinspection PyPep8Naming
-def TracerFactory():
+def TracerFactory(colors="Linux"):
     """
     Returns a callable `Tracer` object.
     When this object is called it starts the ipython commandline debugger
     in that place.
     """
-    return Tracer(colors='Linux')
+    return Tracer(colors)
 
 
 # this has legacy reasons:

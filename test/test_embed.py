@@ -14,10 +14,14 @@ import unittest
 from IPython.utils.tempdir import NamedFileInTemporaryDirectory
 import pexpect
 
+
+# define some test source code
+
 _exit = b"exit\r"
 _mu1 = b"__mu = 1; exit\n"
 
 ipy_prompt = r']:'
+
 
 _sample_embed_ips1 = b"""
 from ipydex import IPS
@@ -31,6 +35,7 @@ IPS()
 print('bye!')
 
 """
+
 _sample_embed_ips2 = b'''
 import sys
 
@@ -68,6 +73,27 @@ arg = float(sys.argv[1])
 # arg == 1.0 -> IPS  
 
 f3(arg)
+
+'''
+
+_sample_embed_dbg1 = b'''
+
+from ipydex import TracerFactory
+
+x = 10
+
+def f1():
+    a = 7
+    b = 8
+
+    return a + b
+
+ST = TracerFactory("NoColor")
+ST()
+
+
+f1()
+y = 20
 
 '''
 
@@ -277,7 +303,54 @@ class TestE1(unittest.TestCase):
             self.assertIn(b"z = 789", out_a)
 
 
+# noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
+class TestDBG(unittest.TestCase):
+
+    def test_trac1(self):
+        with NamedFileInTemporaryDirectory('file_with_trace.py') as f:
+            f.write(_sample_embed_dbg1)
+            f.flush()
+            f.close()  # otherwise msft won't be able to read the file
+
+            # run `python file_with_embed.py`
+            cmd = [sys.executable, f.name]
+            env = os.environ.copy()
+            env['IPY_TEST_SIMPLE_PROMPT'] = '1'
+
+            p = subprocess.Popen(cmd, env=env, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate(_exit)
+            std = out.decode('UTF-8')
+
+
+        eout = f'\x1b[22;0t\x1b]0;IPython: repo/test\x07> {f.name}(17)<module>()\n     15 \n     16 \n---> 17 f1()\n     18 y = 20\n     19 \n\nipdb> Exiting Debugger.\n'
+
+        self.assertEqual(std, eout)
+
+
+
+def test_debug():
+    from ipydex import TracerFactory
+
+    x = 10
+
+    def f1():
+        a = 7
+        b = 8
+
+        return a + b
+
+    ST = TracerFactory()
+    ST()
+
+
+    f1()
+    y = 20
+    exit()
+
+
 if __name__ == "__main__":
+
     unittest.main()
     # write_string_to_file_script(_sample_embed_ips2)
 
