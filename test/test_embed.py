@@ -78,7 +78,7 @@ f3(arg)
 
 _sample_embed_dbg1 = b'''
 
-from ipydex import TracerFactory
+from ipydex import Pdb_instance, set_trace
 
 x = 10
 
@@ -88,8 +88,9 @@ def f1():
 
     return a + b
 
-ST = TracerFactory("NoColor")
-ST()
+Pdb_instance.set_colors("NoColor")
+set_trace()
+
 
 
 f1()
@@ -306,7 +307,7 @@ class TestE1(unittest.TestCase):
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
 class TestDBG(unittest.TestCase):
 
-    def test_trac1(self):
+    def test_trace1(self):
         with NamedFileInTemporaryDirectory('file_with_trace.py') as f:
             f.write(_sample_embed_dbg1)
             f.flush()
@@ -323,14 +324,14 @@ class TestDBG(unittest.TestCase):
             std = out.decode('UTF-8')
 
 
-        eout = f'\x1b[22;0t\x1b]0;IPython: repo/test\x07> {f.name}(17)<module>()\n     15 \n     16 \n---> 17 f1()\n     18 y = 20\n     19 \n\nipdb> Exiting Debugger.\n'
-
+        eout = f'\x1b[22;0t\x1b]0;IPython: repo/test\x07> {f.name}(18)<module>()\n     16 \n     17 \n---> 18 f1()\n     19 y = 20\n     20 \n\nipdb> '
         self.assertEqual(std, eout)
 
 
 
 def test_debug():
-    from ipydex import TracerFactory
+
+    from ipydex import Pdb_instance, set_trace
 
     x = 10
 
@@ -340,19 +341,21 @@ def test_debug():
 
         return a + b
 
-    ST = TracerFactory()
-    ST()
+    Pdb_instance.set_colors("NoColor")
+    set_trace()
 
 
     f1()
     y = 20
+
     exit()
 
 
 if __name__ == "__main__":
 
+    # test_debug()
+
     unittest.main()
-    # write_string_to_file_script(_sample_embed_ips2)
 
 
 # other usefull techniques:

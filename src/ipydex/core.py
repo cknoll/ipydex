@@ -13,7 +13,8 @@ import subprocess
 from IPython.terminal.ipapp import load_default_config
 from IPython.terminal.embed import InteractiveShellEmbed
 from IPython.core import ultratb
-from IPython.core.debugger import Tracer
+
+from IPython.core.debugger import Pdb
 
 sys_orig_excepthook = sys.excepthook
 
@@ -528,14 +529,28 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
     sys.excepthook = theexecpthook
 
 
+Pdb_instance = Pdb()
+
+set_trace = Pdb_instance.set_trace
+
+# Note: colors can be adapted at runtime from the calling script via
+# Pdb_instance.set_colors("Neutral") # default
+# Pdb_instance.set_colors("NoColor")
+
+
 # noinspection PyPep8Naming
 def TracerFactory(colors="Linux"):
     """
-    Returns a callable `Tracer` object.
+    Returns a callable `set_trace`-object.
     When this object is called it starts the ipython commandline debugger
     in that place.
     """
-    return Tracer(colors)
+
+    print("This is a leagacy function. You can directly import callable `set_trace` from ipydex")
+
+    return set_trace
+
+
 
 
 # this has legacy reasons:
@@ -543,9 +558,7 @@ def TracerFactory(colors="Linux"):
 def ST():
     a = " "*3
     print("\n"*5, a, "ST is dreprecated due to namespace problems.")
-    print(a, "use: ST = TracerFactory() or")
-    print(a, "from IPython.core.debugger import Tracer")
-    print(a, "ST=Tracer(colors='Linux')")
+    print(a, "use: from ipydex import set_trace")
     print(a, "\n"*2)
     print(a , "<ENTER>")
     print(a, "\n"*5)
