@@ -127,7 +127,7 @@ class TestCore2(unittest.TestCase):
             return foobar_123()
 
         def foobar_123():
-            res = ipd.calling_stack_info(print_res=False)
+            res = ipd.calling_stack_info(print_res=False, code_context=0)
 
             return res
         res1 = foobar_xyz()

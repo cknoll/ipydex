@@ -10,6 +10,10 @@ import io
 import pickle
 import subprocess
 
+import stack_data
+from pygments.formatters.terminal256 import Terminal256Formatter
+from pygments.styles import get_style_by_name
+
 from IPython.terminal.ipapp import load_default_config
 from IPython.terminal.embed import InteractiveShellEmbed
 from IPython.core import ultratb
@@ -359,7 +363,31 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limi
     res = Container()
     TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
     res.frame_list, res.frame_info_list = get_frame_list(frame, code_context, add_context_for_latest)
-    formated_records = [TB.format_record(frame, *fi) for fi in res.frame_info_list]
+
+    # old Signature: TB.format_record(frame, file, lnum, func, lines, index)
+
+    # formated_records = [TB.format_record(frame, *fi) for fi in res.frame_info_list]
+    formated_records = []
+
+    style = get_style_by_name("default")
+    # style = stack_data.style_with_executing_node(style, "bg:ansiyellow")
+    formatter = Terminal256Formatter(style=style)
+
+    options = stack_data.Options(
+            before=code_context - (code_context // 2),
+            after=code_context // 2 ,
+            pygments_formatter=formatter,
+        )
+
+
+    fil = list(stack_data.FrameInfo.stack_data(frame, options=options))
+    for fic in fil:
+
+
+        # `fi` is a Traceback-Object which has no .frame attribute. That must be added
+        #fic = Container(code_context=fi.code_context, count=fi.count, filename=fi.filename, function=fi.function, index=fi.index, lineno=fi.lineno, frame=frame)
+        # fic = list(stack_data.FrameInfo.stack_data(frame, options=options))[-1]
+        formated_records.append(TB.format_record(fic))
 
     assert isinstance(limit_to, int) and limit_to <= 0
     res.tb_txt = "\n".join(formated_records[limit_to:])
