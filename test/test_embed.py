@@ -14,6 +14,8 @@ import unittest
 from IPython.utils.tempdir import NamedFileInTemporaryDirectory
 import pexpect
 
+from IPython import embed as IPS
+
 
 # define some test source code
 
@@ -30,7 +32,7 @@ a = 3
 b = 14
 print(a, '.', b)
 
-IPS()
+IPS(color_scheme="nocolor")
 
 print('bye!')
 
@@ -51,7 +53,7 @@ def f1(x):
         1/0
     elif x > 4:
         # call interactive IPython
-        IPS()
+        IPS(color_scheme="nocolor")
     else:
         f2(x)
 
@@ -224,6 +226,11 @@ class TestE1(unittest.TestCase):
 
             out_adapted = perform_replacements(out, fname)
 
+
+            IPS()
+            1/0
+
+
             self.assertIn(eout1, out_adapted)
 
             cmd2 = [sys.executable, fname, "1.5"]
@@ -241,6 +248,8 @@ class TestE1(unittest.TestCase):
 
             eout = b'\x1b[22;0t\x1b]0;IPython: repo/test\x07x= 2.5\r\nx= 3.5\r\n\r\n\r\n\x1b[1;31m---------------------------------------------------------------------------\x1b[0m\r\n\x1b[1;31mZeroDivisionError\x1b[0m                         Traceback (most recent call last)\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:37\x1b[0m, in \x1b[0;36m<module>\x1b[1;34m\x1b[0m\r\n\x1b[0;32m     33\x1b[0m arg \x1b[38;5;241m=\x1b[39m \x1b[38;5;28mfloat\x1b[39m(sys\x1b[38;5;241m.\x1b[39margv[\x1b[38;5;241m1\x1b[39m])\r\n\x1b[0;32m     34\x1b[0m \x1b[38;5;66;03m# arg == 1.5 -> exception\x1b[39;00m\r\n\x1b[0;32m     35\x1b[0m \x1b[38;5;66;03m# arg == 1.0 -> IPS  \x1b[39;00m\r\n\x1b[1;32m---> 37\x1b[0m \x1b[43mf3\x1b[49m\x1b[43m(\x1b[49m\x1b[43marg\x1b[49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:31\x1b[0m, in \x1b[0;36mf3\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     28\x1b[0m a \x1b[38;5;241m=\x1b[39m \x1b[38;5;241m1\x1b[39m\r\n\x1b[0;32m     29\x1b[0m b \x1b[38;5;241m=\x1b[39m [\x1b[38;5;241m1\x1b[39m, \x1b[38;5;241m3\x1b[39m]\r\n\x1b[1;32m---> 31\x1b[0m \x1b[43mf2\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     21\x1b[0m \x1b[38;5;28;01mdef\x1b[39;00m \x1b[38;5;21mf2\x1b[39m(x):\r\n\x1b[0;32m     22\x1b[0m     name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\r\n\x1b[1;32m---> 23\x1b[0m     \x1b[43mf1\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[38;5;241;43m+\x1b[39;49m\x1b[38;5;241;43m1\x1b[39;49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:18\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     16\x1b[0m     IPS()\r\n\x1b[0;32m     17\x1b[0m \x1b[38;5;28;01melse\x1b[39;00m:\r\n\x1b[1;32m---> 18\x1b[0m     \x1b[43mf2\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     21\x1b[0m \x1b[38;5;28;01mdef\x1b[39;00m \x1b[38;5;21mf2\x1b[39m(x):\r\n\x1b[0;32m     22\x1b[0m     name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\r\n\x1b[1;32m---> 23\x1b[0m     \x1b[43mf1\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[38;5;241;43m+\x1b[39;49m\x1b[38;5;241;43m1\x1b[39;49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:13\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     10\x1b[0m \x1b[38;5;28mprint\x1b[39m(\x1b[38;5;124m"\x1b[39m\x1b[38;5;124mx=\x1b[39m\x1b[38;5;124m"\x1b[39m, x)\r\n\x1b[0;32m     11\x1b[0m \x1b[38;5;28;01mif\x1b[39;00m x \x1b[38;5;241m==\x1b[39m \x1b[38;5;241m3.5\x1b[39m:\r\n\x1b[0;32m     12\x1b[0m     \x1b[38;5;66;03m# provoke an exception\x1b[39;00m\r\n\x1b[1;32m---> 13\x1b[0m     \x1b[38;5;241;43m1\x1b[39;49m\x1b[38;5;241;43m/\x1b[39;49m\x1b[38;5;241;43m0\x1b[39;49m\r\n\x1b[0;32m     14\x1b[0m \x1b[38;5;28;01melif\x1b[39;00m x \x1b[38;5;241m>\x1b[39m \x1b[38;5;241m4\x1b[39m:\r\n\x1b[0;32m     15\x1b[0m     \x1b[38;5;66;03m# call interactive IPython\x1b[39;00m\r\n\x1b[0;32m     16\x1b[0m     IPS()\r\n\r\n\x1b[1;31mZeroDivisionError\x1b[0m: division by zero\r\n\r\n\r\nPython 3.8.6 | packaged by conda-forge | (default, Nov 27 2020, 19:31:52) \r\nType \'copyright\', \'credits\' or \'license\' for more information\r\nIPython 8.0.0 -- An enhanced Interactive Python. Type \'?\' for help.\r\n\r\nIn [1]:'
 
+
+            IPS()
 
             self.assertEqual(eout, out_a)
 
@@ -360,6 +369,8 @@ def test_debug():
 
 
 if __name__ == "__main__":
+
+
 
     # test_debug()
 

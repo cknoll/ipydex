@@ -143,7 +143,7 @@ class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
 
 # noinspection PyPep8Naming
 def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False,
-        code_context=1, print_tb=True, add_context_for_latest=6):
+        code_context=1, print_tb=True, add_context_for_latest=6, color_scheme="linux"):
     """
 
     :param condition:           return immediately if False
@@ -154,6 +154,7 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     :param code_context:
     :param print_tb:            boolean or negative integer (number of printed last tracebacks)
     :param add_context_for_latest:
+    :param color_scheme:        one of ['nocolor', 'neutral', 'linux', 'lightbg']
     :return:
 
     Starts IPython embedded shell. This is similar to IPython.embed() but with some
@@ -167,9 +168,9 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     if not condition:
         return None
 
-    C = Container()
-    C.copy_namespaces = copy_namespaces
-    C.overwrite_globals = overwrite_globals
+    assert color_scheme in ['nocolor', 'neutral', 'linux', 'lightbg']
+    C = Container(copy_namespaces=copy_namespaces, overwrite_globals=overwrite_globals, color_scheme=color_scheme )
+
 
     if not frame:
         frame = inspect.currentframe().f_back
@@ -234,6 +235,10 @@ def _run_ips(frame_list, c):
     # copied (and modified) from IPython/terminal/embed.py
     config = load_default_config()
     config.InteractiveShellEmbed = config.TerminalInteractiveShell
+
+    color_scheme = getattr(c, "neutral")
+
+    # config.InteractiveShellEmbed.colors = color_scheme
 
     # these two lines prevent problems related to the initialization
     # of ultratb.FormattedTB below
