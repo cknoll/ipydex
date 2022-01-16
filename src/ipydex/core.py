@@ -9,6 +9,7 @@ import tokenize as tk
 import io
 import pickle
 import subprocess
+import dataclasses
 
 import stack_data
 from pygments.formatters.terminal256 import Terminal256Formatter
@@ -104,6 +105,13 @@ development, but already are deployd on different machines/ platforms)
 """
 
 
+# allow global write access to config vars of this module
+module_config = dataclasses.dataclass()
+module_config.COLOR_SCHEME = "Linux"
+
+
+
+
 class DummyMod(object):
     """A dummy module used for IPython's interactive module when
     a name space must be assigned to the module's __dict__."""
@@ -143,7 +151,7 @@ class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
 
 # noinspection PyPep8Naming
 def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False,
-        code_context=1, print_tb=True, add_context_for_latest=6, color_scheme="linux"):
+        code_context=1, print_tb=True, add_context_for_latest=6, color_scheme=module_config.COLOR_SCHEME):
     """
 
     :param condition:           return immediately if False
@@ -154,7 +162,7 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     :param code_context:
     :param print_tb:            boolean or negative integer (number of printed last tracebacks)
     :param add_context_for_latest:
-    :param color_scheme:        one of ['nocolor', 'neutral', 'linux', 'lightbg']
+    :param color_scheme:        (optional) one of ['Linux', 'NoColor', 'LightBG', 'Neutral']
     :return:
 
     Starts IPython embedded shell. This is similar to IPython.embed() but with some
@@ -168,7 +176,8 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     if not condition:
         return None
 
-    assert color_scheme in ['nocolor', 'neutral', 'linux', 'lightbg']
+    # note some but not all portions of IPython code need the camelcase verions
+    assert color_scheme.lower() in ['nocolor', 'neutral', 'linux', 'lightbg']
     C = Container(copy_namespaces=copy_namespaces, overwrite_globals=overwrite_globals, color_scheme=color_scheme )
 
 
@@ -188,7 +197,7 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     else:
         limit_to = 0
 
-    fli = generate_frame_list_info(frame, code_context, add_context_for_latest, limit_to=limit_to)
+    fli = generate_frame_list_info(frame, code_context, add_context_for_latest, limit_to=limit_to, color_scheme=color_scheme)
     custom_header2 = "\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n"
 
     C.ns_extension["_ips_fli"] = fli
@@ -236,16 +245,17 @@ def _run_ips(frame_list, c):
     config = load_default_config()
     config.InteractiveShellEmbed = config.TerminalInteractiveShell
 
-    color_scheme = getattr(c, "neutral")
+    color_scheme = getattr(c, "color_scheme", "neutral")
 
-    # config.InteractiveShellEmbed.colors = color_scheme
+
+    config.InteractiveShellEmbed.colors = color_scheme
 
     # these two lines prevent problems related to the initialization
     # of ultratb.FormattedTB below
     InteractiveShellEmbed.clear_instance()
     InteractiveShellEmbed._instance = None
 
-    shell = InteractiveShellEmbed.instance()
+    shell = InteractiveShellEmbed.instance(config=config)
 
     # achieve that custom macros are loaded in interactive shell
     shell.magic('load_ext storemagic')
@@ -361,12 +371,12 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
         tb_printer.printout(end_offset=index)
         print("\n")
         current_frame = tb_frame_list[index]
-        diff_index = IPS(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb}, print_tb=False)
+        diff_index = IPS(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb}, print_tb=False, color_scheme=module_config.COLOR_SCHEME)
 
 
-def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limit_to=0):
+def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limit_to=0, color_scheme=module_config.COLOR_SCHEME):
     res = Container()
-    TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
+    TB = ultratb.FormattedTB(mode="Context", color_scheme=color_scheme, call_pdb=False)
     res.frame_list, res.frame_info_list = get_frame_list(frame, code_context, add_context_for_latest)
 
     # old Signature: TB.format_record(frame, file, lnum, func, lines, index)
@@ -399,7 +409,7 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limi
     return res
 
 
-def calling_stack_info(print_res=True, code_context=1):
+def calling_stack_info(print_res=True, code_context=1, **kwargs):
     """
     Debugging helper function. Can be called anywhere and returns (and optionally prints) a stacktrace
     :param print_res:
@@ -408,7 +418,7 @@ def calling_stack_info(print_res=True, code_context=1):
 
     start_frame = inspect.currentframe().f_back
 
-    fil = generate_frame_list_info(start_frame, code_context=code_context)
+    fil = generate_frame_list_info(start_frame, code_context=code_context, **kwargs)
 
     if print_res:
         # noinspection PyUnresolvedReferences
@@ -424,7 +434,7 @@ class TBPrinter(object):
         self.excValue = excValue
         self.traceback = traceback
 
-        self.TB = ultratb.FormattedTB(mode="Context", color_scheme='Linux', call_pdb=False)
+        self.TB = ultratb.FormattedTB(mode="Context", color_scheme=module_config.COLOR_SCHEME, call_pdb=False)
 
     def printout(self, *args, **kwargs):
             debug = kwargs.get("debug", False)
@@ -484,13 +494,16 @@ class TBPrinter(object):
         return text
 
 
-def activate_ips_on_exception():
+def activate_ips_on_exception(color_scheme=module_config.COLOR_SCHEME):
+
+    module_config.COLOR_SCHEME = color_scheme
 
     if os.environ.get("NO_IPS_EXCEPTHOOK"):
         # this is useful in the context of calling python programs from other processes
         # e.g. via subprocess.run(...). Then this flag allows to prevent dropping
         # into an IP-Shell after an exception
         return
+
     
     # set the hook
     sys.excepthook = ips_excepthook
@@ -509,15 +522,15 @@ def color_excepthook(pdb=0, mode=2, force=True):
 
     if force or not sys.excepthook == sys_orig_excepthook:
         sys.excepthook = ultratb.FormattedTB(mode=modus,
-                                             color_scheme='Linux', call_pdb=pdb)
+                                             color_scheme=module_config.COLOR_SCHEME, call_pdb=pdb)
 
 
 # for backward compatibiliy
 ip_syshook = color_excepthook
 
 # now, we immediately  apply this new excepthook.
-# consequence: often its sufficient jsut to import this module
-color_excepthook(force=False)
+# consequence: when this module is imported the tracebacks automatically are colored (easier to read)
+color_excepthook(force=True)
 
 
 def ip_extra_syshook(fnc, pdb=0, filename=None):
@@ -541,7 +554,7 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
         pdb = 0
 
     ip_excepthook = ultratb.FormattedTB(mode='Verbose',
-                                    color_scheme='Linux', call_pdb=pdb)
+                                    color_scheme=module_config.COLOR_SCHEME, call_pdb=pdb)
 
     fileTraceback = ultratb.FormattedTB(mode='Verbose',
                                     color_scheme='NoColor', call_pdb=0)
@@ -562,27 +575,31 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
     sys.excepthook = theexecpthook
 
 
-Pdb_instance = Pdb()
-
-set_trace = Pdb_instance.set_trace
-
-# Note: colors can be adapted at runtime from the calling script via
-# Pdb_instance.set_colors("Neutral") # default
-# Pdb_instance.set_colors("NoColor")
-
 
 # noinspection PyPep8Naming
-def TracerFactory(colors="Linux"):
+def TracerFactory(color_scheme=module_config.COLOR_SCHEME):
     """
     Returns a callable `set_trace`-object.
     When this object is called it starts the ipython commandline debugger
     in that place.
+
+    :param color_scheme:    (optional) one of ['Linux', 'NoColor', 'LightBG', 'Neutral']
     """
 
-    print("This is a leagacy function. You can directly import callable `set_trace` from ipydex")
+    Pdb_instance = Pdb()
+
+    # Note: colors can be adapted at runtime from the calling script via
+    # Pdb_instance.set_colors("Neutral") # default
+    # Pdb_instance.set_colors("NoColor")
+
+    Pdb_instance.set_colors(color_scheme) # default
+    set_trace = Pdb_instance.set_trace
 
     return set_trace
 
+
+
+set_trace = TracerFactory()
 
 
 

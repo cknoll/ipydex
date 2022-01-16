@@ -14,7 +14,7 @@ import unittest
 from IPython.utils.tempdir import NamedFileInTemporaryDirectory
 import pexpect
 
-from IPython import embed as IPS
+from ipydex import IPS, activate_ips_on_exception
 
 
 # define some test source code
@@ -42,7 +42,7 @@ _sample_embed_ips2 = b'''
 import sys
 
 from ipydex import IPS, activate_ips_on_exception
-activate_ips_on_exception()
+activate_ips_on_exception(color_scheme="nocolor")
 
 def f1(x):
     name = "f1"
@@ -80,7 +80,7 @@ f3(arg)
 
 _sample_embed_dbg1 = b'''
 
-from ipydex import Pdb_instance, set_trace
+from ipydex import TracerFactory
 
 x = 10
 
@@ -90,9 +90,8 @@ def f1():
 
     return a + b
 
-Pdb_instance.set_colors("NoColor")
+set_trace = TracerFactory(color_scheme="NoColor")
 set_trace()
-
 
 
 f1()
@@ -220,16 +219,10 @@ class TestE1(unittest.TestCase):
 
             # expected output (including control chars for colors etc)
             # noinspection PyPep8
-            eout1 = b'\x1b[22;0t\x1b]0;IPython: repo/test\x07x= 2.0\nx= 3.0\nx= 4.0\nx= 5.0\nPython 3.8.6 | packaged by conda-forge | (default, Nov 27 2020, 19:31:52) \nType \'copyright\', \'credits\' or \'license\' for more information\nIPython 8.0.0 -- An enhanced Interactive Python. Type \'?\' for help.\n\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:37\x1b[0m, in \x1b[0;36m<module>\x1b[1;34m\x1b[0m\n\x1b[0;32m     34\x1b[0m \x1b[38;5;66;03m# arg == 1.5 -> exception\x1b[39;00m\n\x1b[0;32m     35\x1b[0m \x1b[38;5;66;03m# arg == 1.0 -> IPS  \x1b[39;00m\n\x1b[1;32m---> 37\x1b[0m f3(arg)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:31\x1b[0m, in \x1b[0;36mf3\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     29\x1b[0m b \x1b[38;5;241m=\x1b[39m [\x1b[38;5;241m1\x1b[39m, \x1b[38;5;241m3\x1b[39m]\n\x1b[1;32m---> 31\x1b[0m f2(x)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     22\x1b[0m name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\n\x1b[1;32m---> 23\x1b[0m f1(x\x1b[38;5;241m+\x1b[39m\x1b[38;5;241m1\x1b[39m)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:18\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     17\x1b[0m \x1b[38;5;28;01melse\x1b[39;00m:\n\x1b[1;32m---> 18\x1b[0m     f2(x)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     22\x1b[0m name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\n\x1b[1;32m---> 23\x1b[0m f1(x\x1b[38;5;241m+\x1b[39m\x1b[38;5;241m1\x1b[39m)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:18\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     17\x1b[0m \x1b[38;5;28;01melse\x1b[39;00m:\n\x1b[1;32m---> 18\x1b[0m     f2(x)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     22\x1b[0m name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\n\x1b[1;32m---> 23\x1b[0m f1(x\x1b[38;5;241m+\x1b[39m\x1b[38;5;241m1\x1b[39m)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:18\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     17\x1b[0m \x1b[38;5;28;01melse\x1b[39;00m:\n\x1b[1;32m---> 18\x1b[0m     f2(x)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     22\x1b[0m name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\n\x1b[1;32m---> 23\x1b[0m f1(x\x1b[38;5;241m+\x1b[39m\x1b[38;5;241m1\x1b[39m)\n\nFile \x1b[1;32m/tmp/tmpdir/filename.py:16\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\n\x1b[0;32m     14\x1b[0m \x1b[38;5;28;01melif\x1b[39;00m x \x1b[38;5;241m>\x1b[39m \x1b[38;5;241m4\x1b[39m:\n\x1b[0;32m     15\x1b[0m     \x1b[38;5;66;03m# call interactive IPython\x1b[39;00m\n\x1b[1;32m---> 16\x1b[0m     IPS()\n\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n\n\nIn [1]: \n'
-
+            eout1 = 'x= 2.0\nx= 3.0\nx= 4.0\nx= 5.0\nPython 3.8.6 | packaged by conda-forge | (default, Nov 27 2020, 19:31:52) \nType \'copyright\', \'credits\' or \'license\' for more information\nIPython 8.0.0 -- An enhanced Interactive Python. Type \'?\' for help.\n\n\nFile /tmp/tmpdir/filename.py:37, in <module>\n     34 # arg == 1.5 -> exception\n     35 # arg == 1.0 -> IPS  \n---> 37 f3(arg)\n\nFile /tmp/tmpdir/filename.py:31, in f3(x)\n     29 b = [1, 3]\n---> 31 f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:16, in f1(x)\n     14 elif x > 4:\n     15     # call interactive IPython\n---> 16     IPS(color_scheme="nocolor")\n\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n\n\nIn [1]: \n'
             out, err = p.communicate(_exit)
 
-            out_adapted = perform_replacements(out, fname)
-
-
-            IPS()
-            1/0
-
+            out_adapted = perform_replacements(out, fname).decode("utf8")
 
             self.assertIn(eout1, out_adapted)
 
@@ -238,7 +231,7 @@ class TestE1(unittest.TestCase):
             p = pexpect.spawn(sys.executable, [fname, "1.5"], env=env)
 
             p.expect(ipy_prompt)
-            out_a = get_adapted_out(p, fname)
+            out_a = get_adapted_out(p, fname).decode("utf8")
 
             # this is good to get an overview over calling history
             # print(out_a.decode())
@@ -246,12 +239,9 @@ class TestE1(unittest.TestCase):
             # here an ZeroDivision error is intentionally raised and provokes an IPython shell to start
             # we test, whether this shell displays all expected informations and behaves as we want
 
-            eout = b'\x1b[22;0t\x1b]0;IPython: repo/test\x07x= 2.5\r\nx= 3.5\r\n\r\n\r\n\x1b[1;31m---------------------------------------------------------------------------\x1b[0m\r\n\x1b[1;31mZeroDivisionError\x1b[0m                         Traceback (most recent call last)\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:37\x1b[0m, in \x1b[0;36m<module>\x1b[1;34m\x1b[0m\r\n\x1b[0;32m     33\x1b[0m arg \x1b[38;5;241m=\x1b[39m \x1b[38;5;28mfloat\x1b[39m(sys\x1b[38;5;241m.\x1b[39margv[\x1b[38;5;241m1\x1b[39m])\r\n\x1b[0;32m     34\x1b[0m \x1b[38;5;66;03m# arg == 1.5 -> exception\x1b[39;00m\r\n\x1b[0;32m     35\x1b[0m \x1b[38;5;66;03m# arg == 1.0 -> IPS  \x1b[39;00m\r\n\x1b[1;32m---> 37\x1b[0m \x1b[43mf3\x1b[49m\x1b[43m(\x1b[49m\x1b[43marg\x1b[49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:31\x1b[0m, in \x1b[0;36mf3\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     28\x1b[0m a \x1b[38;5;241m=\x1b[39m \x1b[38;5;241m1\x1b[39m\r\n\x1b[0;32m     29\x1b[0m b \x1b[38;5;241m=\x1b[39m [\x1b[38;5;241m1\x1b[39m, \x1b[38;5;241m3\x1b[39m]\r\n\x1b[1;32m---> 31\x1b[0m \x1b[43mf2\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     21\x1b[0m \x1b[38;5;28;01mdef\x1b[39;00m \x1b[38;5;21mf2\x1b[39m(x):\r\n\x1b[0;32m     22\x1b[0m     name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\r\n\x1b[1;32m---> 23\x1b[0m     \x1b[43mf1\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[38;5;241;43m+\x1b[39;49m\x1b[38;5;241;43m1\x1b[39;49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:18\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     16\x1b[0m     IPS()\r\n\x1b[0;32m     17\x1b[0m \x1b[38;5;28;01melse\x1b[39;00m:\r\n\x1b[1;32m---> 18\x1b[0m     \x1b[43mf2\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:23\x1b[0m, in \x1b[0;36mf2\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     21\x1b[0m \x1b[38;5;28;01mdef\x1b[39;00m \x1b[38;5;21mf2\x1b[39m(x):\r\n\x1b[0;32m     22\x1b[0m     name \x1b[38;5;241m=\x1b[39m \x1b[38;5;124m"\x1b[39m\x1b[38;5;124mf2\x1b[39m\x1b[38;5;124m"\x1b[39m\r\n\x1b[1;32m---> 23\x1b[0m     \x1b[43mf1\x1b[49m\x1b[43m(\x1b[49m\x1b[43mx\x1b[49m\x1b[38;5;241;43m+\x1b[39;49m\x1b[38;5;241;43m1\x1b[39;49m\x1b[43m)\x1b[49m\r\n\r\nFile \x1b[1;32m/tmp/tmpdir/filename.py:13\x1b[0m, in \x1b[0;36mf1\x1b[1;34m(x)\x1b[0m\r\n\x1b[0;32m     10\x1b[0m \x1b[38;5;28mprint\x1b[39m(\x1b[38;5;124m"\x1b[39m\x1b[38;5;124mx=\x1b[39m\x1b[38;5;124m"\x1b[39m, x)\r\n\x1b[0;32m     11\x1b[0m \x1b[38;5;28;01mif\x1b[39;00m x \x1b[38;5;241m==\x1b[39m \x1b[38;5;241m3.5\x1b[39m:\r\n\x1b[0;32m     12\x1b[0m     \x1b[38;5;66;03m# provoke an exception\x1b[39;00m\r\n\x1b[1;32m---> 13\x1b[0m     \x1b[38;5;241;43m1\x1b[39;49m\x1b[38;5;241;43m/\x1b[39;49m\x1b[38;5;241;43m0\x1b[39;49m\r\n\x1b[0;32m     14\x1b[0m \x1b[38;5;28;01melif\x1b[39;00m x \x1b[38;5;241m>\x1b[39m \x1b[38;5;241m4\x1b[39m:\r\n\x1b[0;32m     15\x1b[0m     \x1b[38;5;66;03m# call interactive IPython\x1b[39;00m\r\n\x1b[0;32m     16\x1b[0m     IPS()\r\n\r\n\x1b[1;31mZeroDivisionError\x1b[0m: division by zero\r\n\r\n\r\nPython 3.8.6 | packaged by conda-forge | (default, Nov 27 2020, 19:31:52) \r\nType \'copyright\', \'credits\' or \'license\' for more information\r\nIPython 8.0.0 -- An enhanced Interactive Python. Type \'?\' for help.\r\n\r\nIn [1]:'
+            eout = 'x= 2.5\r\nx= 3.5\r\n\r\n\r\n---------------------------------------------------------------------------\r\nZeroDivisionError                         Traceback (most recent call last)\r\nFile /tmp/tmpdir/filename.py:37, in <module>\r\n     33 arg = float(sys.argv[1])\r\n     34 # arg == 1.5 -> exception\r\n     35 # arg == 1.0 -> IPS  \r\n---> 37 f3(arg)\r\n\r\nFile /tmp/tmpdir/filename.py:31, in f3(x)\r\n     28 a = 1\r\n     29 b = [1, 3]\r\n---> 31 f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:18, in f1(x)\r\n     16     IPS(color_scheme="nocolor")\r\n     17 else:\r\n---> 18     f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:13, in f1(x)\r\n     10 print("x=", x)\r\n     11 if x == 3.5:\r\n     12     # provoke an exception\r\n---> 13     1/0\r\n     14 elif x > 4:\r\n     15     # call interactive IPython\r\n     16     IPS(color_scheme="nocolor")\r\n\r\nZeroDivisionError: division by zero\r\n\r\n\r\nPython 3.8.6 | packaged by conda-forge | (default, Nov 27 2020, 19:31:52) \r\nType \'copyright\', \'credits\' or \'license\' for more information\r\nIPython 8.0.0 -- An enhanced Interactive Python. Type \'?\' for help.\r\n\r\nIn [1]:'
 
-
-            IPS()
-
-            self.assertEqual(eout, out_a)
+            self.assertIn(eout, out_a)
 
 
 
@@ -334,15 +324,12 @@ class TestDBG(unittest.TestCase):
             std = out.decode('UTF-8')
 
 
-        eout = f'{f.name}(18)<module>()\n     16 \n     17 \n---> 18 f1()\n     19 y = 20\n     20 \n\nipdb> '
+        eout = f'{f.name}(17)<module>()\n     15 \n     16 \n---> 17 f1()\n     18 y = 20\n     19'
         self.assertIn(eout, std)
 
 
 
-def test_debug():
-
-    from ipydex import Pdb_instance, set_trace, IPS, ultratb
-    from IPython import embed as IPS
+def debug_function():
 
 
     IPS()
@@ -370,9 +357,7 @@ def test_debug():
 
 if __name__ == "__main__":
 
-
-
-    # test_debug()
+    # debug_function()
 
     unittest.main()
 
