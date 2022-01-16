@@ -325,8 +325,8 @@ class TestDBG(unittest.TestCase):
             std = out.decode('UTF-8')
 
 
-        eout = f'\x1b[22;0t\x1b]0;IPython: repo/test\x07> {f.name}(18)<module>()\n     16 \n     17 \n---> 18 f1()\n     19 y = 20\n     20 \n\nipdb> '
-        self.assertEqual(std, eout)
+        eout = f'{f.name}(18)<module>()\n     16 \n     17 \n---> 18 f1()\n     19 y = 20\n     20 \n\nipdb> '
+        self.assertIn(eout, std)
 
 
 
