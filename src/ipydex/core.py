@@ -597,9 +597,11 @@ def TracerFactory(color_scheme=module_config.COLOR_SCHEME):
 
     return set_trace
 
-
-
-set_trace = TracerFactory()
+# This causes problems when running in nohup shell
+try:
+    set_trace = TracerFactory()
+except AttributeError:
+    pass
 
 
 
