@@ -10,6 +10,7 @@ import io
 import pickle
 import subprocess
 import dataclasses
+import re as regex
 
 import stack_data
 from pygments.formatters.terminal256 import Terminal256Formatter
@@ -458,33 +459,34 @@ class TBPrinter(object):
         line_list = [prefix] + tb_parts[:len(tb_parts)-1-end_offset] + [tb_parts[-1]]
 
         if cut_logging:
-            start_idcs = []
-            end_idcs = []
-            removed_lines = []
-            for i, line in enumerate(line_list):
-                if ">> begin captured logging <<" in line:
-                    start_idcs.append(i)
-                if ">> end captured logging <<" in line:
-                    end_idcs.append(i)
 
-            if len(start_idcs) == len(end_idcs) == 1:
-                for i in range(start_idcs[0], end_idcs[0] + 1):
-                    removed_lines.append(line_list.pop(i))
+            pattern = regex.compile(
+                "^(.*?)(-* >> begin captured logging .*? end captured logging << -*\"?)?$",
+                regex.DOTALL  # makes "." to match all characters including newlines
+                )
+            txt = "\n".join(line_list)
+            regex_res = pattern.match(txt)
 
-                msg = "Note: {} lines ({} chars) of logging information have beed removed for better overview."
-                n_chars = len("\n".join(removed_lines))
-                msg = msg.format(len(removed_lines), n_chars)
-                line_list.insert(start_idcs[0], msg)
+            if not regex_res:
+                msg = "ipydex-tb-handling: Unexpected: could not find relevant part of output."
+                line_list.append(msg)
+            else:
+                relevant = regex_res.group(1)
+                irrelevant = regex_res.group(2)
+                # IPS()
 
-                # the first removed line might contain useful information
+                if relevant is None:
+                    msg = "Unexpected: could not find relevant part of output."
+                    line_list.append(msg)
+                else:
+                    line_list=[relevant]
 
-                fl = removed_lines[0]
-                idx = fl.index(">> begin captured logging <<")
 
-                # find the last line break before the unwanted logging info
-                br_idx = fl.rfind("\n", 0, idx) + 1
+                if irrelevant is not None:
+                    msg = "\nNote: {} chars of logging information have beed removed for better overview."
+                    line_list.append(msg.format(len(irrelevant)))
 
-                line_list.insert(start_idcs[0], fl[:br_idx])
+
 
         text = "\n".join(line_list)
 
