@@ -461,7 +461,7 @@ class TBPrinter(object):
         if cut_logging:
 
             pattern = regex.compile(
-                "^(.*?)(-* >> begin captured logging .*? end captured logging << -*\"?)?$",
+                "^(.*?)(-* >> begin captured logging .*? end captured logging << -*.?)?$",
                 regex.DOTALL  # makes "." to match all characters including newlines
                 )
             txt = "\n".join(line_list)
