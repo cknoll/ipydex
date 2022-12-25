@@ -497,7 +497,6 @@ class TBPrinter(object):
 
 
 def activate_ips_on_exception(color_scheme=module_config.COLOR_SCHEME):
-
     module_config.COLOR_SCHEME = color_scheme
 
     if os.environ.get("NO_IPS_EXCEPTHOOK"):
@@ -506,7 +505,7 @@ def activate_ips_on_exception(color_scheme=module_config.COLOR_SCHEME):
         # into an IP-Shell after an exception
         return
 
-    
+
     # set the hook
     sys.excepthook = ips_excepthook
 
@@ -651,10 +650,20 @@ def get_notebook_name():
     for ss in servers:
         response = requests.get(urljoin(ss['url'], 'api/sessions'),
                                 params={'token': ss.get('token', '')})
-        for nn in json.loads(response.text):
+
+        if response.status_code != 200:
+            continue
+
+        data = json.loads(response.text)
+
+        for nn in data:
+
             if nn['kernel']['id'] == kernel_id:
                 relative_path = nn['notebook']['path']
                 return os.path.join(ss['notebook_dir'], relative_path)
+
+    msg = "Could not get access to any notebook server."
+    raise ValueError(msg)
 
 
 def in_ipynb(debug=False):
@@ -989,7 +998,7 @@ class Container(object):
     def __eq__(self, other):
         if not isinstance(other, Container):
             return False
-        
+
         return self.__dict__ == other.__dict__
 
 
