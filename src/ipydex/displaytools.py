@@ -68,6 +68,7 @@ class FC(Container):
         self.shape = False
         self.comment_only = None  # this refers to the whole line
         self.info = None  # this refers to the whole line
+        self.line_break = False
         self.multi_match = []
 
         kwargs["_allow_overwrite"] = True
@@ -103,9 +104,10 @@ def def_special_comments():
     lhs_transpose = Container(c="##:T", flags=FC(lhs=True, transpose=True))
     lhs_shape = Container(c="##:S", flags=FC(lhs=True, shape=True))
     lhs_info = Container(c="##:i", flags=FC(lhs=True, info=True))
+    line_break = Container(c=r"##:\n", flags=FC(lhs=True, line_break=True))
     lhs = Container(c="##:", flags=FC(lhs=True))  # this must be the last one in the list
 
-    SCC = Container(cargs=(plain, transpose, lhs_transpose, lhs_shape, lhs_info, lhs))
+    SCC = Container(cargs=(plain, transpose, lhs_transpose, lhs_shape, lhs_info, line_break, lhs))
     return SCC
 
 
@@ -476,6 +478,7 @@ def process_line(line, line_flags, expr_to_disp, indent):
         expr_to_disp = "{}.T".format(expr_to_disp)
 
     print_delim = 'display({{"text/plain": "{}"}}, raw=True)'.format(delim)
+    line_break_str = "line_break={}".format(line_flags.line_break)
 
     if line_flags.lhs:
         if line_flags.shape:
@@ -484,6 +487,10 @@ def process_line(line, line_flags, expr_to_disp, indent):
         elif line_flags.info:
             new_line = '{}custom_display("info({})", _ipydex__info({})); {}'
             new_line = new_line.format(indent, expr_to_disp, expr_to_disp, print_delim)
+        elif line_flags.line_break:
+            new_line = '{}custom_display("{}", {}, {}); {}'.format(
+                indent, expr_to_disp, expr_to_disp, line_break_str, print_delim
+                )
         else:
             new_line = '{}custom_display("{}", {}); {}'.format(indent, expr_to_disp, expr_to_disp, print_delim)
     else:
@@ -573,7 +580,7 @@ def insert_disp_lines(raw_cell):
     return new_raw_cell3
 
 
-def custom_display(lhs, rhs):
+def custom_display(lhs, rhs, line_break=False):
     """
     lhs: left hand side
     rhs: right hand side
@@ -604,6 +611,12 @@ def custom_display(lhs, rhs):
     # it is up to IPython which item value is finally used
 
     # now merge the lhs into the dict:
+        
+    # optional line break
+    if line_break:
+        olb = "\n"
+    else:
+        olb = " "
 
     if not isinstance(lhs, str):
         raise TypeError('unexpexted Type for lhs object: %s' %type(lhs))
@@ -611,7 +624,7 @@ def custom_display(lhs, rhs):
     new_format_dict = {}
     for key, value in list(format_dict.items()):
         if 'text/plain' in key:
-            prefix = "{} := ".format(lhs)
+            prefix = "{} :={}".format(lhs, olb)
             if value.startswith("array") or value.startswith("matrix"):
                 value = format_np_array(value, len(prefix))
 
@@ -626,7 +639,7 @@ def custom_display(lhs, rhs):
             else:
                 # this is unexpected but raising an exceptions seems
                 # not necessary; handle like plain text (see above)
-                new_value = lhs+' := '+value
+                new_value = "{} :={}{}".format(lhs, olb, value)
                 new_format_dict[key] = new_value
         else:
             # this happens e.g. for mime-type (i.e. key) 'image/png'

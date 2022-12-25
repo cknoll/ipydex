@@ -369,6 +369,18 @@ z = 0
 """
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
+    
+    def test_insert_disp_lines4(self):
+        raw_cell1 = """\
+x = 123 ##:\\n
+"""
+
+        eres1 = """\
+x = 123 ##:\\n
+custom_display("x", x, line_break=True); display({"text/plain": "---"}, raw=True)
+"""
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
 
     def test_logical_lines1(self):
         raw_cell1 = """\
@@ -524,6 +536,14 @@ z4 = [ 1,
             self.assertEqual(o1.replace(" ", ""), o1_expected)
         except ImportError:
             pass
+
+    def test_custom_display2(self):
+        
+        with captured_output() as (out, err):
+            r1 = dt.custom_display("a", 3.1, line_break=True)
+            
+        o1 = out.getvalue().strip()
+        self.assertEqual(o1, 'a :=\n3.1')
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
