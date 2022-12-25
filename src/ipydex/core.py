@@ -690,32 +690,44 @@ def in_ipynb(debug=False):
         return res
 
 
-def save_current_nb_as_html(info=None, return_res=False):
+def save_current_nb_as_html(info=None, return_res=False, fname=None):
     """
     Save the current notebook as html file in the same directory
     """
     assert in_ipynb()
 
     full_path = get_notebook_name()
-    path, filename = os.path.split(full_path)
+    path, src_filename = os.path.split(full_path)
 
     wd_save = os.getcwd()
     os.chdir(path)
-    cmd_list = ["jupyter", "nbconvert", filename, "--to", "html", "--template", "classic"]
+    cmd_list = ["jupyter", "nbconvert", src_filename, "--to", "html", "--template", "classic"]
 
     res = subprocess.run(cmd_list, capture_output=True)
     res.exited = res.returncode
     res.stdout = res.stdout.decode("utf8")
     res.stderr = res.stderr.decode("utf8")
 
+    if fname:
+        import shutil
+        suffix = ".ipynb"
+        assert src_filename.endswith(suffix)
+        html_filename = src_filename[:-len(suffix)] + ".html"
+        assert os.path.isfile(html_filename)
+        shutil.move(html_filename, fname)
+    else:
+        fname = html_filename
+    res.fname = html_filename
+
     os.chdir(wd_save)
 
     if info == True:
+        # this is for debugging
         print("target dir: ", path)
-        print("cmd: ", cmd)
+        print("cmd: ", cmd_list)
         print("working dir: ", wd_save)
     elif info is None:
-        print("`{}`".format(filename), "written.")
+        print("`{}`".format(fname), "written.")
 
     if return_res:
         return res
@@ -1197,4 +1209,3 @@ class SurveiledDict(dict):
         if self._condition_func(self, *args, **kwargs):
             IPS()
         super().update(*args, **kwargs)
-
