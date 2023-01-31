@@ -1,7 +1,7 @@
 ipydex
 ======
 
-[![CircleCI](https://circleci.com/gh/cknoll/ipydex/tree/master.svg?style=shield)](https://circleci.com/gh/cknoll/ipydex/tree/master)
+[![CircleCI](https://circleci.com/gh/cknoll/ipydex/tree/main.svg?style=shield)](https://circleci.com/gh/cknoll/ipydex/tree/main)
 [![PyPI version](https://badge.fury.io/py/ipydex.svg)](https://badge.fury.io/py/ipydex)
 
 \"IPython based debugging and exploring\"
@@ -22,7 +22,7 @@ displaytools
     -   inserts the line `display("x := {}".format(x))` to the source
         code of the cell (before its execution)
 -   see
-    [documentation-notebook](http://nbviewer.jupyter.org/github/cknoll/ipydex/blob/master/examples/displaytools-example.ipynb)
+    [documentation-notebook](http://nbviewer.jupyter.org/github/cknoll/ipydex/blob/main/examples/displaytools-example.ipynb)
 
 **Security advice**: Because the extension manipulates the source code
 before its execution, it might cause unwanted and strange behavior.
