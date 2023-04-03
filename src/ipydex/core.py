@@ -395,15 +395,19 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limi
             pygments_formatter=formatter,
         )
 
-
     fil = list(stack_data.FrameInfo.stack_data(frame, options=options))
+
     for fic in fil:
 
 
         # `fi` is a Traceback-Object which has no .frame attribute. That must be added
         #fic = Container(code_context=fi.code_context, count=fi.count, filename=fi.filename, function=fi.function, index=fi.index, lineno=fi.lineno, frame=frame)
         # fic = list(stack_data.FrameInfo.stack_data(frame, options=options))[-1]
-        formated_records.append(TB.format_record(fic))
+        # since python 3.10 TB.format_record expects a different type
+        # -> manually convert it:
+
+        fi_obj = ultratb.FrameInfo._from_stack_data_FrameInfo(fic)
+        formated_records.append(TB.format_record(fi_obj))
 
     assert isinstance(limit_to, int) and limit_to <= 0
     res.tb_txt = "\n".join(formated_records[limit_to:])

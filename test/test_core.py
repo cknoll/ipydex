@@ -172,6 +172,21 @@ class TestCore3(unittest.TestCase):
         self.assertEqual(res, expeced_res)
 
 
+class TestCore4(unittest.TestCase):
+
+    def test_frame_info(self):
+        import inspect
+        frame = inspect.currentframe().f_back
+        code_context = 1
+        add_context_for_latest = 3
+        limit_to = 0
+        COLOR_SCHEME = "Linux"
+
+        fli = ipd.core.generate_frame_list_info(
+            frame, code_context, add_context_for_latest, limit_to=limit_to, color_scheme=COLOR_SCHEME
+        )
+
+
 def f1(*args1, **kwargs1):
     """
     This function serves to test manually how ips_after_exception behaves
