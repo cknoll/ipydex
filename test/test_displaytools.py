@@ -115,7 +115,7 @@ class TestDT1(unittest.TestCase):
             return dt.get_logical_lines_of_cell(txt)[0]
 
         ind, lhs, rhs, cmt = dt.get_line_segments_from_logical_line(f(l1))
-        
+
         self.assertEqual((ind, lhs, rhs, cmt), ("", lhsc("x"), "0", ""))
 
         l1 = "# abx"
@@ -369,7 +369,7 @@ z = 0
 """
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
-    
+
     def test_insert_disp_lines4(self):
         raw_cell1 = """\
 x = 123 ##:\\n
@@ -413,11 +413,12 @@ z3 = [ 1,  # some comment
        3 ] # more comments
 
 # note the spaces in the  "empty" line below
-       
-z4 = [ 1,  
-       2,  
+XXX
+z4 = [ 1,ZZ
+       2,ZZ
        3 ] ##:
-"""
+""".replace("XXX", "       ").replace("ZZ", "  ")
+        # this replace-hack is necessary because some editors strip empty lines
 
         aa = dt.ast.parse(raw_cell1)
         ll = dt.get_logical_lines_of_cell(raw_cell1)
@@ -538,10 +539,10 @@ z4 = [ 1,
             pass
 
     def test_custom_display2(self):
-        
+
         with captured_output() as (out, err):
             r1 = dt.custom_display("a", 3.1, line_break=True)
-            
+
         o1 = out.getvalue().strip()
         self.assertEqual(o1, 'a :=\n3.1')
 
@@ -681,14 +682,14 @@ C.xyz ##:
         raw_cell1 = """\
 x = 0
 if 1:
-    # a = 0 
+    # a = 0
     # b = 1 ##:
     WW = 10
     XX = 0 # abc1
-    if 1: 
+    if 1:
         YY = 1
 Z1 = 1
-Z2 = 2# abc 
+Z2 = 2# abc
 """
 
         ll = dt.get_logical_lines_of_cell(raw_cell1)
@@ -751,7 +752,7 @@ for k in range(N):
     #...
 
 ng1, ng2, ng3 = len(g1), len(g2), len(g3)  ##:
-g = cs.vertcat(g1_.reshape((-1, 1)), g2_.reshape((-1, 1)))  
+g = cs.vertcat(g1_.reshape((-1, 1)), g2_.reshape((-1, 1)))
 """
 
         ll = dt.get_logical_lines_of_cell(raw_cell1)
