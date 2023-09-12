@@ -392,14 +392,14 @@ def get_rhs_from_ast(myast, txt, no_lines_removed, comment_start_tuple):
     # myast.value.lineno -> this is the line number (w.r.t 1, 2, 3, ...) where the assignation result starts
     # n_line := (myast.value.lineno - 1) is the number of lines above it -> physical_lines[:n_line] returns them
     n_line = myast.value.lineno - 1
-    # count chars from previous lines (including the char "\n")
-    previous_chars_start = sum(len(line) for line in physical_lines[:n_line]) + n_line
+    # count chars from previous lines (+1 is to include the char "\n")
+    previous_chars_start = sum(len(line) + 1 for line in physical_lines[:n_line])
 
     start_idx = previous_chars_start + myast.value.col_offset
 
-    # count chars from previous lines (including the char "\n") for the comment
+    # count chars from previous lines (+1 is to include the char "\n") for the comment
     n_line = comment_start_tuple[0] - 1  # - no_lines_removed
-    previous_chars_end = sum(len(line) for line in physical_lines[:n_line]) + n_line
+    previous_chars_end = sum(len(line) + 1 for line in physical_lines[:n_line])
 
     end_idx = previous_chars_end + comment_start_tuple[1]
 
@@ -611,7 +611,7 @@ def custom_display(lhs, rhs, line_break=False):
     # it is up to IPython which item value is finally used
 
     # now merge the lhs into the dict:
-        
+
     # optional line break
     if line_break:
         olb = "\n"
@@ -797,4 +797,3 @@ def load_ipython_extension(ip):
     ip.user_ns['display'] = display
     ip.user_ns['custom_display'] = custom_display
     ip.user_ns['_ipydex__info'] = info
-
