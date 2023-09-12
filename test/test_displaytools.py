@@ -435,6 +435,32 @@ z4 = [ 1,ZZ
         self.assertEqual(lhs, lhsc("z3"))
         self.assertEqual(rhs, "[ 1,\n       2,\n       3 ]")
 
+    def test_logical_lines3(self):
+
+        raw_cell1 = """\
+font = \\
+{
+    'color':  'tab:blue',
+    'family': 'serif',
+    'weight': 'normal',
+    # 'fontname': "cmtt10",
+    'size': 10,
+}
+
+"""
+        aa = dt.ast.parse(raw_cell1)
+        ll = dt.get_logical_lines_of_cell(raw_cell1)
+        indent, lhs, rhs, comments = dt.get_line_segments_from_logical_line(ll[0])
+
+        self.assertEqual(indent, "")
+        self.assertEqual(lhs, lhsc("font"))
+
+        eres = (
+            "{\n    'color':  'tab:blue',\n    'family': 'serif',\n    "
+            "'weight': 'normal',\n\n    'size': 10,\n}"
+        )
+        self.assertEqual(rhs, eres)
+
     def test_info1(self):
         res1 = dt.info(1)
         eres1 = "<class 'int'> with value: 1"

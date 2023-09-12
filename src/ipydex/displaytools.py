@@ -213,15 +213,20 @@ def get_line_segments_from_logical_line(ll):
 
     try:
         # look from behind if the first "relevant" token is a comment
+
+        final_comment_flag = False
+
         for tok in ll.tokens[::-1]:
             if tok.type in ignorable_tokens:
                 continue
-            if tok.type == tk.COMMENT:
+            elif tok.type == tk.COMMENT:
                 # useful for debugging
                 final_comment_token = tok
                 final_comment_start = tok.start
-                break
-        else:
+                final_comment_flag = True
+            break
+
+        if not final_comment_flag:
             # no final comment
             # use the last token (except DEDENT and ENDMARKER) as virtual final comment
             for tok in ll.tokens[::-1]:
@@ -305,7 +310,6 @@ def get_line_segments_from_logical_line(ll):
             rhs = new_rhs
 
     comment = "".join(comment_strings).strip()
-
     return initial_indent, lhs_container, rhs, comment
 
 
