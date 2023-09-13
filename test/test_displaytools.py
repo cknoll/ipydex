@@ -461,6 +461,26 @@ font = \\
         )
         self.assertEqual(rhs, eres)
 
+    def test_syntax_error(self):
+        # this cell contains a syntax error
+        raw_cell1 = """\
+for i in range(3):
+    pass
+    pass
+    print(1
+"""
+        with self.assertRaises(dt.SyntaxErrorInCell) as cm:
+            res1 = dt.insert_disp_lines(raw_cell1)
+
+        raw_cell2 = """\
+%some_macro
+pass
+pass
+print(1)
+"""
+        res2 = dt.insert_disp_lines(raw_cell2)
+        self.assertEqual(raw_cell2, raw_cell2)
+
     def test_info1(self):
         res1 = dt.info(1)
         eres1 = "<class 'int'> with value: 1"

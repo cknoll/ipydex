@@ -54,6 +54,10 @@ from IPython.display import display
 from .core import Container, IPS, str_to_token_list
 
 
+class SyntaxErrorInCell(ValueError):
+    pass
+
+
 class FC(Container):
     """
     FlagContainer
@@ -506,10 +510,20 @@ def process_line(line, line_flags, expr_to_disp, indent):
 def insert_disp_lines(raw_cell):
 
     if "##!! raise TestException !!" in raw_cell:
-        raise SyntaxError("Virtual syntax error (only for testing)")
+        raise SyntaxErrorInCell("Virtual syntax error (only for testing)")
 
     original_raw_cell = raw_cell
+
+    # convert ipython macros to comments
+    syntax_err_test_cell = f"\n{raw_cell}".replace("\n%", "\n#%")
+
+    try:
+        ast.parse(syntax_err_test_cell)
+    except SyntaxError as err:
+        raise SyntaxErrorInCell(*err.args)
+
     raw_cell = raw_cell.strip()
+
 
     physical_lines = raw_cell.split('\n')
     logical_lines = get_logical_lines_of_cell(raw_cell)
@@ -775,6 +789,10 @@ def load_ipython_extension(ip):
         # noinspection PyBroadException
         try:
             new_raw_cell = insert_disp_lines(raw_cell)
+        except SyntaxErrorInCell as e:
+            msg = "displaytools detected a SyntaxError in the original cell\n"
+            print(msg.format(e))
+            new_raw_cell = raw_cell
         except Exception as e:
             msg = "There was an error in the displaytools extension (probably due to unsupported syntax).\n"\
                   "This is the error message:\n\n{}\n\n"\
