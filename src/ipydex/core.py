@@ -259,9 +259,9 @@ def _run_ips(frame_list, c):
     shell = InteractiveShellEmbed.instance(config=config)
 
     # achieve that custom macros are loaded in interactive shell
-    shell.magic('load_ext storemagic')
+    shell.run_line_magic("load_ext", "storemagic")
     if config.StoreMagics.autorestore:
-        shell.magic('store -r')
+        shell.run_line_magic("store", "-r")
         ar_keys = [k.split("/")[-1] for k in shell.db.keys() if k.startswith("autorestore/")]
     else:
         ar_keys = []
