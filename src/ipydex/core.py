@@ -1214,3 +1214,30 @@ class SurveiledDict(dict):
         if self._condition_func(self, *args, **kwargs):
             IPS()
         super().update(*args, **kwargs)
+
+
+def explore_data(data):
+    try:
+        from jtree import JSONTreeApp, App
+    except ImportError:
+        msg = (
+            "This functionality depends on the package jtree. Please run "
+            "`pip install jtree`"
+        )
+        raise ImportError(msg)
+
+    import json
+
+    class DataViewApp(JSONTreeApp):
+        def __init__(self, data):
+
+            jtree_path = os.path.split(inspect.getabsfile(JSONTreeApp))[0]
+            css_path = os.path.join(jtree_path, "css", "layout.css")
+
+            App.__init__(self, css_path=css_path)
+            self.json_data = json.dumps(data)
+            return
+
+
+    app = DataViewApp(data)
+    app.run()
