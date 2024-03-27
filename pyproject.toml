@@ -1,0 +1,54 @@
+[build-system]
+
+# setuptools-scm helps to find package-data which is tracked by git
+# anyway, make sure the following packages are installed
+# pip install build setuptools_scm
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+
+name = "ipydex"
+description = "IPython based debugging and exploring tool"
+authors=[{name = "Carsten Knoll", email = "firstname.lastname@posteo.de"}]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "GNU General Public License v3 (GPLv3)" }
+
+dynamic = ["dependencies", "version"]
+
+classifiers=[
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+]
+
+# copied (and name-adapted) from the original setup.py
+# long_description="""
+# IPython based debugging and exploring tool
+# 
+# This package provides the following features:
+# 
+# - `IPS()` – An embedded IPython shell with some extra features like conditional execution: `IPS(x>0)`.
+# - `activate_ips_on_exception()` – Open an IPython shell in the frame where an exception is raised, but with the ability to move to other frames.
+# - `dirsearch` – easily search for substrings in the attribute list of an object or in the keys of a dict.
+# - `displaytools` – an extesion for jupyter notebooks to display intermediate results (e.g. of assignments). Useful for didactic purposes.
+# """,
+# """
+
+# see also https://realpython.com/python-toml/
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+
+[project.urls]
+Homepage = "http://github.com/cknoll/ipydex"
+
+[project.scripts]
+ipydex = "ipydex.script:main"
+
+[tool.setuptools.packages.find]
+# note: `include-package-data = true` by default in pyproject.toml
+where = ["src"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+version = {attr = "ipydex.__version__"}
