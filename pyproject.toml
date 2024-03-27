@@ -26,9 +26,9 @@ classifiers=[
 # copied (and name-adapted) from the original setup.py
 # long_description="""
 # IPython based debugging and exploring tool
-# 
+#
 # This package provides the following features:
-# 
+#
 # - `IPS()` – An embedded IPython shell with some extra features like conditional execution: `IPS(x>0)`.
 # - `activate_ips_on_exception()` – Open an IPython shell in the frame where an exception is raised, but with the ability to move to other frames.
 # - `dirsearch` – easily search for substrings in the attribute list of an object or in the keys of a dict.
@@ -44,6 +44,7 @@ Homepage = "http://github.com/cknoll/ipydex"
 
 [project.scripts]
 ipydex = "ipydex.script:main"
+ipydex_catch = "ipydex.script:catch"
 
 [tool.setuptools.packages.find]
 # note: `include-package-data = true` by default in pyproject.toml
