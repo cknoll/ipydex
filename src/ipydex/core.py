@@ -531,6 +531,16 @@ def catch_exception(func, *args, **kwargs):
         ips_excepthook(type(ex), ex, tb)
 
 
+# based on https://github.com/jupyter/jupyter_client/issues/1004
+def get_kernel_id():
+
+    import ipykernel
+    import re
+
+    kernel_id = re.search('kernel-(.*).json', ipykernel.connect.get_connection_file()).group(1)
+    return kernel_id
+
+
 
 def color_excepthook(pdb=0, mode=2, force=True):
     """
@@ -600,7 +610,7 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
 def TracerFactory(color_scheme=module_config.COLOR_SCHEME):
     """
     Returns a callable `set_trace`-object.
-    When this object is called it starts the ipython commandline debugger
+    When this object is called it starts the ipython command line debugger
     in that place.
 
     :param color_scheme:    (optional) one of ['Linux', 'NoColor', 'LightBG', 'Neutral']
