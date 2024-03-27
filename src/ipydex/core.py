@@ -522,6 +522,16 @@ def activate_ips_on_exception(color_scheme=module_config.COLOR_SCHEME):
     sys.custom_excepthook = ips_excepthook
 
 
+def catch_exception(func, *args, **kwargs):
+    try:
+        func(*args, **kwargs)
+    except Exception as ex:
+        import traceback
+        value, tb = traceback._parse_value_tb(ex, traceback._sentinel, traceback._sentinel)
+        ips_excepthook(type(ex), ex, tb)
+
+
+
 def color_excepthook(pdb=0, mode=2, force=True):
     """
     Make tracebacks after exceptions colored, verbose, and/or call pdb
