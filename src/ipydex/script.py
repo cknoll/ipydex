@@ -15,6 +15,7 @@ def catch():
     """
     from jupyter_console.app import ZMQTerminalIPythonApp
 
+    sys.argv = [sys.argv[0], "--existing"]
     app = ZMQTerminalIPythonApp.instance()
     app.initialize(None)
     super(ZMQTerminalIPythonApp, app).start()
@@ -23,7 +24,7 @@ def catch():
     import ipydex
     import traceback
     try:
-        foo(0)
+        failing_function()
     except Exception as ex:
         value, tb = traceback._parse_value_tb(ex, traceback._sentinel, traceback._sentinel)
         ipydex.ips_excepthook(type(ex), ex, tb)
