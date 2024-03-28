@@ -251,12 +251,17 @@ def _run_ips(frame_list, c):
     config = load_default_config()
     config.InteractiveShellEmbed = config.TerminalInteractiveShell
 
+    # create empty config (kept for reference)
+    # from traitlets.config.loader import Config
+    # config = Config()
+
     color_scheme = getattr(c, "color_scheme", "neutral")
-
-
     config.InteractiveShellEmbed.colors = color_scheme
 
-    # these two lines prevent problems related to the initialization
+    # we might want to override the .simple_prompt class variable in the future
+    # InteractiveShellEmbed.simple_prompt = False
+
+    # these lines prevent problems related to the initialization
     # of ultratb.FormattedTB below
     InteractiveShellEmbed.clear_instance()
     InteractiveShellEmbed._instance = None
@@ -336,9 +341,9 @@ def _run_ips(frame_list, c):
 # noinspection PyPep8Naming
 def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     """
-    This function is launched after an exception. It launches IPS in suitable frame.
-    Also note that if `__mu` is an integer in the local_ns of the closed IPS-Session then another Session
-    is launched in the corresponding frame: "__mu" means = "move up" and referes to frame levels.
+    This function is launched after an exception. It launches IPS inside the suitable frame.
+    Also note that if `__mu` is an integer in the local_ns of the closed IPS-Session then another session
+    is launched in the corresponding frame: "__mu" means = "move up" and refers to frame levels.
 
     :param excType:     Exception type
     :param excValue:    Exception value
