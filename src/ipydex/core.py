@@ -1246,6 +1246,30 @@ class SurveiledDict(dict):
         super().update(*args, **kwargs)
 
 
+def enable_conversion_to_json(obj):
+    """
+    Iterate over nested datastructures and replace non-json-able objects by their str repr
+    """
+
+    from collections.abc import Iterable
+    import json
+
+    def convert_value(value):
+        if isinstance(value, dict):
+            return {str(k): convert_value(v) for k, v in value.items()}
+        elif isinstance(value, Iterable) and not isinstance(value, str):
+            return [convert_value(v) for v in value]
+        else:
+            try:
+                json.dumps(value)
+                return value
+            except TypeError:
+                return str(value)
+
+    json_src = json.dumps(convert_value(obj))
+    return json.loads(json_src)
+
+
 def explore_data(data):
     try:
         from jtree import JSONTreeApp, App
@@ -1268,6 +1292,6 @@ def explore_data(data):
             self.json_data = json.dumps(data)
             return
 
-
+    data = enable_conversion_to_json(data)
     app = DataViewApp(data)
     app.run()
