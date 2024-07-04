@@ -152,7 +152,8 @@ class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
 
 # noinspection PyPep8Naming
 def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False,
-        code_context=1, print_tb=True, add_context_for_latest=6, color_scheme=module_config.COLOR_SCHEME):
+        code_context=1, print_tb=True, add_context_for_latest=6, color_scheme=module_config.COLOR_SCHEME,
+        verbose=False):
     """
 
     :param condition:           return immediately if False
@@ -184,7 +185,10 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
 
     # note some but not all portions of IPython code need the camelcase verions
     assert color_scheme.lower() in ['nocolor', 'neutral', 'linux', 'lightbg']
-    C = Container(copy_namespaces=copy_namespaces, overwrite_globals=overwrite_globals, color_scheme=color_scheme )
+    C = Container(
+        copy_namespaces=copy_namespaces, overwrite_globals=overwrite_globals, color_scheme=color_scheme,
+        verbose=verbose
+    )
 
 
     if not frame:
@@ -247,6 +251,8 @@ def _run_ips(frame_list, c):
     :param c:       Container for arguments
     """
 
+    c.verbose: bool
+
     # copied (and modified) from IPython/terminal/embed.py
     config = load_default_config()
     config.InteractiveShellEmbed = config.TerminalInteractiveShell
@@ -301,11 +307,11 @@ def _run_ips(frame_list, c):
 
         gns.update({k: lns[k] for k in safe_keys})
 
-        if unsafe_keys and not c.overwrite_globals:
+        if unsafe_keys and not c.overwrite_globals and c.verbose:
             c.custom_header += "following local keys have " \
                              "not been copied:\n{}\n".format(unsafe_keys)
 
-        if unsafe_keys and c.overwrite_globals:
+        if unsafe_keys and c.overwrite_globals and c.verbose:
             gns.update({k: lns[k] for k in unsafe_keys})
             c.custom_header += "following global keys have " \
                              "been overwritten:\n{}\n".format(unsafe_keys)
