@@ -897,22 +897,26 @@ class Container(object):
 
 
     (3) Collect all variables from local namespace and (by some `inspect`-magic) make them available as
-        attributes (usefull for debugging).
+        attributes (useful for debugging).
 
-        def func1(x, debug=False):
+        def func1(x, debug_container=None):
             y = complicated_func1(x)
             res = complicated_func2(x, y)
 
-            C = Container(fetch_locals=True)
+            # convenient way to non-intrusively gather internal information
+            if debug_container is not None:
+                debug_container.fetch_locals()
+                # now the following attributes exists:
+                # debug_container.x
+                # debug_container.y
+                # debug_container.res
 
-            if debug:
-                return C
-            else:
-                return res
+            return res
 
-        C = func1(100, debug=True)
+        dc = Container()
+        res = func1(100, debug_container=dc)
 
-        # investigate internal behavior
+        # investigate *internal* behavior of func1
         print(C.x)
         print(C.y)
         print(C.res)
