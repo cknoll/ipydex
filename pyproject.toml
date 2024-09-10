@@ -44,7 +44,7 @@ Homepage = "http://github.com/cknoll/ipydex"
 
 [project.scripts]
 ipydex = "ipydex.script:main"
-ipydex_catch = "ipydex.script:catch"
+ipydex_catch = "ipydex.cli:catch"
 
 [tool.setuptools.packages.find]
 # note: `include-package-data = true` by default in pyproject.toml
