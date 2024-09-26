@@ -345,7 +345,7 @@ def _run_ips(frame_list, c):
 
 
 # noinspection PyPep8Naming
-def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
+def ips_excepthook(excType, excValue, traceback, frame_upcount=0, leave_ut=False):
     """
     This function is launched after an exception. It launches IPS inside the suitable frame.
     Also note that if `__mu` is an integer in the local_ns of the closed IPS-Session then another session
@@ -354,7 +354,10 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     :param excType:     Exception type
     :param excValue:    Exception value
     :param traceback:   Traceback
-    :param frame_upcount:   int; initial value for diff index; useful if this hook is called from outside
+    :param frame_upcount:
+                        int; initial value for diff index; useful if this hook is called from outside
+    :param leave_ut:    bool; if True the excepthook moves frame-wise upward until reaching a frame
+                        outside the unittest module
     :return:
     """
 
@@ -374,12 +377,25 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
     tb_frame_list.append(critical_frame)
 
     tb_frame_list.reverse()
-    # now the first frame in the list is the critical frame where the exception occured
+    # now the first frame in the list is the critical frame where the exception occurred
     index = 0
     diff_index = frame_upcount
 
-    # this allows to repeat the traceback inside the interactive function
+    # move upward in the frame list until the module of the respective frame has not
+    # "unittest" in its last 3 path parts
+    if leave_ut:
+        for k in range(1, len(tb_frame_list)):
+            current_frame = tb_frame_list[index + k]
+            try:
+                # extract the relevant part of the full module path
+                module_path_part = current_frame.f_code.co_filename.split(os.path.sep)[-3:]
+            except Exception:
+                break
+            if "unittest" not in module_path_part:
+                index = index + k
+                break
 
+    # this allows to repeat the traceback inside the interactive function
     def __ips_print_tb(**kwargs):
         return tb_printer.printout(end_offset=index, **kwargs)
 
@@ -388,7 +404,12 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0):
         tb_printer.printout(end_offset=index)
         print("\n")
         current_frame = tb_frame_list[index]
-        diff_index = IPS(frame=current_frame, ns_extension={"__ips_print_tb": __ips_print_tb}, print_tb=False, color_scheme=module_config.COLOR_SCHEME)
+        diff_index = IPS(
+            frame=current_frame,
+            ns_extension={"__ips_print_tb": __ips_print_tb, "__frame": current_frame, "__fl": tb_frame_list},
+            print_tb=False,
+            color_scheme=module_config.COLOR_SCHEME
+        )
 
 
 def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limit_to=0, color_scheme=module_config.COLOR_SCHEME):
