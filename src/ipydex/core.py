@@ -156,7 +156,7 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
         verbose=False):
     """
 
-    :param condition:           return immediately if False
+    :param condition:           bool; if False return immediately (do not really run IPS)
     :param frame:
     :param ns_extension:
     :param copy_namespaces:
