@@ -87,8 +87,11 @@ if os.getenv("PYTEST_IPS") == "True":
 
 
     def pytest_exception_interact(node, call, report):
+        # the option `leave_ut=True` causes the excepthook to leave functions
+        # from the unittest package. This is a convenience feature such that
+        # the code wakes up in your own testcode
         ipydex.ips_excepthook(
-            call.excinfo.type, call.excinfo.value, call.excinfo.tb, frame_upcount=0
+            call.excinfo.type, call.excinfo.value, call.excinfo.tb, leave_ut=True
         )
 ```
 
