@@ -384,7 +384,7 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0, leave_ut=False
     # move upward in the frame list until the module of the respective frame has not
     # "unittest" in its last 3 path parts
     if leave_ut:
-        for k in range(1, len(tb_frame_list)):
+        for k in range(0, len(tb_frame_list)):
             current_frame = tb_frame_list[index + k]
             try:
                 # extract the relevant part of the full module path
@@ -395,7 +395,15 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0, leave_ut=False
                 index = index + k
                 break
 
-    # this allows to repeat the traceback inside the interactive function
+    # TODO:
+    # use the following code to ensure that the excepthook opens the correct level
+    # self.assertEqual(0, 1)  # AssertionError raised two levels deeper
+    # self.assertFalse(True)  # AssertionError raised one levels deeper
+    # self.assertIn("a", "xyz")
+
+    # end of leave_ut-processing
+
+    # the following allows to repeat the traceback inside the interactive function
     def __ips_print_tb(**kwargs):
         return tb_printer.printout(end_offset=index, **kwargs)
 
