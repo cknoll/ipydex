@@ -703,7 +703,12 @@ def get_notebook_name():
     import ipykernel
     import json
     import re
-    from notebook.notebookapp import list_running_servers
+    try:
+        version = "old"
+        from notebook.notebookapp import list_running_servers
+    except ImportError:
+        version = "new"
+        from jupyter_server.serverapp import list_running_servers
 
     kernel_id = re.search('kernel-(.*).json',
                           ipykernel.connect.get_connection_file()).group(1)
@@ -721,7 +726,11 @@ def get_notebook_name():
 
             if nn['kernel']['id'] == kernel_id:
                 relative_path = nn['notebook']['path']
-                return os.path.join(ss['notebook_dir'], relative_path)
+
+                if version == "old":
+                    return os.path.join(ss["notebook_dir"], relative_path)
+                else:
+                    return os.path.join(ss["root_dir"], relative_path)
 
     msg = "Could not get access to any notebook server."
     raise ValueError(msg)
