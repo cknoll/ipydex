@@ -183,7 +183,7 @@ class TestCore4(unittest.TestCase):
         COLOR_SCHEME = "Linux"
 
         fli = ipd.core.generate_frame_list_info(
-            frame, code_context, add_context_for_latest, limit_to=limit_to, color_scheme=COLOR_SCHEME
+            frame, code_context, add_context_for_latest, limit_to=limit_to
         )
 
 

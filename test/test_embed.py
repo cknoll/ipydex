@@ -32,7 +32,7 @@ a = 3
 b = 14
 print(a, '.', b)
 
-IPS(color_scheme="nocolor")
+IPS(theme_name="nocolor")
 
 print('bye!')
 
@@ -42,18 +42,18 @@ _sample_embed_ips2 = b'''
 import sys
 
 from ipydex import IPS, activate_ips_on_exception
-activate_ips_on_exception(color_scheme="nocolor")
+activate_ips_on_exception(theme_name="nocolor")
 
 def f1(x):
     name = "f1"
-    
+
     print("x=", x)
     if x == 3.5:
         # provoke an exception
         1/0
     elif x > 4:
         # call interactive IPython
-        IPS(color_scheme="nocolor")
+        IPS(theme_name="nocolor")
     else:
         f2(x)
 
@@ -72,7 +72,7 @@ def f3(x):
 
 arg = float(sys.argv[1])
 # arg == 1.5 -> exception
-# arg == 1.0 -> IPS  
+# arg == 1.0 -> IPS
 
 f3(arg)
 
@@ -90,7 +90,7 @@ def f1():
 
     return a + b
 
-set_trace = TracerFactory(color_scheme="NoColor")
+set_trace = TracerFactory(theme_name="nocolor")
 set_trace()
 
 
@@ -181,7 +181,7 @@ class TestE1(unittest.TestCase):
         self.assertEqual(sys.getdefaultencoding(), "utf-8")
 
     def test_ipython_embed1(self):
-        with NamedFileInTemporaryDirectory('file_with_embed.py') as f:
+        with NamedFileInTemporaryDirectory("file_with_embed.py", "wb") as f:
             f.write(_sample_embed_ips1)
             f.flush()
             f.close()  # otherwise msft won't be able to read the file
@@ -202,7 +202,7 @@ class TestE1(unittest.TestCase):
             self.assertIn('bye!', std)
 
     def test_ipython_embed2(self):
-        with NamedFileInTemporaryDirectory('file_with_embed.py') as f:
+        with NamedFileInTemporaryDirectory("file_with_embed.py", "wb") as f:
             f.write(_sample_embed_ips2)
             f.flush()
             f.close()  # otherwise msft won't be able to read the file
@@ -220,10 +220,12 @@ class TestE1(unittest.TestCase):
             # invariant part of expected output
             # noinspection PyPep8
 
-            eout1 = '\n     34 # arg == 1.5 -> exception\n     35 # arg == 1.0 -> IPS  \n---> 37 f3(arg)\n\nFile /tmp/tmpdir/filename.py:31, in f3(x)\n     29 b = [1, 3]\n---> 31 f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:16, in f1(x)\n     14 elif x > 4:\n     15     # call interactive IPython\n---> 16     IPS(color_scheme="nocolor")\n\n--- Interactive IPython Shell. Type `?`<enter> for help'
+            eout1 = '\n     34 # arg == 1.5 -> exception\n     35 # arg == 1.0 -> IPS  \n---> 37 f3(arg)\n\nFile /tmp/tmpdir/filename.py:31, in f3(x)\n     29 b = [1, 3]\n---> 31 f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:16, in f1(x)\n     14 elif x > 4:\n     15     # call interactive IPython\n---> 16     IPS(theme_name="nocolor")\n\n--- Interactive IPython Shell. Type `?`<enter> for help'
             out, err = p.communicate(_exit)
 
             out_adapted = perform_replacements(out, fname).decode("utf8")
+
+            IPS()
 
             self.assertIn(eout1, out_adapted)
 
@@ -240,11 +242,9 @@ class TestE1(unittest.TestCase):
             # here an ZeroDivision error is intentionally raised and provokes an IPython shell to start
             # we test, whether this shell displays all expected informations and behaves as we want
 
-            eout = '\r\n     33 arg = float(sys.argv[1])\r\n     34 # arg == 1.5 -> exception\r\n     35 # arg == 1.0 -> IPS  \r\n---> 37 f3(arg)\r\n\r\nFile /tmp/tmpdir/filename.py:31, in f3(x)\r\n     28 a = 1\r\n     29 b = [1, 3]\r\n---> 31 f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:18, in f1(x)\r\n     16     IPS(color_scheme="nocolor")\r\n     17 else:\r\n---> 18     f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:13, in f1(x)\r\n     10 print("x=", x)\r\n     11 if x == 3.5:\r\n     12     # provoke an exception\r\n---> 13     1/0\r\n     14 elif x > 4:\r\n     15     # call interactive IPython\r\n     16     IPS(color_scheme="nocolor")\r\n\r\nZeroDivisionError: division by zero\r\n\r\n\r\n'
+            eout = '\r\n     33 arg = float(sys.argv[1])\r\n     34 # arg == 1.5 -> exception\r\n     35 # arg == 1.0 -> IPS  \r\n---> 37 f3(arg)\r\n\r\nFile /tmp/tmpdir/filename.py:31, in f3(x)\r\n     28 a = 1\r\n     29 b = [1, 3]\r\n---> 31 f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:18, in f1(x)\r\n     16     IPS(theme_name="nocolor")\r\n     17 else:\r\n---> 18     f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:13, in f1(x)\r\n     10 print("x=", x)\r\n     11 if x == 3.5:\r\n     12     # provoke an exception\r\n---> 13     1/0\r\n     14 elif x > 4:\r\n     15     # call interactive IPython\r\n     16     IPS(theme_name="nocolor")\r\n\r\nZeroDivisionError: division by zero\r\n\r\n\r\n'
 
             self.assertIn(eout, out_a)
-
-
 
             out_a = ipy_io(p, fname, "print('func =', name)\n")
             self.assertIn(b"func = f1", out_a)
@@ -309,7 +309,7 @@ class TestE1(unittest.TestCase):
 class TestDBG(unittest.TestCase):
 
     def test_trace1(self):
-        with NamedFileInTemporaryDirectory('file_with_trace.py') as f:
+        with NamedFileInTemporaryDirectory("file_with_trace.py", "wb") as f:
             f.write(_sample_embed_dbg1)
             f.flush()
             f.close()  # otherwise msft won't be able to read the file
@@ -324,10 +324,8 @@ class TestDBG(unittest.TestCase):
             out, err = p.communicate(_exit)
             std = out.decode('UTF-8')
 
-
         eout = f'{f.name}(17)<module>()\n     15 \n     16 \n---> 17 f1()\n     18 y = 20\n     19'
         self.assertIn(eout, std)
-
 
 
 def debug_function():
@@ -346,7 +344,7 @@ def debug_function():
 
         return a + b
 
-    Pdb_instance.set_colors("NoColor")
+    Pdb_instance.set_colors("nocolor")
     set_trace()
 
 

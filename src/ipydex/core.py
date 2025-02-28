@@ -108,9 +108,8 @@ development, but already are deployd on different machines/ platforms)
 
 # allow global write access to config vars of this module
 module_config = dataclasses.dataclass()
-module_config.COLOR_SCHEME = "Linux"
-
-
+# module_config.COLOR_SCHEME = "linux"
+module_config.THEME_NAME = "linux"
 
 
 class DummyMod(object):
@@ -152,7 +151,7 @@ class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
 
 # noinspection PyPep8Naming
 def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False,
-        code_context=1, print_tb=True, add_context_for_latest=6, color_scheme=module_config.COLOR_SCHEME,
+        code_context=1, print_tb=True, add_context_for_latest=6, theme_name=None,
         verbose=False):
     """
 
@@ -162,9 +161,9 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     :param copy_namespaces:
     :param overwrite_globals:
     :param code_context:
+    :param theme_name:          optional, one of ['nocolor', 'neutral', 'linux', 'lightbg']
     :param print_tb:            boolean or negative integer (number of printed last tracebacks)
     :param add_context_for_latest:
-    :param color_scheme:        (optional) one of ['Linux', 'NoColor', 'LightBG', 'Neutral']
     :return:
 
     Starts IPython embedded shell. This is similar to IPython.embed() but with some
@@ -179,17 +178,20 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
         print('omit starting IPython shell because env var `IPS` is "False"')
         return None
 
+    if theme_name is None:
+        theme_name = module_config.THEME_NAME
 
     if not condition:
         return None
 
     # note some but not all portions of IPython code need the camelcase verions
-    assert color_scheme.lower() in ['nocolor', 'neutral', 'linux', 'lightbg']
+    # assert color_scheme.lower() in ['nocolor', 'neutral', 'linux', 'lightbg']
     C = Container(
-        copy_namespaces=copy_namespaces, overwrite_globals=overwrite_globals, color_scheme=color_scheme,
-        verbose=verbose
+        copy_namespaces=copy_namespaces,
+        overwrite_globals=overwrite_globals,
+        verbose=verbose,
+        theme_name=theme_name,
     )
-
 
     if not frame:
         frame = inspect.currentframe().f_back
@@ -207,7 +209,9 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     else:
         limit_to = 0
 
-    fli = generate_frame_list_info(frame, code_context, add_context_for_latest, limit_to=limit_to, color_scheme=color_scheme)
+    fli = generate_frame_list_info(
+        frame, code_context, add_context_for_latest, limit_to=limit_to, theme_name=theme_name
+    )
     custom_header2 = "\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n"
 
     C.ns_extension["_ips_fli"] = fli
@@ -261,8 +265,12 @@ def _run_ips(frame_list, c):
     # from traitlets.config.loader import Config
     # config = Config()
 
-    color_scheme = getattr(c, "color_scheme", "neutral")
+
+    # TODO !!: check how this can be ported to ipython >9.0
+    color_scheme = getattr(c, "theme_name", "neutral")
     config.InteractiveShellEmbed.colors = color_scheme
+
+
 
     # we might want to override the .simple_prompt class variable in the future
     # InteractiveShellEmbed.simple_prompt = False
@@ -416,13 +424,14 @@ def ips_excepthook(excType, excValue, traceback, frame_upcount=0, leave_ut=False
             frame=current_frame,
             ns_extension={"__ips_print_tb": __ips_print_tb, "__frame": current_frame, "__fl": tb_frame_list},
             print_tb=False,
-            color_scheme=module_config.COLOR_SCHEME
         )
 
 
-def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limit_to=0, color_scheme=module_config.COLOR_SCHEME):
+def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limit_to=0, theme_name=None):
     res = Container()
-    TB = ultratb.FormattedTB(mode="Context", color_scheme=color_scheme, call_pdb=False)
+    if theme_name is None:
+        theme_name = module_config.THEME_NAME
+    TB = ultratb.FormattedTB(mode="Context", call_pdb=False, theme_name=theme_name)
     res.frame_list, res.frame_info_list = get_frame_list(frame, code_context, add_context_for_latest)
 
     # old Signature: TB.format_record(frame, file, lnum, func, lines, index)
@@ -476,7 +485,6 @@ def calling_stack_info(print_res=True, code_context=1, **kwargs):
     return fil
 
 
-
 class TBPrinter(object):
 
     def __init__(self, excType, excValue, traceback):
@@ -484,7 +492,7 @@ class TBPrinter(object):
         self.excValue = excValue
         self.traceback = traceback
 
-        self.TB = ultratb.FormattedTB(mode="Context", color_scheme=module_config.COLOR_SCHEME, call_pdb=False)
+        self.TB = ultratb.FormattedTB(mode="Context", call_pdb=False, theme_name=module_config.THEME_NAME)
 
     def printout(self, *args, **kwargs):
             debug = kwargs.get("debug", False)
@@ -545,15 +553,16 @@ class TBPrinter(object):
         return text
 
 
-def activate_ips_on_exception(color_scheme=module_config.COLOR_SCHEME):
-    module_config.COLOR_SCHEME = color_scheme
+def activate_ips_on_exception(theme_name=None):
+
+    if theme_name is not None:
+        module_config.THEME_NAME = theme_name
 
     if os.environ.get("NO_IPS_EXCEPTHOOK"):
         # this is useful in the context of calling python programs from other processes
         # e.g. via subprocess.run(...). Then this flag allows to prevent dropping
         # into an IP-Shell after an exception
         return
-
 
     # set the hook
     sys.excepthook = ips_excepthook
@@ -581,7 +590,6 @@ def get_kernel_id():
     return kernel_id
 
 
-
 def color_excepthook(pdb=0, mode=2, force=True):
     """
     Make tracebacks after exceptions colored, verbose, and/or call pdb
@@ -591,8 +599,7 @@ def color_excepthook(pdb=0, mode=2, force=True):
     modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
 
     if force or not sys.excepthook == sys_orig_excepthook:
-        sys.excepthook = ultratb.FormattedTB(mode=modus,
-                                             color_scheme=module_config.COLOR_SCHEME, call_pdb=pdb)
+        sys.excepthook = ultratb.FormattedTB(mode=modus, call_pdb=pdb, theme_name=module_config.THEME_NAME)
 
 
 # for backward compatibiliy
@@ -623,11 +630,9 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
         assert isinstance(filename, str)
         pdb = 0
 
-    ip_excepthook = ultratb.FormattedTB(mode='Verbose',
-                                    color_scheme=module_config.COLOR_SCHEME, call_pdb=pdb)
+    ip_excepthook = ultratb.FormattedTB(mode="Verbose", call_pdb=pdb, theme_name=module_config.THEME_NAME)
 
-    fileTraceback = ultratb.FormattedTB(mode='Verbose',
-                                    color_scheme='NoColor', call_pdb=0)
+    fileTraceback = ultratb.FormattedTB(mode="Verbose", theme_name="nocolor", call_pdb=0)
 
     # define the new excepthook
     def theexecpthook (type, value, traceback):
@@ -645,16 +650,17 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
     sys.excepthook = theexecpthook
 
 
-
 # noinspection PyPep8Naming
-def TracerFactory(color_scheme=module_config.COLOR_SCHEME):
+def TracerFactory(theme_name=None):
     """
     Returns a callable `set_trace`-object.
     When this object is called it starts the ipython command line debugger
     in that place.
 
-    :param color_scheme:    (optional) one of ['Linux', 'NoColor', 'LightBG', 'Neutral']
+    :param theme_name:    (optional) one of ['nocolor', 'neutral', 'linux', 'lightbg']
     """
+    if theme_name is None:
+        theme_name = module_config.THEME_NAME
 
     Pdb_instance = Pdb()
 
@@ -662,7 +668,8 @@ def TracerFactory(color_scheme=module_config.COLOR_SCHEME):
     # Pdb_instance.set_colors("Neutral") # default
     # Pdb_instance.set_colors("NoColor")
 
-    Pdb_instance.set_colors(color_scheme) # default
+    # Pdb_instance.set_colors(color_scheme) # default
+    Pdb_instance.set_theme_name(theme_name) # default
     set_trace = Pdb_instance.set_trace
 
     return set_trace
@@ -672,7 +679,6 @@ try:
     set_trace = TracerFactory()
 except AttributeError:
     pass
-
 
 
 # this has legacy reasons:
