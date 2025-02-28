@@ -220,12 +220,10 @@ class TestE1(unittest.TestCase):
             # invariant part of expected output
             # noinspection PyPep8
 
-            eout1 = '\n     34 # arg == 1.5 -> exception\n     35 # arg == 1.0 -> IPS  \n---> 37 f3(arg)\n\nFile /tmp/tmpdir/filename.py:31, in f3(x)\n     29 b = [1, 3]\n---> 31 f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:16, in f1(x)\n     14 elif x > 4:\n     15     # call interactive IPython\n---> 16     IPS(theme_name="nocolor")\n\n--- Interactive IPython Shell. Type `?`<enter> for help'
+            eout1 = 'x= 2.0\nx= 3.0\nx= 4.0\nx= 5.0\nPython 3.11.4 (main, Jul  5 2023, 13:45:01) [GCC 11.2.0]\nType \'copyright\', \'credits\' or \'license\' for more information\nIPython 9.0.0 -- An enhanced Interactive Python. Type \'?\' for help.\n\n\nFile /tmp/tmpdir/filename.py:37\n     34 # arg == 1.5 -> exception\n     35 # arg == 1.0 -> IPS\n---> 37 f3(arg)\n\nFile /tmp/tmpdir/filename.py:31, in f3(x)\n     29 b = [1, 3]\n---> 31 f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:16, in f1(x)\n     14 elif x > 4:\n     15     # call interactive IPython\n---> 16     IPS(theme_name="nocolor")\n\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n\n\nIn [1]: \n'
             out, err = p.communicate(_exit)
 
             out_adapted = perform_replacements(out, fname).decode("utf8")
-
-            IPS()
 
             self.assertIn(eout1, out_adapted)
 
@@ -234,15 +232,17 @@ class TestE1(unittest.TestCase):
             p = pexpect.spawn(sys.executable, [fname, "1.5"], env=env)
 
             p.expect(ipy_prompt)
+
+            # note: this might contain a random tip at the end
             out_a = get_adapted_out(p, fname).decode("utf8")
 
             # this is good to get an overview over calling history
             # print(out_a.decode())
 
             # here an ZeroDivision error is intentionally raised and provokes an IPython shell to start
-            # we test, whether this shell displays all expected informations and behaves as we want
+            # we test, whether this shell displays all expected information and behaves as we want
 
-            eout = '\r\n     33 arg = float(sys.argv[1])\r\n     34 # arg == 1.5 -> exception\r\n     35 # arg == 1.0 -> IPS  \r\n---> 37 f3(arg)\r\n\r\nFile /tmp/tmpdir/filename.py:31, in f3(x)\r\n     28 a = 1\r\n     29 b = [1, 3]\r\n---> 31 f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:18, in f1(x)\r\n     16     IPS(theme_name="nocolor")\r\n     17 else:\r\n---> 18     f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:13, in f1(x)\r\n     10 print("x=", x)\r\n     11 if x == 3.5:\r\n     12     # provoke an exception\r\n---> 13     1/0\r\n     14 elif x > 4:\r\n     15     # call interactive IPython\r\n     16     IPS(theme_name="nocolor")\r\n\r\nZeroDivisionError: division by zero\r\n\r\n\r\n'
+            eout = '''x= 2.5\r\nx= 3.5\r\n\r\n\r\n---------------------------------------------------------------------------\r\nZeroDivisionError                         Traceback (most recent call last)\r\nFile /tmp/tmpdir/filename.py:37\r\n     33 arg = float(sys.argv[1])\r\n     34 # arg == 1.5 -> exception\r\n     35 # arg == 1.0 -> IPS\r\n---> 37 f3(arg)\r\n\r\nFile /tmp/tmpdir/filename.py:31, in f3(x)\r\n     28 a = 1\r\n     29 b = [1, 3]\r\n---> 31 f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:18, in f1(x)\r\n     16     IPS(theme_name="nocolor")\r\n     17 else:\r\n---> 18     f2(x)\r\n\r\nFile /tmp/tmpdir/filename.py:23, in f2(x)\r\n     21 def f2(x):\r\n     22     name = "f2"\r\n---> 23     f1(x+1)\r\n\r\nFile /tmp/tmpdir/filename.py:13, in f1(x)\r\n     10 print("x=", x)\r\n     11 if x == 3.5:\r\n     12     # provoke an exception\r\n---> 13     1/0\r\n     14 elif x > 4:\r\n     15     # call interactive IPython\r\n     16     IPS(theme_name="nocolor")\r\n\r\nZeroDivisionError: division by zero\r\n\r\n\r\nPython 3.11.4 (main, Jul  5 2023, 13:45:01) [GCC 11.2.0]\r\nType \'copyright\', \'credits\' or \'license\' for more information\r\nIPython 9.0.0 -- An enhanced Interactive Python. Type \'?\' for help.\r\n'''
 
             self.assertIn(eout, out_a)
 
