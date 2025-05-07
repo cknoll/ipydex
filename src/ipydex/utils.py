@@ -48,7 +48,7 @@ def regex_a_in_b(a_pattern_str:str, b_target_str:str) -> bool:
     # return bool(regex.search(b))
 
 
-def get_out_and_err_of_command(cmd, _input=None, env: dict = None, extra_env: dict = None):
+def get_out_and_err_of_command(cmd, _input=None, env: dict = None, extra_env: dict = None, returncode=False):
     import subprocess
     import os
 
@@ -65,6 +65,8 @@ def get_out_and_err_of_command(cmd, _input=None, env: dict = None, extra_env: di
     out = out.decode("UTF-8")
     err = err.decode("UTF-8")
 
+    if returncode:
+        return out, err, p.returncode
     return out, err
 
 def get_clipboard_content():

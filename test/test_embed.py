@@ -209,11 +209,11 @@ class TestE1(unittest.TestCase):
             # run `python file_with_embed.py`
             cmd = [sys.executable, f.name]
 
-            std, _ = ipydex.utils.get_out_and_err_of_command(
-                cmd, _input=_exit, extra_env={"IPY_TEST_SIMPLE_PROMPT": "1"}
+            std, _, returncode = ipydex.utils.get_out_and_err_of_command(
+                cmd, _input=_exit, extra_env={"IPY_TEST_SIMPLE_PROMPT": "1"}, returncode=True,
             )
 
-            self.assertEqual(p.returncode, 0)
+            self.assertEqual(returncode, 0)
             self.assertIn('3 . 14', std)
             self.assertIn('IPython', std)
             self.assertIn('bye!', std)
