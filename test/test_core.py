@@ -1,8 +1,8 @@
 import unittest
 
 import ipydex as ipd
+import ipydex.utils
 
-# run with e.g. rednose ipydex.test.test_core
 
 zz_global = 5678
 
@@ -185,6 +185,17 @@ class TestCore4(unittest.TestCase):
         fli = ipd.core.generate_frame_list_info(
             frame, code_context, add_context_for_latest, limit_to=limit_to
         )
+
+
+class TestUtils(unittest.TestCase):
+
+    def test_regex_a_in_b(self):
+        a1 = "x=1.0\ny=2.7\n__dot_star__\nz=3.7"
+        a2 = "x=1.0\ny=2.7\n__dot_star__\nz=4.7"
+        b = "a=0.0\nx=1.0\ny=2.7\nb=100\nc=200\nz=3.7\nfoo=300"
+
+        self.assertTrue(ipydex.utils.regex_a_in_b(a1, b))
+        self.assertFalse(ipydex.utils.regex_a_in_b(a2, b))
 
 
 def f1(*args1, **kwargs1):

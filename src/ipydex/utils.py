@@ -1,4 +1,3 @@
-
 from colorama import Style, Back, Fore
 
 
@@ -34,3 +33,15 @@ def compare_strings(str1, str2, n=25):
     print(f"First difference at index {idx}:")
     print(f"{str1[start:idx]}{hl(str1[idx:end], 'g')}")
     print(f"{str2[start:idx]}{hl(str2[idx:end], 'y')}")
+
+
+def regex_a_in_b(a_pattern_str:str, b_target_str:str) -> bool:
+    import re
+
+    # DOTALL flag to allow . to match newlines
+    # Check if the pattern matches anywhere in target
+
+    pattern = re.escape(a_pattern_str).replace("__dot_star__", ".*")
+    return bool(re.search(pattern, b_target_str, re.DOTALL))
+
+    # return bool(regex.search(b))
