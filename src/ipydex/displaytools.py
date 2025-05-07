@@ -28,13 +28,13 @@ usage:
 inserts the source line `display(my_random_variable)` to the source code,
 that is actually executed.
 
-That way, the notebook is more comprehensible beacause the reader knows
+That way, the notebook is more comprehensible because the reader knows
 the content of `my_random_variable`. It saves the typing effort and the code
 duplication of manually adding `display(my_random_variable)`.
 """
 
 # Issues: SyntaxError points to the wrong line (due to display insertion)
-# Note: this extension does not work properly with keywordargs: x = func(a, b=2)
+# Note: this extension does not work properly with kwargs: x = func(a, b=2)
 
 
 # todo maybe use sp.Eq(sp.Symbol('Z1'), theta, evaluate=False) to get better formatting
@@ -128,7 +128,7 @@ aux_only_tokens = ignorable_tokens + (tk.INDENT, tk.COMMENT)
 def preprocess_logical_line(ll):
     """
     # logical lines might start with physical lines which are only comments, or with empty physical lines.
-    # we dont want strip that, except when the logical line does not contain any "real code" at all
+    # we don't want strip that, except when the logical line does not contain any "real code" at all
 
     :param ll:
 
@@ -177,9 +177,9 @@ def preprocess_logical_line(ll):
     ll.lws_len = len(re.match(r"\s*", ll.txt, re.UNICODE).group(0))
 
     if ll.lws_len > 0 and ll.txt[ll.lws_len] == "#":
-        ll.special_case_indendeted_comment_start = True
+        ll.special_case_indented_comment_start = True
     else:
-        ll.special_case_indendeted_comment_start = False
+        ll.special_case_indented_comment_start = False
 
     return ll
 
@@ -251,9 +251,9 @@ def get_line_segments_from_logical_line(ll):
         dedented_line = textwrap.dedent(ll.txt)
         if not dedented_line.startswith(ll.removed_start_txt):
             # this is unusual
-            if not ll.special_case_indendeted_comment_start:
+            if not ll.special_case_indented_comment_start:
                 # now this is unexpected
-                msg = "unexpected indendation trouble"
+                msg = "unexpected indentation trouble"
                 raise ValueError(msg)
             else:
                 # see tag_issue_comment_at_end_of_indented_blocks
@@ -338,7 +338,7 @@ def get_lhs_from_ast(myast):
             if isinstance(elt, ast.Name):
                 seq_list.append(elt.id)
             elif isinstance(elt, ast.Attribute):
-                seq_list.append(_resolove_ast_attribute(elt))
+                seq_list.append(_resolve_ast_attribute(elt))
             else:
                 msg = "Unexpected AST-type {} when evaluating lhs-tuple".format(type(elt))
                 raise ValueError(msg)
@@ -346,7 +346,7 @@ def get_lhs_from_ast(myast):
         res = ", ".join(seq_list)
 
     elif isinstance(t, ast.Attribute):
-        res = _resolove_ast_attribute(t)
+        res = _resolve_ast_attribute(t)
     else:
         msg = "Unexpected AST-type when evaluating lhs"
         raise ValueError(msg)
@@ -355,7 +355,7 @@ def get_lhs_from_ast(myast):
     return lhs_container
 
 
-def _resolove_ast_attribute(elt):
+def _resolve_ast_attribute(elt):
     """
     Handle the ast-object corresponding e.g. to `C.x.y.z`.
 
@@ -570,7 +570,7 @@ def insert_disp_lines(raw_cell):
 
             # this line is not an assignment
             # -> it is replaced by `display(line)`
-            # in practise this case is not so important
+            # in practice this case is not so important
             cmt_flags.assignment = False
             new_line = process_line(ll, cmt_flags, rhs, indent)
             lines_of_new_cell.insert(0, new_line)
@@ -637,7 +637,7 @@ def custom_display(lhs, rhs, line_break=False):
         olb = " "
 
     if not isinstance(lhs, str):
-        raise TypeError('unexpexted Type for lhs object: %s' %type(lhs))
+        raise TypeError('unexpected Type for lhs object: %s' %type(lhs))
 
     new_format_dict = {}
     for key, value in list(format_dict.items()):
@@ -668,7 +668,7 @@ def custom_display(lhs, rhs, line_break=False):
         # noinspection PyTypeChecker
         publish_display_data('display', new_format_dict, md_dict)
     else:
-        # indeed, I dont know with which version the api changed
+        # indeed, I don't know with which version the api changed
         # but it does not really matter (for me)
         publish_display_data(data=new_format_dict, metadata=md_dict)
 

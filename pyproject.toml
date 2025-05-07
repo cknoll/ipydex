@@ -32,7 +32,7 @@ classifiers=[
 # - `IPS()` – An embedded IPython shell with some extra features like conditional execution: `IPS(x>0)`.
 # - `activate_ips_on_exception()` – Open an IPython shell in the frame where an exception is raised, but with the ability to move to other frames.
 # - `dirsearch` – easily search for substrings in the attribute list of an object or in the keys of a dict.
-# - `displaytools` – an extesion for jupyter notebooks to display intermediate results (e.g. of assignments). Useful for didactic purposes.
+# - `displaytools` – an extension for jupyter notebooks to display intermediate results (e.g. of assignments). Useful for didactic purposes.
 # """,
 # """
 

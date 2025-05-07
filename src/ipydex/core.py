@@ -24,9 +24,9 @@ from IPython.core.debugger import Pdb
 
 sys_orig_excepthook = sys.excepthook
 
-# Licence: GPLv3
+# License: GPLv3
 #  (full text: http://www.gnu.org/licenses/gpl-3.0-standalone.html)
-# Origin: a coobook example extended by Carsten Knoll for personal needs
+# Origin: a cookbook example extended by Carsten Knoll for personal needs
 # Please send bug reports via Email
 # "Carsten.+".replace('+', 'Knoll@') + "tu-dresden.de"
 
@@ -43,7 +43,7 @@ activate_ips_on_exception()
 
 # some code ...
 
-IPS()  # call the IPython shell to interactively investigate the situaion
+IPS()  # call the IPython shell to interactively investigate the situation
 
 --
 
@@ -66,7 +66,7 @@ the namespace. Example: import os; dirsearch('path', os)
 known bugs:
 - - - - - -
 
-if used from within a PyQt app: annoying meassages
+if used from within a PyQt app: annoying messages
 
   "QCoreApplication::exec: The event loop is already running"
 
@@ -79,12 +79,12 @@ QtCore.pyqtRemoveInputHook() # to be called in __init__ of main-dialog-class
 the way colors are represented in a "normal" shell conflicts with embedded
 shells in eclipse, pyscripter or spyder; result: ugly control characters
 
-workarround: start your script from an externall shell
+workaround: start your script from an external shell
 
 -----------
 
 The embedded IPython-Shell seems to conflict with output suppressing in
-the module py.test (for unittesting).
+the module py.test (for unit testing).
 
 To avoid this, disable the output suppressing via:
 py.test -s <testfiles>
@@ -101,7 +101,7 @@ There have been problems with pyparallel
 If IPython is not installed, dummy objects are created.
 This makes it possible to run code which import the ipHelp module on machines
 where IPython is not available (useful for modules which are still under
-development, but already are deployd on different machines/ platforms)
+development, but already are deployed on different machines/ platforms)
 
 """
 
@@ -120,7 +120,7 @@ class DummyMod(object):
 
 def get_frame_list(frame=None, code_context=1, add_context_for_latest=0):
     """
-    return the list of frames and frame_info_tuples in desceninding order (newest frame is last)
+    return the list of frames and frame_info_tuples in descending order (newest frame is last)
     """
 
     # TODO: use this function in IPS below (less code duplication)
@@ -184,7 +184,7 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
     if not condition:
         return None
 
-    # note some but not all portions of IPython code need the camelcase verions
+    # note some but not all portions of IPython code need the camelcase versions
     # assert color_scheme.lower() in ['nocolor', 'neutral', 'linux', 'lightbg']
     C = Container(
         copy_namespaces=copy_namespaces,
@@ -436,8 +436,8 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limi
 
     # old Signature: TB.format_record(frame, file, lnum, func, lines, index)
 
-    # formated_records = [TB.format_record(frame, *fi) for fi in res.frame_info_list]
-    formated_records = []
+    # formatted_records = [TB.format_record(frame, *fi) for fi in res.frame_info_list]
+    formatted_records = []
 
     style = get_style_by_name("default")
     # style = stack_data.style_with_executing_node(style, "bg:ansiyellow")
@@ -461,10 +461,10 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limi
         # -> manually convert it:
 
         fi_obj = ultratb.FrameInfo._from_stack_data_FrameInfo(fic)
-        formated_records.append(TB.format_record(fi_obj))
+        formatted_records.append(TB.format_record(fi_obj))
 
     assert isinstance(limit_to, int) and limit_to <= 0
-    res.tb_txt = "\n".join(formated_records[limit_to:])
+    res.tb_txt = "\n".join(formatted_records[limit_to:])
     return res
 
 
@@ -505,10 +505,10 @@ class TBPrinter(object):
     def get_tb_txt(self, end_offset=0, prefix="\n", debug=False, cut_logging=True):
         """
 
-        :param prefix:      string which is printed befor the actual TB (default: "\n")
+        :param prefix:      string which is printed before the actual TB (default: "\n")
         :param end_offset:  0 means print all, 1 means print parts[:-1] etc
         :param debug:       debug flag (return debug_container)
-        :param cut_logging: flag (cut off logging information e.g. injected by nosetests)
+        :param cut_logging: flag (cut off logging information e.g. injected by nose tests)
         :return:
         """
         # note that the kwarg `tb_offset` of the FormattedTB constructor is refers to the start of the list
@@ -540,7 +540,7 @@ class TBPrinter(object):
 
 
                 if irrelevant is not None:
-                    msg = "\nNote: {} chars of logging information have beed removed for better overview."
+                    msg = "\nNote: {} chars of logging information have been removed for better overview."
                     line_list.append(msg.format(len(irrelevant)))
 
 
@@ -602,7 +602,7 @@ def color_excepthook(pdb=0, mode=2, force=True):
         sys.excepthook = ultratb.FormattedTB(mode=modus, call_pdb=pdb, theme_name=module_config.THEME_NAME)
 
 
-# for backward compatibiliy
+# for backward compatibility
 ip_syshook = color_excepthook
 
 # now, we immediately  apply this new excepthook.
@@ -616,10 +616,10 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
 
     supports logging of tracebacks to a file
 
-    lets fnc() be executed imediately before the IPython
+    lets fnc() be executed immediately before the IPython
     Verbose Traceback is started
 
-    this can be used to pop up a QTMessageBox: "An exception occured"
+    this can be used to pop up a QTMessageBox: "An exception occurred"
     """
 
     assert isinstance(fnc, collections.Callable)
@@ -685,7 +685,7 @@ except AttributeError:
 # noinspection PyPep8Naming
 def ST():
     a = " "*3
-    print("\n"*5, a, "ST is dreprecated due to namespace problems.")
+    print("\n"*5, a, "ST is deprecated due to namespace problems.")
     print(a, "use: from ipydex import set_trace")
     print(a, "\n"*2)
     print(a , "<ENTER>")
@@ -855,14 +855,14 @@ def dirsearch(s, obj, only_keys=True, deep=0, maxlength=20):
                         keys). Note, this implies that matches are also found in attributes/dict-values if they fulfill
                         isinstance(value, str).
 
-    :param maxlength:   int. default=20; maximum displayed lenghth of the above str.-version
+    :param maxlength:   int. default=20; maximum displayed length of the above str.-version
     :param deep:        recursion level
 
     """
     s = s.lower()
 
     if isinstance(obj, dict):
-        # only consider keys which are basestrings
+        # only consider keys which are strings
         items = [(key, val) for key, val in list(obj.items()) if isinstance(key, str)]
     else:
 
@@ -921,7 +921,8 @@ def dirsearch(s, obj, only_keys=True, deep=0, maxlength=20):
 class Container(object):
     """General purpose container class to conveniently store data attributes
 
-    There are three main usecases for this container data type (see below) which are triggered by args and keyword args:
+    There are three main use cases for this container data type (see below) which are triggered by args
+    and kwargs:
 
     (1) Store some data:
 
@@ -1133,7 +1134,8 @@ def get_whole_assignment_expression(line, varname, seq_type):
     # Delimiter_open_level
     DOL = 0
 
-    # 0 -> not searching, 1 -> searching for first occurence of `L`, 2 -> searching for last occurence of `R`
+    # 0 -> not searching, 1 -> searching for first occurrence of `L`,
+    # 2 -> searching for last occurrence of `R`
     search_mode = 0
 
     i_start, i_end = None, None
@@ -1260,7 +1262,7 @@ def str_to_token_list(line, raise_TE=False):
 def always(*args, **kwargs):
     return True
 
-# two class decorators which trigger IPS() if an attribute or an internal storrage changes
+# two class decorators which trigger IPS() if an attribute or an internal storage changes
 
 
 # copied from https://github.com/pdbpp/pdbpp/
@@ -1279,7 +1281,7 @@ def break_on_setattr(attrname, condition=always):
 
 class SurveiledDict(dict):
     """
-    Dictionary which triggeres IPS if a value is set (and an optional condition is met)
+    Dictionary which triggers IPS if a value is set (and an optional condition is met)
     """
 
     def __init__(self, *args, **kwargs):
