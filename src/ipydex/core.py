@@ -265,12 +265,9 @@ def _run_ips(frame_list, c):
     # from traitlets.config.loader import Config
     # config = Config()
 
-
     # TODO !!: check how this can be ported to ipython >9.0
     color_scheme = getattr(c, "theme_name", "neutral")
     config.InteractiveShellEmbed.colors = color_scheme
-
-
 
     # we might want to override the .simple_prompt class variable in the future
     # InteractiveShellEmbed.simple_prompt = False
@@ -281,6 +278,11 @@ def _run_ips(frame_list, c):
     InteractiveShellEmbed._instance = None
 
     shell = InteractiveShellEmbed.instance(config=config)
+
+    # Register the magic with the running shell
+    shell.register_magic_function(
+        create_method_from_pasted_function, "line", "create_method_from_pasted_function"
+    )
 
     # achieve that custom macros are loaded in interactive shell
     shell.run_line_magic("load_ext", "storemagic")
@@ -1351,3 +1353,30 @@ def explore_data(data):
     data = enable_conversion_to_json(data)
     app = DataViewApp(data)
     app.run()
+
+
+def create_method_from_pasted_function(line):
+    import types
+    from textwrap import dedent
+    from IPython import get_ipython
+    from ipydex.utils import get_clipboard_content
+
+    clipboard_content = dedent(get_clipboard_content()).strip()
+    assert clipboard_content.startswith("def")
+
+    bracket_idx = clipboard_content.index("(")
+    func_name = clipboard_content[4:bracket_idx].strip()
+
+    namespace = {}
+    exec(clipboard_content, namespace)
+    func = namespace[func_name]
+    assert func_name == func.__name__
+
+    # 'line' should be the function name as a string
+    ip = get_ipython()
+    instance = ip.user_ns.get('self')
+    if instance is None:
+        ip.user_ns[func_name] = func
+    else:
+        setattr(instance, func.__name__, types.MethodType(func, instance))
+    print(f"Method '{func.__name__}' added to `self`.")

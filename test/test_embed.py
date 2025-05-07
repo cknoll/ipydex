@@ -11,6 +11,8 @@ import os
 import subprocess
 import sys
 import unittest
+from textwrap import dedent
+
 from IPython.utils.tempdir import NamedFileInTemporaryDirectory
 import pexpect
 from pexpect.popen_spawn import PopenSpawn
@@ -78,6 +80,19 @@ arg = float(sys.argv[1])
 
 f3(arg)
 
+'''
+
+
+# execute IPS inside a method
+_sample_embed_ips3 = b'''
+from ipydex import IPS
+
+class A:
+
+    def __init__(self):
+        IPS()
+
+a = A()
 '''
 
 _sample_embed_dbg1 = b'''
@@ -156,7 +171,7 @@ def get_adapted_out(spawn_instance, fname):
     return perform_replacements(out, fname)
 
 
-def ipy_io(spawn_instance, fname, command):
+def ipy_io(spawn_instance, fname, command, decode=False):
     """
 
     :param spawn_instance:
@@ -168,6 +183,9 @@ def ipy_io(spawn_instance, fname, command):
     spawn_instance.send(command)
     spawn_instance.expect(ipy_prompt)
     out_a = get_adapted_out(spawn_instance, fname)
+
+    if decode:
+        out_a = out_a.decode("utf8")
 
     return out_a
 
@@ -224,7 +242,6 @@ class TestE1(unittest.TestCase):
 
             env = os.environ.copy()
             env["IPY_TEST_SIMPLE_PROMPT"] = "1"
-            # p = pexpect.spawn(sys.executable, [fname, "1.5"], env=env)
 
             cmd2 = f"{sys.executable} {fname} 1.5"
             p = PopenSpawn(cmd2, env=env)
@@ -302,6 +319,39 @@ class TestE1(unittest.TestCase):
             # check that this is the namespace which we had already visited above
             out_a = ipy_io(p, fname, "print('z =', z)\n")
             self.assertIn(b"z = 789", out_a)
+
+    def test_ipython_embed3(self):
+        with NamedFileInTemporaryDirectory("file_with_embed.py", "wb") as f:
+            f.write(_sample_embed_ips3)
+            f.flush()
+            f.close()  # otherwise msft won't be able to read the file
+
+            fname = f.name
+
+            env = os.environ.copy()
+            env["IPY_TEST_SIMPLE_PROMPT"] = "1"
+            env["IPYDEX_UNITTEST_RUNNING"] = "1"
+            env["IPYDEX_CLIPBOARD_MOCK"] = dedent("""
+            def new_method(self):
+                print("SUCCESS")
+            """)
+            cmd2 = f"{sys.executable} {fname}"
+            p = PopenSpawn(cmd2, env=env)
+            p.expect(ipy_prompt)
+
+            out_a = ipy_io(p, fname, "self.new_method()\n", decode=True)
+
+            # ensure that the method is not present
+            eout = "AttributeError__dot_star__'A' object has no attribute 'new_method'"
+            self.assertTrue(ipydex.utils.regex_a_in_b(eout, out_a))
+
+            src = "%create_method_from_pasted_function\n"
+            out_a = ipy_io(p, fname, src, decode=True)
+            self.assertIn("Method 'new_method' added to `self`.", out_a)
+
+            # ensure that the new method can be executed
+            out_a = ipy_io(p, fname, "self.new_method()\n", decode=True)
+            self.assertTrue(out_a.strip().startswith("SUCCESS"))
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal

@@ -1,4 +1,5 @@
 from colorama import Style, Back, Fore
+import os
 
 
 def hl(txt, k="g"):
@@ -65,3 +66,12 @@ def get_out_and_err_of_command(cmd, _input=None, env: dict = None, extra_env: di
     err = err.decode("UTF-8")
 
     return out, err
+
+def get_clipboard_content():
+
+    if os.environ.get("IPYDEX_UNITTEST_RUNNING"):
+        return os.environ.get("IPYDEX_CLIPBOARD_MOCK", "")
+
+    else:
+        import pyperclip
+        return pyperclip.paste()
