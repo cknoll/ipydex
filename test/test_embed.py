@@ -87,11 +87,15 @@ f3(arg)
 _sample_embed_ips3 = b'''
 from ipydex import IPS
 
+# call IPS without self being present
+IPS()
+
 class A:
 
     def __init__(self):
         IPS()
 
+# call IPS in a method (self is present)
 a = A()
 '''
 
@@ -332,11 +336,33 @@ class TestE1(unittest.TestCase):
             env["IPY_TEST_SIMPLE_PROMPT"] = "1"
             env["IPYDEX_UNITTEST_RUNNING"] = "1"
             env["IPYDEX_CLIPBOARD_MOCK"] = dedent("""
-            def new_method(self):
+            def new_method(self=None):
                 print("SUCCESS")
             """)
             cmd2 = f"{sys.executable} {fname}"
             p = PopenSpawn(cmd2, env=env)
+
+            ####################################################################
+            # first part: test function mode
+            p.expect(ipy_prompt)
+            out_a = ipy_io(p, fname, "new_method()\n", decode=True)
+
+            eout = "NameError__dot_star__ name 'new_method' is not defined"
+            self.assertTrue(ipydex.utils.regex_a_in_b(eout, out_a))
+
+            src = "%create_method_from_pasted_function\n"
+            out_a = ipy_io(p, fname, src, decode=True)
+
+            # ensure that the new function (called "new_method") can be executed
+            out_a = ipy_io(p, fname, "new_method()\n", decode=True)
+            self.assertTrue(out_a.strip().startswith("SUCCESS"))
+
+            # leave this shell
+            out_a = ipy_io(p, fname, "exit()\n\n", decode=True)
+            self.assertIn("Interactive IPython Shell. Type `?`<enter> for help.", out_a)
+
+            ####################################################################
+            # second part: test oo-mode
             p.expect(ipy_prompt)
 
             out_a = ipy_io(p, fname, "self.new_method()\n", decode=True)
