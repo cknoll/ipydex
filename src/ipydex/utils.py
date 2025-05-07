@@ -45,3 +45,23 @@ def regex_a_in_b(a_pattern_str:str, b_target_str:str) -> bool:
     return bool(re.search(pattern, b_target_str, re.DOTALL))
 
     # return bool(regex.search(b))
+
+
+def get_out_and_err_of_command(cmd, _input=None, env: dict = None, extra_env: dict = None):
+    import subprocess
+    import os
+
+    if env is None:
+        env = os.environ.copy()
+
+    if extra_env is not None:
+        env.update(extra_env)
+
+    p = subprocess.Popen(cmd, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    out, err = p.communicate(_input)
+
+    out = out.decode("UTF-8")
+    err = err.decode("UTF-8")
+
+    return out, err

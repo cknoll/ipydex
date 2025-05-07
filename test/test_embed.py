@@ -189,13 +189,10 @@ class TestE1(unittest.TestCase):
 
             # run `python file_with_embed.py`
             cmd = [sys.executable, f.name]
-            env = os.environ.copy()
-            env['IPY_TEST_SIMPLE_PROMPT'] = '1'
 
-            p = subprocess.Popen(cmd, env=env, stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate(_exit)
-            std = out.decode('UTF-8')
+            std, _ = ipydex.utils.get_out_and_err_of_command(
+                cmd, _input=_exit, extra_env={"IPY_TEST_SIMPLE_PROMPT": "1"}
+            )
 
             self.assertEqual(p.returncode, 0)
             self.assertIn('3 . 14', std)
@@ -212,14 +209,9 @@ class TestE1(unittest.TestCase):
 
             # run `python file_with_embed.py`
             cmd1 = [sys.executable, fname, "1.0"]
-            env = os.environ.copy()
-            env['IPY_TEST_SIMPLE_PROMPT'] = '1'
-
-            p = subprocess.Popen(cmd1, env=env, stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-            # invariant part of expected output
-            # noinspection PyPep8
+            std, _ = ipydex.utils.get_out_and_err_of_command(
+                cmd1, _input=_exit, extra_env={"IPY_TEST_SIMPLE_PROMPT": "1"}
+            )
 
             # replace python-version specific substring with "__dot_star__"
             expected_output_pattern = 'x= 2.0\nx= 3.0\nx= 4.0\nx= 5.0\nPython 3.__dot_star__\nFile /tmp/tmpdir/filename.py:37\n     34 # arg == 1.5 -> exception\n     35 # arg == 1.0 -> IPS\n---> 37 f3(arg)\n\nFile /tmp/tmpdir/filename.py:31, in f3(x)\n     29 b = [1, 3]\n---> 31 f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:18, in f1(x)\n     17 else:\n---> 18     f2(x)\n\nFile /tmp/tmpdir/filename.py:23, in f2(x)\n     22 name = "f2"\n---> 23 f1(x+1)\n\nFile /tmp/tmpdir/filename.py:16, in f1(x)\n     14 elif x > 4:\n     15     # call interactive IPython\n---> 16     IPS(theme_name="nocolor")\n\n--- Interactive IPython Shell. Type `?`<enter> for help. ----\n\n\nIn [1]: \n'
@@ -318,13 +310,10 @@ class TestDBG(unittest.TestCase):
 
             # run `python file_with_embed.py`
             cmd = [sys.executable, f.name]
-            env = os.environ.copy()
-            env['IPY_TEST_SIMPLE_PROMPT'] = '1'
 
-            p = subprocess.Popen(cmd, env=env, stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate(_exit)
-            std = out.decode('UTF-8')
+            std, _ = ipydex.utils.get_out_and_err_of_command(
+                cmd, _input=_exit, extra_env={"IPY_TEST_SIMPLE_PROMPT": "1"}
+            )
 
         eout = f'{f.name}(17)<module>()\n     15 \n     16 \n---> 17 f1()\n     18 y = 20\n     19'
         self.assertIn(eout, std)
