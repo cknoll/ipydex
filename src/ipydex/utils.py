@@ -79,8 +79,17 @@ def get_clipboard_content():
         return pyperclip.paste()
 
 
-# TODO-AIDER: implement this function according to docstring
 def get_file_name_of_caller():
     """
     This function is intended to be called from an arbitrary module and return the name of that module
     """
+    import inspect
+    
+    # Get the frame of the caller (skip current frame)
+    caller_frame = inspect.currentframe().f_back
+    
+    # Get the filename from the caller's frame
+    filename = caller_frame.f_code.co_filename
+    
+    # Return just the basename (filename without path)
+    return os.path.basename(filename)
