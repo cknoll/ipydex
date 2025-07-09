@@ -101,6 +101,21 @@ def get_file_name_of_caller(return_with_ext=False):
         return root
 
 
-# TODO-AIDER: implement this function according to docstring
-def reload_module()
-    pass
+def reload_module():
+    """
+    Reload the module that calls this function
+    """
+    import inspect
+    import importlib
+    
+    # Get the frame of the caller (skip current frame)
+    caller_frame = inspect.currentframe().f_back
+    
+    # Get the module from the caller's frame
+    caller_module = inspect.getmodule(caller_frame)
+    
+    if caller_module is not None:
+        importlib.reload(caller_module)
+        return caller_module
+    else:
+        raise RuntimeError("Could not determine caller module")
