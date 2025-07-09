@@ -99,3 +99,8 @@ def get_file_name_of_caller(return_with_ext=False):
         return fname
     else:
         return root
+
+
+# TODO-AIDER: implement this function according to docstring
+def reload_module()
+    pass
