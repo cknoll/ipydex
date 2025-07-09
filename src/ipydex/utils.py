@@ -100,9 +100,33 @@ def get_file_name_of_caller(return_with_ext=False):
     else:
         return root
 
-# TODO-AIDER: implement this function according to docstring
-def reload_module_for_given_path():
+def reload_module_for_given_path(path):
     """
     Reload the module specified by a given path on the filesystem
     """
     import importlib
+    import importlib.util
+    import sys
+    
+    # Convert path to absolute path
+    abs_path = os.path.abspath(path)
+    
+    # Find the module in sys.modules that corresponds to this path
+    module_to_reload = None
+    for module_name, module in sys.modules.items():
+        if hasattr(module, '__file__') and module.__file__:
+            if os.path.abspath(module.__file__) == abs_path:
+                module_to_reload = module
+                break
+    
+    if module_to_reload is None:
+        # If module not found in sys.modules, try to load it
+        spec = importlib.util.spec_from_file_location("temp_module", abs_path)
+        if spec is None:
+            raise ImportError(f"Cannot create module spec from path: {abs_path}")
+        module_to_reload = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module_to_reload)
+        return module_to_reload
+    else:
+        # Reload the existing module
+        return importlib.reload(module_to_reload)
