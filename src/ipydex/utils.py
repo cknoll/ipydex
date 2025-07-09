@@ -77,3 +77,10 @@ def get_clipboard_content():
     else:
         import pyperclip
         return pyperclip.paste()
+
+
+# TODO-AIDER: implement this function according to docstring
+def get_file_name_of_caller():
+    """
+    This function is intended to be called from an arbitrary module and return the name of that module
+    """
