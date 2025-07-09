@@ -1032,6 +1032,8 @@ class Container(object):
                 break
             frame = frame.f_back
             i -= 1
+
+            # TODO: shouldn't this be <=0?
             if i == 0:
                 break
 
