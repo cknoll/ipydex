@@ -79,17 +79,23 @@ def get_clipboard_content():
         return pyperclip.paste()
 
 
-def get_file_name_of_caller():
+# TODO: create unittest (currently not so critical feature)
+def get_file_name_of_caller(return_with_ext=False):
     """
     This function is intended to be called from an arbitrary module and return the name of that module
     """
     import inspect
-    
+
     # Get the frame of the caller (skip current frame)
     caller_frame = inspect.currentframe().f_back
-    
+
     # Get the filename from the caller's frame
-    filename = caller_frame.f_code.co_filename
-    
-    # Return just the basename (filename without path)
-    return os.path.basename(filename)
+    fpath = caller_frame.f_code.co_filename
+
+    # extract just the basename (filename without path)
+    fname = os.path.basename(fpath)
+    root, _ext = os.path.splitext(fname)
+    if return_with_ext:
+        return fname
+    else:
+        return root
