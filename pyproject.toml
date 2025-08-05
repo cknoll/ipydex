@@ -13,7 +13,7 @@ description = "IPython based debugging and exploring tool"
 authors=[{name = "Carsten Knoll", email = "firstname.lastname@posteo.de"}]
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "GNU General Public License v3 (GPLv3)" }
+license = "GPL-3.0-or-later"
 
 dynamic = ["dependencies", "version"]
 
