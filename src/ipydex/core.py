@@ -150,12 +150,24 @@ class InteractiveShellEmbedWithoutBanner(InteractiveShellEmbed):
 
 
 # noinspection PyPep8Naming
-def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, overwrite_globals=False,
-        code_context=1, print_tb=True, add_context_for_latest=6, theme_name=None,
-        verbose=False):
+def IPS(
+    condition1=None,
+    condition2=True,
+    frame=None,
+    ns_extension=None,
+    copy_namespaces=True,
+    overwrite_globals=False,
+    code_context=1,
+    print_tb=True,
+    add_context_for_latest=6,
+    theme_name=None,
+    verbose=False,
+):
     """
 
-    :param condition:           bool; if False return immediately (do not really run IPS)
+    :param condition1:           if it is -1 then its a shortcut for print_tb=-1,
+                                 otherwise condition2 = condition1
+    :param condition2:           bool; if False return immediately (do not really run IPS)
     :param frame:
     :param ns_extension:
     :param copy_namespaces:
@@ -178,10 +190,21 @@ def IPS(condition=True, frame=None, ns_extension=None, copy_namespaces=True, ove
         print('omit starting IPython shell because env var `IPS` is "False"')
         return None
 
+    if condition1 is not None:
+        # we have to distinguish between 1, True and other values
+        # Note: isinstance(1, bool) -> False but isinstance(True, int) -> True
+        if isinstance(condition1, bool):
+            condition2 = condition1
+        elif isinstance(condition1, int) and condition1 == -1:
+            # this is interpreted as a shortcut for print_tb=-1
+            print_tb = -1
+        else:
+            condition2 = condition1
+
     if theme_name is None:
         theme_name = module_config.THEME_NAME
 
-    if not condition:
+    if not condition2:
         return None
 
     # note some but not all portions of IPython code need the camelcase versions
@@ -255,7 +278,7 @@ def _run_ips(frame_list, c):
     :param c:       Container for arguments
     """
 
-    c.verbose: bool
+    # c.verbose: bool
 
     # copied (and modified) from IPython/terminal/embed.py
     config = load_default_config()
