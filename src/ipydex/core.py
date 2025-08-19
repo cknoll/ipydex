@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 import collections
 import inspect
 import sys
@@ -105,6 +102,16 @@ development, but already are deployed on different machines/ platforms)
 
 """
 
+# this is relevant for testing (because we call ipydex as a subprocess and expect a certain output)
+if os.getenv("IPYDEX_SUPPRESS_VENV_WARNING"):
+    import warnings
+
+    warnings.filterwarnings(
+        "ignore",
+        message="Attempting to work in a virtualenv. If you encounter problems, "
+        "please install IPython inside the virtualenv.",
+        category=UserWarning,
+    )
 
 # allow global write access to config vars of this module
 module_config = dataclasses.dataclass()

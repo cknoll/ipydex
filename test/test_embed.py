@@ -246,6 +246,7 @@ class TestE1(unittest.TestCase):
 
             env = os.environ.copy()
             env["IPY_TEST_SIMPLE_PROMPT"] = "1"
+            env["IPYDEX_SUPPRESS_VENV_WARNING"] = "1"
 
             cmd2 = f"{sys.executable} {fname} 1.5"
             p = PopenSpawn(cmd2, env=env)
