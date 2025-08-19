@@ -189,3 +189,14 @@ def reload_this_module(mode=None, mod_name="__proxy_module__"):
         if not name.startswith('_'):
             rm.callers_globals[name] = getattr(mod, name)
     return mod
+
+def elist(lst: list, start, diff, attr: str | None = None):
+    """
+    return a list of tuples (index, value), where values are taken from `lst` (and optionally getattr
+    is applied).
+
+    Motivation: this simplifies interactive inspection of long lists.
+    """
+    if attr is None:
+        return list(enumerate(lst[start:start+diff], start=start))
+    return list(enumerate([getattr(x, attr) for x in lst[start:start+diff]], start=start))
