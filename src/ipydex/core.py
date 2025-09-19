@@ -821,8 +821,11 @@ def save_current_nb_as_html(info=None, return_res=False, fname=None):
 
     res = subprocess.run(cmd_list, capture_output=True)
     res.exited = res.returncode
+
+    assert res.exited == 0, f"command `{''.join(cmd_list)}` failed"
     res.stdout = res.stdout.decode("utf8")
     res.stderr = res.stderr.decode("utf8")
+
 
     suffix = ".ipynb"
     html_filename = src_filename[:-len(suffix)] + ".html"
