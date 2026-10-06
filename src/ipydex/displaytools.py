@@ -44,6 +44,7 @@ import collections
 import ast
 import textwrap
 import re
+import json
 
 
 import tokenize as tk
@@ -463,6 +464,13 @@ def is_single_name(expr):
     return res
 
 
+def _str_literal(txt):
+    """
+    Return python source code of a string literal which evaluates to `txt`
+    """
+    return json.dumps(txt, ensure_ascii=False)
+
+
 def process_line(line, line_flags, expr_to_disp, indent):
     """
 
@@ -490,17 +498,18 @@ def process_line(line, line_flags, expr_to_disp, indent):
 
     if line_flags.lhs:
         if line_flags.shape:
-            new_line = '{}custom_display("{}.shape", {}.shape); {}'
-            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, print_delim)
+            label, value = f"{expr_to_disp}.shape", f"{expr_to_disp}.shape"
         elif line_flags.info:
-            new_line = '{}custom_display("info({})", _ipydex__info({})); {}'
-            new_line = new_line.format(indent, expr_to_disp, expr_to_disp, print_delim)
-        elif line_flags.line_break:
-            new_line = '{}custom_display("{}", {}, {}); {}'.format(
-                indent, expr_to_disp, expr_to_disp, line_break_str, print_delim
-                )
+            label, value = f"info({expr_to_disp})", f"_ipydex__info({expr_to_disp})"
         else:
-            new_line = '{}custom_display("{}", {}); {}'.format(indent, expr_to_disp, expr_to_disp, print_delim)
+            label, value = expr_to_disp, expr_to_disp
+
+        # the label must become a valid string literal even if the expression contains quotes or backslashes
+        # (json.dumps yields a double-quoted literal which is also valid python)
+        args = [_str_literal(label), value]
+        if line_flags.line_break:
+            args.append(line_break_str)
+        new_line = "{}custom_display({}); {}".format(indent, ", ".join(args), print_delim)
     else:
         new_line = '{}display({}); {}'.format(indent, expr_to_disp, print_delim)
 

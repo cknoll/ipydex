@@ -1,6 +1,7 @@
 import unittest
 
 import sys
+import ast
 from contextlib import contextmanager
 from io import StringIO
 
@@ -381,6 +382,28 @@ custom_display("x", x, line_break=True); display({"text/plain": "---"}, raw=True
 """
         res1 = dt.insert_disp_lines(raw_cell1)
         self.assertEqual(eres1, res1)
+
+    def test_insert_disp_lines_with_quotes(self):
+        # expressions containing quotes or backslashes must not break the generated label string
+        raw_cell1 = """\
+b.decode("utf-8") ##:
+x = 'a\\\\b' + "ü" ##:i
+"""
+
+        eres1 = """\
+custom_display("(b.decode(\\"utf-8\\"))", (b.decode("utf-8"))); display({"text/plain": "---"}, raw=True)
+x = 'a\\\\b' + "ü" ##:i
+custom_display("info(x)", _ipydex__info(x)); display({"text/plain": "---"}, raw=True)
+"""
+        res1 = dt.insert_disp_lines(raw_cell1)
+        self.assertEqual(eres1, res1)
+
+        expr = r'len(s.split("\\")), "x"'
+        res2 = dt.insert_disp_lines(f"{expr} ##:S\n")
+        # the generated label literal must evaluate to the original source of the expression
+        call = ast.parse(res2).body[0].value
+        self.assertEqual(call.func.id, "custom_display")
+        self.assertEqual(call.args[0].value, f"({expr}).shape")
 
     def test_logical_lines1(self):
         raw_cell1 = """\
