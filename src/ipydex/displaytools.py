@@ -120,6 +120,16 @@ SCC = def_special_comments()
 
 sc_list = SCC.value_list()
 
+# all special comments start with "##" followed by one of these chars (see def_special_comments)
+sc_regex = re.compile(r"##[;T:]")
+
+
+def contains_special_comment(txt):
+    """
+    Return whether txt might contain a special comment (cheap check; false positives are possible)
+    """
+    return sc_regex.search(txt) is not None
+
 
 ignorable_tokens = (tk.NEWLINE, tk.NL, tk.DEDENT, tk.ENDMARKER)
 ignorable_final_tokens = (tk.DEDENT, tk.ENDMARKER)
@@ -521,6 +531,10 @@ def insert_disp_lines(raw_cell):
     if "##!! raise TestException !!" in raw_cell:
         raise SyntaxErrorInCell("Virtual syntax error (only for testing)")
 
+    if not contains_special_comment(raw_cell):
+        # nothing to do -> also avoid problems with IPython-specific syntax (`obj?`, `!cmd`, ...)
+        return raw_cell
+
     original_raw_cell = raw_cell
 
     # convert ipython macros to comments
@@ -799,8 +813,12 @@ def load_ipython_extension(ip):
         try:
             new_raw_cell = insert_disp_lines(raw_cell)
         except SyntaxErrorInCell as e:
-            msg = "displaytools detected a SyntaxError in the original cell\n"
-            print(msg.format(e))
+            # IPython reports real syntax errors itself -> only explain why the special comments are ignored
+            msg = (
+                "displaytools: this cell is not plain Python (IPython syntax like `obj?`, `!cmd`, `%%magic` "
+                "or a syntax error)\n-> special comments (`##:` etc.) are ignored for this cell.\n"
+            )
+            print(msg)
             new_raw_cell = raw_cell
         except Exception as e:
             msg = "There was an error in the displaytools extension (probably due to unsupported syntax).\n"\

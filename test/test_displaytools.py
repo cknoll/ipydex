@@ -487,6 +487,7 @@ font = \\
     def test_syntax_error(self):
         # this cell contains a syntax error
         raw_cell1 = """\
+x = 0 ##:
 for i in range(3):
     pass
     pass
@@ -495,6 +496,10 @@ for i in range(3):
         with self.assertRaises(dt.SyntaxErrorInCell) as cm:
             res1 = dt.insert_disp_lines(raw_cell1)
 
+        # without special comments there is nothing to do -> no error, cell unchanged
+        raw_cell1b = raw_cell1.replace(" ##:", "")
+        self.assertEqual(dt.insert_disp_lines(raw_cell1b), raw_cell1b)
+
         raw_cell2 = """\
 %some_macro
 pass
@@ -502,7 +507,14 @@ pass
 print(1)
 """
         res2 = dt.insert_disp_lines(raw_cell2)
-        self.assertEqual(raw_cell2, raw_cell2)
+        self.assertEqual(res2, raw_cell2)
+
+    def test_ipython_syntax_without_special_comment(self):
+        for raw_cell in ["dir?\n", "dir??", "!ls -l\n", "x = !ls\nx", "%%bash\necho 1 # ## no sc\n"]:
+            self.assertEqual(dt.insert_disp_lines(raw_cell), raw_cell)
+
+        self.assertTrue(dt.contains_special_comment("x = 1 ##:S"))
+        self.assertFalse(dt.contains_special_comment("# ## heading"))
 
     def test_info1(self):
         res1 = dt.info(1)
