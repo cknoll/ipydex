@@ -1,3 +1,4 @@
+import atexit
 import collections
 import inspect
 import sys
@@ -279,6 +280,33 @@ def IPS(
     return diff_index
 
 
+def _dispose_shell(shell):
+    """
+    Release the resources of an embedded shell which has finished.
+
+    `clear_instance()` only drops the class-level reference. The shell itself stays alive (it is
+    referenced via `atexit`) and so does its HistoryManager with a sqlite connection and a
+    running HistorySavingThread. Without this cleanup every IPS-call leaks one thread and
+    some file descriptors.
+
+    :param shell:   InteractiveShellEmbed instance (must not be used afterwards)
+    """
+
+    atexit.unregister(shell.atexit_operations)
+
+    hm = getattr(shell, "history_manager", None)
+    if hm is None:
+        return
+    shell.history_manager = None
+
+    hm.end_session()
+    save_thread = getattr(hm, "save_thread", None)
+    if save_thread is not None:
+        save_thread.stop()
+        hm.save_thread = None
+    hm.db.close()
+
+
 def _run_ips(frame_list, c):
     """
     :param frame_list:  list of frames
@@ -374,10 +402,14 @@ def _run_ips(frame_list, c):
 
     # now execute the shell
     shell(header=c.custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
+    _dispose_shell(shell)
+    InteractiveShellEmbed.clear_instance()
 
     # if `diff_index` is not None it will be interpreted as index increment for the frame_list in the except hook
     # "__mu" means "move up"
-    diff_index = lns.get("__mu")
+    # note: pop (not get) because lns might be the (persistent) f_locals of a frame; a stale value
+    # would trigger the same move again on the next visit of that frame (-> possibly endless loop)
+    diff_index = lns.pop("__mu", None)
     if not isinstance(diff_index, int):
         diff_index = None
 

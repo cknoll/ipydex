@@ -8,6 +8,7 @@
 
 
 import os
+import signal
 import subprocess
 import sys
 import unittest
@@ -98,6 +99,18 @@ class A:
 # call IPS in a method (self is present)
 a = A()
 '''
+
+# call IPS repeatedly to check that no resources (threads) are leaked
+_sample_embed_ips4 = b"""
+import threading
+from ipydex import IPS
+
+n0 = threading.active_count()
+for i in range(5):
+    IPS(theme_name="nocolor")
+
+print("thread_diff:", threading.active_count() - n0)
+"""
 
 _sample_embed_dbg1 = b'''
 
@@ -250,6 +263,8 @@ class TestE1(unittest.TestCase):
 
             cmd2 = f"{sys.executable} {fname} 1.5"
             p = PopenSpawn(cmd2, env=env)
+            # ensure the child does not outlive the test (it would wait for input forever)
+            self.addCleanup(p.kill, signal.SIGKILL)
 
             p.expect(ipy_prompt)
 
@@ -342,6 +357,7 @@ class TestE1(unittest.TestCase):
             """)
             cmd2 = f"{sys.executable} {fname}"
             p = PopenSpawn(cmd2, env=env)
+            self.addCleanup(p.kill, signal.SIGKILL)
 
             ####################################################################
             # first part: test function mode
@@ -379,6 +395,43 @@ class TestE1(unittest.TestCase):
             # ensure that the new method can be executed
             out_a = ipy_io(p, fname, "self.new_method()\n", decode=True)
             self.assertTrue(out_a.strip().startswith("SUCCESS"))
+
+    def test_ipython_embed_stale_mu(self):
+        # regression test: revisiting a frame must not re-apply an old `__mu` value
+        # (this used to result in an endless loop when stdin was closed)
+        with NamedFileInTemporaryDirectory("file_with_embed.py", "wb") as f:
+            f.write(_sample_embed_ips2)
+            f.flush()
+            f.close()
+
+            env = os.environ.copy()
+            env["IPY_TEST_SIMPLE_PROMPT"] = "1"
+            env["IPYDEX_SUPPRESS_VENV_WARNING"] = "1"
+
+            # f1 -> f2 -> f1, then EOF
+            _input = b"__mu = 1\nexit()\n__mu = -1\nexit()\n"
+            cmd = [sys.executable, f.name, "1.5"]
+            try:
+                res = subprocess.run(cmd, input=_input, env=env, capture_output=True, timeout=30)
+            except subprocess.TimeoutExpired:
+                self.fail("process did not terminate (endless frame-navigation loop?)")
+
+        # 3 shells (f1, f2, f1) -> exactly 3 tracebacks printed by the excepthook
+        self.assertEqual(res.stdout.count(b"ZeroDivisionError: division by zero"), 3)
+
+    def test_ipython_embed_no_thread_leak(self):
+        with NamedFileInTemporaryDirectory("file_with_embed.py", "wb") as f:
+            f.write(_sample_embed_ips4)
+            f.flush()
+            f.close()
+
+            cmd = [sys.executable, f.name]
+            std, _, returncode = ipydex.utils.get_out_and_err_of_command(
+                cmd, _input=b"exit\n" * 5, extra_env={"IPY_TEST_SIMPLE_PROMPT": "1"}, returncode=True,
+            )
+
+        self.assertEqual(returncode, 0)
+        self.assertIn("thread_diff: 0", std)
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
