@@ -54,6 +54,35 @@ The following functions are meant to be used in ordinary python-scripts:
 -   `Container`
     - versatile class for debugging and convenient creation of case-specific data structures
 
+### Traceback Format After `import ipydex`
+
+Importing ipydex replaces `sys.excepthook` by IPython's colored traceback formatter (`ultratb.FormattedTB`). The level of detail is controlled by the environment variable `IPYDEX_TB_MODE`:
+
+| Value | Output |
+|---|---|
+| `plain` (default) | compact, like the normal Python traceback (but colored) |
+| `context` | additionally shows some lines of source code before and after the relevant line of each frame |
+| `verbose` | like `context`, plus the values of function arguments and of the variables in the relevant line of each frame |
+
+The values are case-insensitive; `0`, `1`, `2` are accepted as well. An invalid value causes a warning and the fallback to `plain`.
+
+Note: in `verbose` mode the variable values are printed completely (via `repr`). Large lists or dicts can make the traceback extremely long, which is especially inefficient for LLM agents processing the output.
+
+Example:
+
+```bash
+IPYDEX_TB_MODE=verbose python my_script.py
+```
+
+The mode can also be set from within Python (this overrides the environment variable):
+
+```python
+import ipydex
+ipydex.color_excepthook(mode="context")  # or ip_syshook(...) (alias)
+```
+
+Note: the traceback printed by `activate_ips_on_exception()` before the IPython shell starts is not affected by this setting.
+
 ## Notes
 
 This package has grown over more than a decade. It is only partially covered by unittests. Its internals are not exemplary for recommended coding practice. It certainly contains bugs. No warranty for any purpose is given.

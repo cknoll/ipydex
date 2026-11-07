@@ -654,13 +654,58 @@ def get_kernel_id():
     return kernel_id
 
 
-def color_excepthook(pdb=0, mode=2, force=True):
+TB_MODES = ["Plain", "Context", "Verbose"]
+TB_MODE_ENV_VAR = "IPYDEX_TB_MODE"
+DEFAULT_TB_MODE = "Plain"
+
+
+def _resolve_tb_mode(mode):
     """
-    Make tracebacks after exceptions colored, verbose, and/or call pdb
-    (python cmd line debugger) at the place where the exception occurs
+    Convert `mode` (int index, case-insensitive string or None) into a valid mode name of
+    `ultratb.FormattedTB`. `None` means: use the environment variable `IPYDEX_TB_MODE`
+    (fallback: `DEFAULT_TB_MODE`).
     """
 
-    modus = ['Plain', 'Context', 'Verbose'][mode] # select the mode
+    from_env = mode is None
+    if from_env:
+        mode = os.environ.get(TB_MODE_ENV_VAR, "").strip() or DEFAULT_TB_MODE
+
+    if isinstance(mode, int) and not isinstance(mode, bool) and 0 <= mode < len(TB_MODES):
+        return TB_MODES[mode]
+
+    if isinstance(mode, str):
+        if mode.isdigit():
+            return _resolve_tb_mode(int(mode))
+        for name in TB_MODES:
+            if mode.lower() == name.lower():
+                return name
+
+    msg = (
+        f"ipydex: invalid traceback mode {mode!r}"
+        f"{' (from environment variable ' + TB_MODE_ENV_VAR + ')' if from_env else ''}. "
+        f"Valid values: {', '.join(m.lower() for m in TB_MODES)} (or 0, 1, 2)."
+    )
+    if from_env:
+        # do not crash at import time because of a misconfigured environment
+        import warnings
+
+        warnings.warn(f"{msg} Falling back to {DEFAULT_TB_MODE.lower()!r}.")
+        return DEFAULT_TB_MODE
+    raise ValueError(msg)
+
+
+def color_excepthook(pdb=0, mode=None, force=True):
+    """
+    Make tracebacks after exceptions colored and/or call pdb
+    (python cmd line debugger) at the place where the exception occurs
+
+    :param pdb:     flag whether to start the debugger after an exception
+    :param mode:    traceback detail level: "plain" (0), "context" (1) or "verbose" (2);
+                    None (default) means: use environment variable `IPYDEX_TB_MODE` (default: "plain")
+    :param force:   flag whether to override the excepthook unconditionally
+    """
+
+    modus = _resolve_tb_mode(mode)
 
     if force or not sys.excepthook == sys_orig_excepthook:
         sys.excepthook = ultratb.FormattedTB(mode=modus, call_pdb=pdb, theme_name=module_config.THEME_NAME)
@@ -671,6 +716,7 @@ ip_syshook = color_excepthook
 
 # now, we immediately  apply this new excepthook.
 # consequence: when this module is imported the tracebacks automatically are colored (easier to read)
+# the level of detail is controlled by the environment variable IPYDEX_TB_MODE (see README)
 color_excepthook(force=True)
 
 
