@@ -194,8 +194,8 @@ def IPS(
     3. while doing so optionally overwrite names in the global namespace
     """
 
-    if os.getenv("IPS", None) == "False":
-        print('omit starting IPython shell because env var `IPS` is "False"')
+    if os.getenv("IPS", "").strip().lower() in ("false", "0"):
+        print('omit starting IPython shell because env var `IPS` is `False`')
         return None
 
     if condition1 is not None:
