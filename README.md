@@ -1,7 +1,7 @@
 # ipydex – **ipy**thon based **de**bugging and **ex**ploring
 
 
-[![CircleCI](https://circleci.com/gh/cknoll/ipydex/tree/main.svg?style=shield)](https://circleci.com/gh/cknoll/ipydex/tree/main)
+[![tests](https://github.com/cknoll/ipydex/actions/workflows/tests.yml/badge.svg)](https://github.com/cknoll/ipydex/actions/workflows/tests.yml)
 [![PyPI version](https://badge.fury.io/py/ipydex.svg)](https://badge.fury.io/py/ipydex)
 
 ipydex helps to find out what is going on inside a running Python program: it drops you into a full

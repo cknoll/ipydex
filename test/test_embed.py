@@ -450,7 +450,14 @@ class TestDBG(unittest.TestCase):
                 cmd, _input=_exit, extra_env={"IPY_TEST_SIMPLE_PROMPT": "1"}
             )
 
-        eout = f'{f.name}(17)<module>()\n     15 \n     16 \n---> 17 f1()\n     18 y = 20\n     19'
+        if sys.version_info >= (3, 13):
+            # since Python 3.13 `set_trace()` stops at the line of the call itself (not at the next line)
+            eout = (
+                f'{f.name}(14)<module>()\n     12 \n     13 set_trace = TracerFactory(theme_name="nocolor")\n'
+                '---> 14 set_trace()\n     15 \n     16'
+            )
+        else:
+            eout = f'{f.name}(17)<module>()\n     15 \n     16 \n---> 17 f1()\n     18 y = 20\n     19'
         self.assertIn(eout, std)
 
 
