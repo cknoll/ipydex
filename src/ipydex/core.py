@@ -170,6 +170,7 @@ def IPS(
     add_context_for_latest=6,
     theme_name=None,
     verbose=False,
+    _caller_frame=None,
 ):
     """
 
@@ -184,6 +185,9 @@ def IPS(
     :param theme_name:          optional, one of ['nocolor', 'neutral', 'linux', 'lightbg']
     :param print_tb:            boolean or negative integer (number of printed last tracebacks)
     :param add_context_for_latest:
+    :param _caller_frame:       internal; used by wrappers (see `_ipydex_builtins.py`) to pass the
+                                frame of their caller (in contrast to `frame`, the detection of a
+                                debug console is still active)
     :return:
 
     Starts IPython embedded shell. This is similar to IPython.embed() but with some
@@ -226,7 +230,7 @@ def IPS(
 
     C.debugger_ns = None
     if not frame:
-        frame = inspect.currentframe().f_back
+        frame = _caller_frame if _caller_frame is not None else inspect.currentframe().f_back
         debugger_context = _get_debugger_eval_context(frame)
         if debugger_context is not None:
             # IPS() was typed into the debug console of a pydevd-based debugger (e.g. VS Code)

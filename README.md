@@ -31,6 +31,10 @@ Before the shell opens, `IPS()` prints the list of calling frames, so you see wh
 - `IPS(i == 3)`: only start the shell if the condition is true (e.g. inside a loop)
 - run the program with the environment variable `IPS=0` (or `IPS=false`) to skip all `IPS()` calls
   without removing them from the code
+- optional (new in 0.23.0): `ipydex --install-builtins` makes `IPS()` and
+  `activate_ips_on_exception()` available without import in the current Python environment
+  (undo: `ipydex --uninstall-builtins`). No other side effects: ipydex is only imported when one of
+  these functions is called. Details (also about IDE/linter warnings) in `src/_ipydex_builtins.py`.
 
 ## Overview
 
@@ -73,7 +77,8 @@ How it works in practice:
 
 Notes:
 
-- `IPS` must be available in the debugged code (`from ipydex import IPS`). Otherwise type
+- `IPS` must be available in the debugged code: `from ipydex import IPS` in the code, or
+  `ipydex --install-builtins` (see [Quick Start](#quick-start)). Otherwise type
   `__import__("ipydex").IPS()`.
 - Assignments to existing variables (e.g. `x = 5`) are written back to the paused frame by the
   debugger after the shell has been closed, i.e. they persist when you continue stepping.
