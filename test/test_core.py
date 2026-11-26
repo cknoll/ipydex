@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import ipydex as ipd
@@ -185,6 +186,63 @@ class TestCore4(unittest.TestCase):
         fli = ipd.core.generate_frame_list_info(
             frame, code_context, add_context_for_latest, limit_to=limit_to
         )
+
+
+class TestDebuggerDetection(unittest.TestCase):
+    """
+    Test the detection of IPS() calls from the debug console of pydevd-based debuggers (debugpy).
+    The relevant part of pydevd (`evaluate_expression` in a file named `pydevd_vars.py`) is mimicked.
+    """
+
+    FAKE_PYDEVD_SRC = (
+        "def evaluate_expression(frame, expression):\n"
+        "    ns = {}\n"
+        "    ns.update(frame.f_globals)\n"
+        "    ns.update(frame.f_locals)\n"
+        "    return eval(compile(expression, '<string>', 'eval'), ns)\n"
+    )
+
+    def setUp(self):
+        self.fake_pydevd = {}
+        fname = os.path.join("fake", "_pydevd_bundle", "pydevd_vars.py")
+        exec(compile(self.FAKE_PYDEVD_SRC, fname, "exec"), self.fake_pydevd)
+
+    def test_detection_in_debug_console(self):
+        import inspect
+
+        paused_frame = inspect.currentframe()
+        local_marker = 123  # noqa: F841 (accessed via the eval namespace)
+
+        expr = "_get_ctx(_this_frame())"
+        paused_frame.f_globals["_get_ctx"] = ipd.core._get_debugger_eval_context
+        paused_frame.f_globals["_this_frame"] = inspect.currentframe
+        try:
+            res = self.fake_pydevd["evaluate_expression"](paused_frame, expr)
+        finally:
+            del paused_frame.f_globals["_get_ctx"]
+            del paused_frame.f_globals["_this_frame"]
+
+        self.assertIsNotNone(res)
+        found_frame, eval_ns = res
+        self.assertIs(found_frame, paused_frame)
+        self.assertEqual(eval_ns["local_marker"], 123)
+
+    def test_no_detection_outside_debugger(self):
+        import inspect
+
+        # ordinary call
+        self.assertIsNone(ipd.core._get_debugger_eval_context(inspect.currentframe()))
+
+        # ordinary eval (not called from pydevd)
+        ns = {"_get_ctx": ipd.core._get_debugger_eval_context, "_this_frame": inspect.currentframe}
+        self.assertIsNone(eval("_get_ctx(_this_frame())", ns))
+
+    def test_clean_debugger_ns(self):
+        ns = {"a": 1, "In": [], "Out": {}, "_1": 2, "_i1": "x", "_ips_fli": None, "newvar": 3}
+        shell = ipd.Container(user_ns_hidden={"In": [], "Out": {}})
+        c = ipd.Container(ns_extension={"_ips_fli": None})
+        ipd.core._clean_debugger_ns(ns, {"a"}, shell, c)
+        self.assertEqual(ns, {"a": 1, "newvar": 3})
 
 
 class TestUtils(unittest.TestCase):

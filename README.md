@@ -38,6 +38,8 @@ The following functions are meant to be used in ordinary python-scripts:
     -   useful to explore what objects are available and what are their
         abilities
     -   some additional features compared to `IPython.embed()`
+    -   can also be typed into the debug console of VS Code (debugpy; PyCharm untested) while the debugger
+        is paused (see below)
 -   `ST()`
     -   start the IPython debugger
 -   `activate_ips_on_exception()`
@@ -53,6 +55,20 @@ The following functions are meant to be used in ordinary python-scripts:
         data-structures
 -   `Container`
     - versatile class for debugging and convenient creation of case-specific data structures
+
+### `IPS()` in the Debug Console (VS Code / debugpy)
+
+Step through the code with the graphical debugger and, when you need more than the debug console
+offers, type `IPS()` into the debug console (requires `from ipydex import IPS` in the debugged code,
+or use `__import__("ipydex").IPS()`). The shell is started in the frame which is currently
+selected in the *Call Stack* view.
+
+- The shell runs in the *terminal* of the debugged program (`"console": "integratedTerminal"`,
+  the default), not in the debug console. The debug console waits until the shell is closed.
+- Assignments to existing variables (e.g. `x = 5`) are written back to the paused frame by the
+  debugger after the shell has been closed, i.e. they persist when you continue stepping.
+- This relies on internals of pydevd (the debugger engine of debugpy). If these change, `IPS()`
+  falls back to its normal behavior (shell in an auxiliary frame of the debugger).
 
 ### Traceback Format After `import ipydex`
 

@@ -224,8 +224,13 @@ def IPS(
         theme_name=theme_name,
     )
 
+    C.debugger_ns = None
     if not frame:
         frame = inspect.currentframe().f_back
+        debugger_context = _get_debugger_eval_context(frame)
+        if debugger_context is not None:
+            # IPS() was typed into the debug console of a pydevd-based debugger (e.g. VS Code)
+            frame, C.debugger_ns = debugger_context
 
     # extension of local namespace for IPS-debugging purposes
     if not ns_extension:
@@ -239,6 +244,11 @@ def IPS(
         limit_to = print_tb
     else:
         limit_to = 0
+
+    if C.debugger_ns is not None:
+        # hide the outer frames of the debugger's launcher (runpy, debugpy, pydevd)
+        n_user_frames = _count_frames_below_debugger(frame)
+        limit_to = max(limit_to, -n_user_frames) if limit_to < 0 else -n_user_frames
 
     fli = generate_frame_list_info(
         frame, code_context, add_context_for_latest, limit_to=limit_to, theme_name=theme_name
@@ -278,6 +288,68 @@ def IPS(
         sys.excepthook = custom_excepthook
 
     return diff_index
+
+
+def _get_debugger_eval_context(caller_frame):
+    """
+    Detect whether IPS() was called from the debug console of a pydevd-based debugger
+    (debugpy in VS Code, PyCharm). In this case `caller_frame` is not the paused frame but an
+    auxiliary frame of the debugger's `eval(...)` call.
+
+    Note: this relies on internals of pydevd (function `evaluate_expression` with local variable
+    `frame`). If these change, None is returned and IPS falls back to its normal behavior.
+
+    :param caller_frame:    the frame from which IPS was called
+    :return:                None or a tuple (paused_frame, eval_namespace); the debugger writes
+                            changes of eval_namespace back to paused_frame after the evaluation.
+    """
+
+    if caller_frame is None or caller_frame.f_code.co_filename != "<string>":
+        return None
+
+    f = caller_frame.f_back
+    while f is not None:
+        fname = f.f_code.co_filename
+        if "pydevd" not in fname:
+            # IPS() was called from user code that was executed by an eval -> no special treatment
+            return None
+        if f.f_code.co_name == "evaluate_expression":
+            paused_frame = f.f_locals.get("frame")
+            if inspect.isframe(paused_frame):
+                return paused_frame, caller_frame.f_globals
+            return None
+        f = f.f_back
+    return None
+
+
+def _count_frames_below_debugger(frame):
+    """
+    Return the number of frames from `frame` upwards until the first frame which belongs to the
+    debugger's launcher (debugpy, pydevd, runpy). At least 1 is returned.
+    """
+    n = 0
+    while frame is not None:
+        fname = frame.f_code.co_filename
+        if "pydevd" in fname or "debugpy" in fname or "runpy" in fname:
+            break
+        n += 1
+        frame = frame.f_back
+    return max(n, 1)
+
+
+# names which IPython creates for its output cache (`_1`, `_i1`, ...)
+_IPYTHON_CACHE_NAME_RE = regex.compile(r"^_i{0,3}\d+$")
+
+
+def _clean_debugger_ns(ns, initial_keys, shell, c):
+    """
+    Remove names which were added by IPython or IPS itself from the debugger's eval namespace.
+    Otherwise the debugger would write them back into the paused frame. Names which were newly
+    created by the user inside the shell are kept.
+    """
+    for key in set(ns) - initial_keys:
+        if key in shell.user_ns_hidden or key in c.ns_extension or _IPYTHON_CACHE_NAME_RE.match(key):
+            del ns[key]
 
 
 def _dispose_shell(shell):
@@ -353,7 +425,18 @@ def _run_ips(frame_list, c):
     # adapt the namespaces to prevent missing names inside the shell
     # see: https://github.com/ipython/ipython/issues/62
     # https://github.com/ipython/ipython/issues/10695
-    if c.copy_namespaces and len(frame_list) >= 1:
+    initial_keys = None
+    if c.debugger_ns is not None:
+        # IPS was called from a debug console: use the debugger's eval namespace (globals and locals
+        # of the paused frame merged into one dict). The debugger writes changed values back to
+        # the paused frame after the evaluation, i.e. assignments in the shell persist.
+        lns = c.debugger_ns
+        initial_keys = set(lns)
+        lns.update(c.ns_extension)
+        dummy_module = DummyMod()
+        dummy_module.__dict__ = lns
+
+    elif c.copy_namespaces and len(frame_list) >= 1:
         # callers_frame to IPS()
         # note that frame_list and frame_info_list were reversed above
         f1 = frame_list[-1]
@@ -402,6 +485,8 @@ def _run_ips(frame_list, c):
 
     # now execute the shell
     shell(header=c.custom_header, stack_depth=2, local_ns=lns, module=dummy_module)
+    if initial_keys is not None:
+        _clean_debugger_ns(lns, initial_keys, shell, c)
     _dispose_shell(shell)
     InteractiveShellEmbed.clear_instance()
 
