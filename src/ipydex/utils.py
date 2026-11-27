@@ -1,6 +1,9 @@
-from typing import Literal, overload
-from colorama import Style, Back, Fore
+import inspect
 import os
+from types import FrameType
+from typing import Literal, overload
+
+from colorama import Style, Back, Fore
 
 
 def hl(txt, k="g"):
@@ -95,18 +98,25 @@ def get_clipboard_content():
         return pyperclip.paste()
 
 
-def get_caller_frame(upcount=1):
-    import inspect
+def get_caller_frame(upcount: int = 1) -> FrameType:
+    """
+    Return the frame `upcount` levels above the frame of the function which calls this function:
 
-    # Get the frame of the caller (`upcount` frames above the current frame),
+    - `upcount=0`: frame of the calling function (like `inspect.currentframe()` there)
+    - `upcount=1`: frame of its caller (like `inspect.currentframe().f_back` there)
+
+    Unlike `inspect.currentframe()` the result is never `None` (which simplifies static type checking).
+    """
 
     frame = inspect.currentframe()
+    if frame is None:
+        raise RuntimeError("This Python implementation does not support stack frame introspection.")
 
     # + 1 to leave this frame (we usually want at least the grand-parent)
     i = upcount + 1
     while i > 0:
         if frame.f_back is None:
-            msg = f"Unexpectedly reached to of frame-stack for {i=}"
+            msg = f"Unexpectedly reached top of frame-stack for {i=}"
             raise ValueError(msg)
         frame = frame.f_back
         i -= 1

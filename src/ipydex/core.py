@@ -21,6 +21,8 @@ from IPython.core import ultratb
 
 from IPython.core.debugger import Pdb
 
+from ipydex.utils import get_caller_frame
+
 sys_orig_excepthook = sys.excepthook
 
 # License: GPLv3
@@ -231,7 +233,7 @@ def IPS(
 
     C.debugger_ns = None
     if not frame:
-        frame = _caller_frame if _caller_frame is not None else inspect.currentframe().f_back
+        frame = _caller_frame if _caller_frame is not None else get_caller_frame(upcount=1)
         debugger_context = _get_debugger_eval_context(frame)
         if debugger_context is not None:
             # IPS() was typed into the debug console of a pydevd-based debugger (e.g. VS Code)
@@ -629,7 +631,7 @@ def calling_stack_info(print_res=True, code_context=1, **kwargs):
     :return:
     """
 
-    start_frame = inspect.currentframe().f_back
+    start_frame = get_caller_frame(upcount=1)
 
     fil = generate_frame_list_info(start_frame, code_context=code_context, **kwargs)
 
@@ -1172,9 +1174,12 @@ class Container(object):
 
     if TYPE_CHECKING:
         # Attributes are created dynamically (via kwargs, cargs or fetch_locals).
-        # This tells static type checkers (pyright/pylance, mypy) that arbitrary attributes may exist.
+        # This tells static type checkers (pyright/pylance, mypy) that arbitrary attributes may exist
+        # (reading and writing).
         # It has no effect at runtime.
         def __getattr__(self, name: str) -> Any: ...
+
+        def __setattr__(self, name: str, value: Any) -> None: ...
 
     def __init__(self, cargs=None, **kwargs):
 
@@ -1188,7 +1193,7 @@ class Container(object):
             assert not fetch_locals
             # we were called with something like: c = Container(cargs=(x, y, z))
 
-            caller_frame = inspect.currentframe().f_back
+            caller_frame = get_caller_frame(upcount=1)
 
             tmp_dict, self.__carg_varnames = get_carg_vars_from_frame(caller_frame, type(cargs), return_varnames=True)
 
@@ -1232,7 +1237,7 @@ class Container(object):
         :return:
         """
 
-        frame = inspect.currentframe()
+        frame = get_caller_frame(upcount=0)
         i = upcount
         while True:
             if frame.f_back is None:
@@ -1254,7 +1259,7 @@ class Container(object):
         :return:
         """
 
-        frame = inspect.currentframe()
+        frame = get_caller_frame(upcount=0)
         i = upcount
         while True:
             if frame.f_back is None:
