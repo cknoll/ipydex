@@ -1,5 +1,4 @@
 import atexit
-import collections
 import inspect
 import sys
 import os
@@ -7,17 +6,19 @@ import tokenize as tk
 import io
 import pickle
 import subprocess
-import dataclasses
+import types
 import re as regex
 from typing import TYPE_CHECKING, Any
 
 import stack_data
+import stack_data.core
 from pygments.formatters.terminal256 import Terminal256Formatter
 from pygments.styles import get_style_by_name
 
 from IPython.terminal.ipapp import load_default_config
 from IPython.terminal.embed import InteractiveShellEmbed
 from IPython.core import ultratb
+from IPython.core import tbtools
 
 from IPython.core.debugger import Pdb
 
@@ -118,9 +119,7 @@ if os.getenv("IPYDEX_SUPPRESS_VENV_WARNING"):
     )
 
 # allow global write access to config vars of this module
-module_config = dataclasses.dataclass()
-# module_config.COLOR_SCHEME = "linux"
-module_config.THEME_NAME = "linux"
+module_config = types.SimpleNamespace(THEME_NAME="linux")
 
 
 class DummyMod(object):
@@ -417,8 +416,8 @@ def _run_ips(frame_list, c):
     shell = InteractiveShellEmbed.instance(config=config)
 
     # Register the magic with the running shell
-    shell.register_magic_function(
-        create_method_from_pasted_function, "line", "create_method_from_pasted_function"
+    shell.magics_manager.register_function(
+        create_method_from_pasted_function, magic_kind="line", magic_name="create_method_from_pasted_function"
     )
 
     # achieve that custom macros are loaded in interactive shell
@@ -599,13 +598,13 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limi
     # style = stack_data.style_with_executing_node(style, "bg:ansiyellow")
     formatter = Terminal256Formatter(style=style)
 
-    options = stack_data.Options(
+    options = stack_data.core.Options(
             before=code_context - (code_context // 2),
             after=code_context // 2 ,
             pygments_formatter=formatter,
         )
 
-    fil = list(stack_data.FrameInfo.stack_data(frame, options=options))
+    fil = list(stack_data.core.FrameInfo.stack_data(frame, options=options))
 
     for fic in fil:
 
@@ -616,7 +615,7 @@ def generate_frame_list_info(frame, code_context, add_context_for_latest=0, limi
         # since python 3.10 TB.format_record expects a different type
         # -> manually convert it:
 
-        fi_obj = ultratb.FrameInfo._from_stack_data_FrameInfo(fic)
+        fi_obj = tbtools.FrameInfo._from_stack_data_FrameInfo(fic)
         formatted_records.append(TB.format_record(fi_obj))
 
     assert isinstance(limit_to, int) and limit_to <= 0
@@ -724,16 +723,14 @@ def activate_ips_on_exception(theme_name=None):
     sys.excepthook = ips_excepthook
 
     # save the hook (because it might be overridden from extern)
-    sys.custom_excepthook = ips_excepthook
+    setattr(sys, "custom_excepthook", ips_excepthook)
 
 
 def catch_exception(func, *args, **kwargs):
     try:
         func(*args, **kwargs)
     except Exception as ex:
-        import traceback
-        value, tb = traceback._parse_value_tb(ex, traceback._sentinel, traceback._sentinel)
-        ips_excepthook(type(ex), ex, tb)
+        ips_excepthook(type(ex), ex, ex.__traceback__)
 
 
 # based on https://github.com/jupyter/jupyter_client/issues/1004
@@ -742,7 +739,9 @@ def get_kernel_id():
     import ipykernel
     import re
 
-    kernel_id = re.search('kernel-(.*).json', ipykernel.connect.get_connection_file()).group(1)
+    match = re.search('kernel-(.*).json', ipykernel.connect.get_connection_file())
+    assert match is not None
+    kernel_id = match.group(1)
     return kernel_id
 
 
@@ -800,7 +799,7 @@ def color_excepthook(pdb=0, mode=None, force=True):
     modus = _resolve_tb_mode(mode)
 
     if force or not sys.excepthook == sys_orig_excepthook:
-        sys.excepthook = ultratb.FormattedTB(mode=modus, call_pdb=pdb, theme_name=module_config.THEME_NAME)
+        sys.excepthook = ultratb.FormattedTB(mode=modus, call_pdb=bool(pdb), theme_name=module_config.THEME_NAME)
 
 
 # for backward compatibility
@@ -824,7 +823,7 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
     this can be used to pop up a QTMessageBox: "An exception occurred"
     """
 
-    assert isinstance(fnc, collections.Callable)
+    assert callable(fnc)
     from IPython.core import ultratb
     import time
 
@@ -832,9 +831,9 @@ def ip_extra_syshook(fnc, pdb=0, filename=None):
         assert isinstance(filename, str)
         pdb = 0
 
-    ip_excepthook = ultratb.FormattedTB(mode="Verbose", call_pdb=pdb, theme_name=module_config.THEME_NAME)
+    ip_excepthook = ultratb.FormattedTB(mode="Verbose", call_pdb=bool(pdb), theme_name=module_config.THEME_NAME)
 
-    fileTraceback = ultratb.FormattedTB(mode="Verbose", theme_name="nocolor", call_pdb=0)
+    fileTraceback = ultratb.FormattedTB(mode="Verbose", theme_name="nocolor", call_pdb=False)
 
     # define the new excepthook
     def theexecpthook (type, value, traceback):
@@ -921,13 +920,14 @@ def get_notebook_name():
     import re
     try:
         version = "old"
-        from notebook.notebookapp import list_running_servers
+        from notebook.notebookapp import list_running_servers  # pyright: ignore[reportMissingImports]
     except ImportError:
         version = "new"
         from jupyter_server.serverapp import list_running_servers
 
-    kernel_id = re.search('kernel-(.*).json',
-                          ipykernel.connect.get_connection_file()).group(1)
+    match = re.search('kernel-(.*).json', ipykernel.connect.get_connection_file())
+    assert match is not None
+    kernel_id = match.group(1)
     servers = list_running_servers()
     for ss in servers:
         response = requests.get(urljoin(ss['url'], 'api/sessions'),
@@ -989,12 +989,11 @@ def save_current_nb_as_html(info=None, return_res=False, fname=None):
     os.chdir(path)
     cmd_list = ["jupyter", "nbconvert", src_filename, "--to", "html", "--template", "classic"]
 
-    res = subprocess.run(cmd_list, capture_output=True)
-    res.exited = res.returncode
+    res = subprocess.run(cmd_list, capture_output=True, text=True, encoding="utf8")
+    # additional attributes (kept for backward compatibility)
+    setattr(res, "exited", res.returncode)
 
-    assert res.exited == 0, f"command `{''.join(cmd_list)}` failed"
-    res.stdout = res.stdout.decode("utf8")
-    res.stderr = res.stderr.decode("utf8")
+    assert res.returncode == 0, f"command `{' '.join(cmd_list)}` failed"
 
 
     suffix = ".ipynb"
@@ -1007,7 +1006,7 @@ def save_current_nb_as_html(info=None, return_res=False, fname=None):
         shutil.move(html_filename, fname)
     else:
         fname = html_filename
-    res.fname = html_filename
+    setattr(res, "fname", html_filename)
 
     os.chdir(wd_save)
 
@@ -1380,6 +1379,7 @@ def get_whole_assignment_expression(line, varname, seq_type):
     else:  # no break
         raise ValueError(errmsg)
 
+    assert i_start is not None and i_end is not None
     substr = line[tokens[i_start].start[1]: tokens[i_end].end[1]]
 
     try:
@@ -1406,6 +1406,7 @@ def get_carg_vars_from_frame(frame, seq_type, return_varnames=False):
 
     info = inspect.getframeinfo(frame)
     context = info.code_context
+    assert context is not None
 
     code_line = " ".join(context)
 
@@ -1572,7 +1573,7 @@ def explore_data(data):
 def create_method_from_pasted_function(line):
     import types
     from textwrap import dedent
-    from IPython import get_ipython
+    from IPython.core.getipython import get_ipython
     from ipydex.utils import get_clipboard_content
 
     clipboard_content = dedent(get_clipboard_content()).strip()
@@ -1588,6 +1589,7 @@ def create_method_from_pasted_function(line):
 
     # 'line' should be the function name as a string
     ip = get_ipython()
+    assert ip is not None
     instance = ip.user_ns.get('self')
     if instance is None:
         ip.user_ns[func_name] = func

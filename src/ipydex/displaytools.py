@@ -49,7 +49,6 @@ import json
 
 import tokenize as tk
 
-import IPython
 from IPython.display import display
 # noinspection PyUnresolvedReferences
 from .core import Container, IPS, str_to_token_list
@@ -68,7 +67,7 @@ class FC(Container):
         self.empty_comment = False
         self.sc = True  # just indicate that we have a special comment (default true servers as abbreviation)
         self.lhs = False  # relates to the comment
-        self.assignment = None  # relates to the actual line (will be set later)
+        self.assignment: bool | None = None  # relates to the actual line (will be set later)
         self.transpose = False
         self.shape = False
         self.comment_only = None  # this refers to the whole line
@@ -185,7 +184,9 @@ def preprocess_logical_line(ll):
     # mark this as special case
 
     # find length of leading whitespace of original string
-    ll.lws_len = len(re.match(r"\s*", ll.txt, re.UNICODE).group(0))
+    lws_match = re.match(r"\s*", ll.txt, re.UNICODE)
+    assert lws_match is not None  # this pattern always matches
+    ll.lws_len = len(lws_match.group(0))
 
     if ll.lws_len > 0 and ll.txt[ll.lws_len] == "#":
         ll.special_case_indented_comment_start = True
@@ -229,7 +230,7 @@ def get_line_segments_from_logical_line(ll):
     try:
         # look from behind if the first "relevant" token is a comment
 
-        final_comment_flag = False
+        final_comment_start = None
 
         for tok in ll.tokens[::-1]:
             if tok.type in ignorable_tokens:
@@ -238,16 +239,13 @@ def get_line_segments_from_logical_line(ll):
                 # useful for debugging
                 final_comment_token = tok
                 final_comment_start = tok.start
-                final_comment_flag = True
             break
 
-        if not final_comment_flag:
+        if final_comment_start is None:
             # no final comment
             # use the last token (except DEDENT and ENDMARKER) as virtual final comment
-            for tok in ll.tokens[::-1]:
-                if tok.type in ignorable_final_tokens:
-                    continue
-                break
+            # (if all tokens are ignorable: use the first one)
+            tok = next((t for t in ll.tokens[::-1] if t.type not in ignorable_final_tokens), ll.tokens[0])
             final_comment_token = tok
             final_comment_start = tok.start
             # be sure that in the last physical line there is no comment
@@ -255,7 +253,7 @@ def get_line_segments_from_logical_line(ll):
 
     except IndexError:
         # this is an unexpected short line
-        return "", None, None, ""
+        return "", Container(lhs_str=None, parsing_exception=None), None, ""
 
     try:
         # remove *common* leading whitespaces
@@ -439,6 +437,7 @@ def classify_comment(cmt):
             if matchflag:
                 # we have a multi match situation
                 # ignore this for now
+                assert res is not None
                 res.multi_match.append(sc)
                 continue
             matchflag = True
@@ -639,9 +638,10 @@ def custom_display(lhs, rhs, line_break=False):
     metadata = kwargs.get('metadata')
 
     from IPython.core.interactiveshell import InteractiveShell
-    from IPython.core.displaypub import publish_display_data
+    from IPython.core.display_functions import publish_display_data
 
-    format = InteractiveShell.instance().display_formatter.format
+    # `display_formatter` is a traitlets `Instance` trait which pyright cannot resolve to its actual type
+    format = InteractiveShell.instance().display_formatter.format  # pyright: ignore
     format_dict, md_dict = format(rhs, include=include, exclude=exclude)
 
     # example format_dict (for a sympy expression):
@@ -686,14 +686,7 @@ def custom_display(lhs, rhs, line_break=False):
             # this happens e.g. for mime-type (i.e. key) 'image/png'
             new_format_dict[key] = value
 
-    # legacy IPython 2.x support
-    if IPython.__version__.startswith('2.'):
-        # noinspection PyTypeChecker
-        publish_display_data('display', new_format_dict, md_dict)
-    else:
-        # indeed, I don't know with which version the api changed
-        # but it does not really matter (for me)
-        publish_display_data(data=new_format_dict, metadata=md_dict)
+    publish_display_data(data=new_format_dict, metadata=md_dict)
 
 
 def info(arg):

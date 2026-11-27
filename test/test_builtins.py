@@ -125,9 +125,9 @@ class TestBuiltinsWrapper(unittest.TestCase):
         import _ipydex_builtins
 
         sentinel = object()
-        builtins.IPS = sentinel
+        setattr(builtins, "IPS", sentinel)
         _ipydex_builtins._install()
-        self.assertIs(builtins.IPS, sentinel)
+        self.assertIs(getattr(builtins, "IPS"), sentinel)
 
 
 if __name__ == "__main__":

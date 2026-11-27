@@ -175,9 +175,9 @@ def _reload_module(path, mod_name="__proxy_module__"):
         return importlib.reload(module_to_reload)
 
 def _import_module_from_path(abs_path, mod_name="temp_module"):
-    import importlib
+    import importlib.util
     spec = importlib.util.spec_from_file_location(mod_name, abs_path)
-    if spec is None:
+    if spec is None or spec.loader is None:
         raise ImportError(f"Cannot create module spec from path: {abs_path}")
     module_to_reload = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module_to_reload)
@@ -185,8 +185,8 @@ def _import_module_from_path(abs_path, mod_name="temp_module"):
 
 class ReloadManager:
     def __init__(self):
-        self.abs_path_of_caller = None
-        self.callers_globals = None
+        self.abs_path_of_caller: str | None = None
+        self.callers_globals: dict | None = None
 
 rm = ReloadManager()
 
@@ -209,6 +209,7 @@ def reload_this_module(mode=None, mod_name="__proxy_module__"):
     if mode == "prepare_only":
         return
     mod = _import_module_from_path(rm.abs_path_of_caller, mod_name=mod_name)
+    assert rm.callers_globals is not None
 
     # Inject all public names into globals
     for name in getattr(mod, '__all__', dir(mod)):

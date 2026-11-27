@@ -89,12 +89,10 @@ def catch():
 
     code = """
     import ipydex
-    import traceback
     try:
         failing_function()
     except Exception as ex:
-        value, tb = traceback._parse_value_tb(ex, traceback._sentinel, traceback._sentinel)
-        ipydex.ips_excepthook(type(ex), ex, tb)
+        ipydex.ips_excepthook(type(ex), ex, ex.__traceback__)
     """.replace("\n    ", "\n")
 
     app.shell.run_cell(code)

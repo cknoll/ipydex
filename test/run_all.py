@@ -1,6 +1,5 @@
 
 import os
-import inspect
 import unittest
 import importlib
 
@@ -14,7 +13,7 @@ def run_all():
 
     print("Running all tests for module `{}` {}.".format(mod_name, release.__version__))
 
-    current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    current_path = os.path.dirname(os.path.abspath(__file__))
 
     loader = unittest.TestLoader()
     suite = loader.discover(current_path)

@@ -13,6 +13,7 @@ import subprocess
 import sys
 import unittest
 from textwrap import dedent
+from typing import Literal, overload
 
 from IPython.utils.tempdir import NamedFileInTemporaryDirectory
 import pexpect
@@ -191,7 +192,15 @@ def get_adapted_out(spawn_instance, fname):
     return perform_replacements(out, fname)
 
 
-def ipy_io(spawn_instance, fname, command, decode=False):
+@overload
+def ipy_io(spawn_instance, fname, command, decode: Literal[False] = False) -> bytes: ...
+
+
+@overload
+def ipy_io(spawn_instance, fname, command, decode: Literal[True]) -> str: ...
+
+
+def ipy_io(spawn_instance, fname, command, decode: bool = False) -> str | bytes:
     """
 
     :param spawn_instance:

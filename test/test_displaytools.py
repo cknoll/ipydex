@@ -401,7 +401,10 @@ custom_display("info(x)", _ipydex__info(x)); display({"text/plain": "---"}, raw=
         expr = r'len(s.split("\\")), "x"'
         res2 = dt.insert_disp_lines(f"{expr} ##:S\n")
         # the generated label literal must evaluate to the original source of the expression
-        call = ast.parse(res2).body[0].value
+        stmt = ast.parse(res2).body[0]
+        assert isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call)
+        call = stmt.value
+        assert isinstance(call.func, ast.Name) and isinstance(call.args[0], ast.Constant)
         self.assertEqual(call.func.id, "custom_display")
         self.assertEqual(call.args[0].value, f"({expr}).shape")
 
