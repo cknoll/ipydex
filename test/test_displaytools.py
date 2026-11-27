@@ -71,42 +71,6 @@ class TestDT1(unittest.TestCase):
         self.assertTrue(r1.shape)
         self.assertFalse(r1.transpose)
 
-    def _test_classify_line_by_comment(self):
-
-        l1 = "x = 0 # nothing special here"
-        r1 = dt.classify_line_by_comment(l1)
-        # all flags should be false
-        self.assertFalse(any(r1.value_list()))
-
-        l1 = "# nothing special here"
-        r1 = dt.classify_line_by_comment(l1)
-        self.assertTrue(r1.comment_only)
-
-        l1 = "x = '# '"
-        r1 = dt.classify_line_by_comment(l1)
-        # all flags should be false
-        self.assertFalse(any(r1.value_list()))
-
-        l1 = "x = '##:'"
-        r1 = dt.classify_line_by_comment(l1)
-        # all flags should be false
-        self.assertFalse(any(r1.value_list()))
-
-        l1 = "x = '##:T' ##:"
-        r1 = dt.classify_line_by_comment(l1)
-        # all flags should be false
-        self.assertTrue(r1.sc)
-        self.assertTrue(r1.lhs)
-        self.assertFalse(r1.transpose)
-
-        l1 = "x = a*b # xyz ##:S"
-        r1 = dt.classify_line_by_comment(l1)
-        # all flags should be false
-        self.assertTrue(r1.sc)
-        self.assertTrue(r1.lhs)
-        self.assertTrue(r1.shape)
-        self.assertFalse(r1.transpose)
-
     def test_get_line_segments(self):
         ##!!
 
