@@ -1,11 +1,23 @@
 import os
 import unittest
+from typing import TYPE_CHECKING, Any
 
 import ipydex as ipd
 import ipydex.utils
 
 
 zz_global = 5678
+
+if TYPE_CHECKING:
+    # These global names are injected at runtime by `Container.publish_attrs()`.
+    # Declaring them here only for static type checkers avoids `reportUndefinedVariable` warnings.
+    # At runtime they do not exist (which is tested).
+    X: Any = None
+    Y: Any = None
+    a: Any = None
+    s: Any = None
+    xaz: Any = None
+    d: Any = None
 
 
 # noinspection PyPep8Naming,PyUnresolvedReferences,PyUnusedLocal
@@ -150,27 +162,27 @@ class TestCore3(unittest.TestCase):
 
         res = ipd.dirsearch("log", math)
 
-        expeced_res = ('log', 'log10', 'log1p', 'log2')
+        expected_res = ('log', 'log10', 'log1p', 'log2')
 
-        self.assertEqual(res, expeced_res)
+        self.assertEqual(res, expected_res)
 
         res = ipd.dirsearch("log", math, only_keys=False)
-        expeced_res = \
+        expected_res = \
             [('log', '<built-in function..'),
              ('log10', '<built-in function..'),
              ('log1p', '<built-in function..'),
              ('log2', '<built-in function..')]
 
-        self.assertEqual(res, expeced_res)
+        self.assertEqual(res, expected_res)
 
         res = ipd.dirsearch("log", math, only_keys=False, maxlength=50)
-        expeced_res = \
+        expected_res = \
             [('log', '<built-in function log>'),
              ('log10', '<built-in function log10>'),
              ('log1p', '<built-in function log1p>'),
              ('log2', '<built-in function log2>')]
 
-        self.assertEqual(res, expeced_res)
+        self.assertEqual(res, expected_res)
 
 
 class TestCore4(unittest.TestCase):
