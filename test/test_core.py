@@ -284,7 +284,7 @@ def f1(*args1, **kwargs1):
     print("x=", x)
     if x > 3:
         ipd.IPS()
-        1/0
+        x = 1/0
     else:
         f2(x)
 
