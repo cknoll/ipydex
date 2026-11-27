@@ -189,7 +189,9 @@ class TestCore4(unittest.TestCase):
 
     def test_frame_info(self):
         import inspect
-        frame = inspect.currentframe().f_back
+        current_frame = inspect.currentframe()
+        assert current_frame is not None
+        frame = current_frame.f_back
         code_context = 1
         add_context_for_latest = 3
         limit_to = 0
@@ -223,6 +225,7 @@ class TestDebuggerDetection(unittest.TestCase):
         import inspect
 
         paused_frame = inspect.currentframe()
+        assert paused_frame is not None
         local_marker = 123  # noqa: F841 (accessed via the eval namespace)
 
         expr = "_get_ctx(_this_frame())"

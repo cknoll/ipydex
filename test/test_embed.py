@@ -184,7 +184,10 @@ def get_adapted_out(spawn_instance, fname):
 
     assert isinstance(spawn_instance, (PopenSpawn, pexpect.pty_spawn.spawn))
 
-    out = spawn_instance.before + spawn_instance.after
+    before, after = spawn_instance.before, spawn_instance.after
+    # without `encoding` argument pexpect yields bytes (`after` might also be the EOF or TIMEOUT class)
+    assert isinstance(before, bytes) and isinstance(after, bytes)
+    out = before + after
     return perform_replacements(out, fname)
 
 

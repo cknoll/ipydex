@@ -1,3 +1,4 @@
+from typing import Literal, overload
 from colorama import Style, Back, Fore
 import os
 
@@ -48,7 +49,22 @@ def regex_a_in_b(a_pattern_str:str, b_target_str:str) -> bool:
     # return bool(regex.search(b))
 
 
-def get_out_and_err_of_command(cmd, _input=None, env: dict = None, extra_env: dict = None, returncode=False):
+# the overloads tell static type checkers that the length of the returned tuple depends on `returncode`
+@overload
+def get_out_and_err_of_command(
+    cmd, _input=None, env: dict | None = None, extra_env: dict | None = None, returncode: Literal[False] = False
+) -> tuple[str, str]: ...
+
+
+@overload
+def get_out_and_err_of_command(
+    cmd, _input=None, env: dict | None = None, extra_env: dict | None = None, *, returncode: Literal[True]
+) -> tuple[str, str, int]: ...
+
+
+def get_out_and_err_of_command(
+    cmd, _input=None, env: dict | None = None, extra_env: dict | None = None, returncode: bool = False
+):
     import subprocess
     import os
 
