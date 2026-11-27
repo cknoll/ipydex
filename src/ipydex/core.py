@@ -9,6 +9,7 @@ import pickle
 import subprocess
 import dataclasses
 import re as regex
+from typing import TYPE_CHECKING, Any
 
 import stack_data
 from pygments.formatters.terminal256 import Terminal256Formatter
@@ -1168,6 +1169,12 @@ class Container(object):
         print(C.y)
         print(C.res)
     """
+
+    if TYPE_CHECKING:
+        # Attributes are created dynamically (via kwargs, cargs or fetch_locals).
+        # This tells static type checkers (pyright/pylance, mypy) that arbitrary attributes may exist.
+        # It has no effect at runtime.
+        def __getattr__(self, name: str) -> Any: ...
 
     def __init__(self, cargs=None, **kwargs):
 
